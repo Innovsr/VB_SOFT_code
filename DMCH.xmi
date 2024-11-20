@@ -90,8 +90,6 @@ $gus
 30 24
 31 24
 32 24
-
 $end
 nset 0
-mout 1
-sym btos
+sym
