@@ -46,15 +46,6 @@ character(len=6),public::symtype,norbsym1(100,20)
 double precision::dist_act_rel_mat(20,20)
 integer::strdet(10000),detmnt(10000,15),det_sign(10000),Rumwrite,set_order
 
-common /info/nlp,tncs,tnis,is,atom,nabsym,atn,absyn,active_atoms,nao,nae,niao,mult,nlast,set_order,loopsymsc
-common /mat/dist_mat,flgst,noqult,rplc,nactorb,nstrt,serial,active_orbs,atm_nb_sym,dist_rel_mat,str_det_sec,biasval
-
-common /stct/mnbond,nmbond,nfset,at_num,itb,syb,nnb,rad,prad,noq,noq1,noq2,noq3,dist_act_rel_mat&
-,atoset,at_ab_symset,repl,radical,tot_atom,input_flg,biasmat,dist_nnat,Rumwrite,qflg
-
-common /srr/key_frag,num_frag_cntr,imbd,qult,nnat_bond,nnnatom,frag_cntr
-common /str1/all_at_num,sig_sym_flg,uoptstr,repl_struc,ovval,actv_atom,noq0,nlpset,lp,plpair,strt_struc,flg1,ndet&
-,ovopt,vpt,symtype
 
 DATA valence_state/1,1,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4,4,4,&
 4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5/
@@ -114,8 +105,6 @@ character(len=35)::inputfilename
 common/str/str5,nstr7
 
 open(unit=7,file='structures.dat',status='unknown')
-!open(unit=9,file='inputfile.xmi',status='unknown')
-!open(unit=9,file='structure_set.dat',status='unknown')
 open(unit=10,file='structure_set_1.dat',status='unknown')
 open(unit=23,file='Rumer_Sets_all.dat',status='unknown')
 open(unit=35,file='quality_str.dat',status='unknown')
@@ -132,7 +121,7 @@ input_flg=1
 INQUIRE(FILE=TRIM(inputfilename),EXIST=fileexists)
 IF (fileexists) THEN
 print*,'Reading from input.dat file.'
-call input
+!call input
 ELSE
 PRINT*,'SORRY input.dat file does not exist and you also did not put .xmi file'
 stop
@@ -146,7 +135,7 @@ if(flgst.eq.1.or.flgst.eq.2) then
 call cov_struc
 endif
 if(flgst.eq.1.or.flgst.eq.3) then
-call ion_struc
+!call ion_struc
 endif
 
 call close_file
@@ -180,7 +169,7 @@ noq0=100
 noq1=100
 noq2=100
 noq3=100
-symm=0
+symm=1
 ovval=1.000
 ovopt=0
 nlpset=0
@@ -234,10 +223,6 @@ read(21,'(a)')charst(i)
 if(index(charst(i),'$end').ne.0)then
 MDP1=i
 endif
-!!!write(9,*)charst(i)
-!write(23,*)charst(i)
-!sttr(i)=charst(i)(1:4)
-!print*,charst(i)
 enddo
 
 rewind(21)
@@ -256,7 +241,6 @@ ll=index(charst(i),'#')
 do k=1,ll
 line=charst(i)(k:k)
 if(line.eq.'')then
-!print*,'charst(i)(1:k-1)',charst(i)(1:k-1)
 if(trim(charst(i)(1:k-1)).ne.'')then
 charst(i)=charst(i)(1:ll-1)
 goto 111
@@ -270,7 +254,6 @@ ll=index(charst(i),';')
 do k=1,ll
 line=charst(i)(k:k)
 if(line.eq.'')then
-!print*,'charst(i)(1:k-1)',charst(i)(1:k-1)
 if(trim(charst(i)(1:k-1)).ne.'')then
 charst(i)=charst(i)(1:ll-1)
 goto 111
@@ -282,19 +265,11 @@ endif
 
 111 charst(i)=lowercase(charst(i))
 
-!ll=len(trim(charst(i)))
-!do k=1,ll+1
-!line5=charst(i)(k:k)
-!if(line5.eq.'')then
-!sttr=trim(charst(i)(1:k-1))
-!if(sttr.eq.'$ctrl'.or.sttr.eq.'$end'.or.sttr.eq.'$orb'.or.sttr.eq.'$frag'.or.sttr.eq.'$bfi'&
-!.or.sttr.eq.'$CTRL'.or.sttr.eq.'$END'.or.sttr.eq.'$ORB'.or.sttr.eq.'$FRAG'.or.sttr.eq.'$BFI') then
 if(index(charst(i),'$ctrl').ne.0.or.index(charst(i),'$end').ne.0&
 .or.index(charst(i),'$orb').ne.0.or.index(charst(i),'$frag').ne.0&
 .or.index(charst(i),'$bfi').ne.0) then
 l=l+1
 if(index(charst(i),'$end').ne.0)then
-!if(sttr.eq.'$end'.or.sttr.eq.'$END')then
 endflg(l)=1
 else
 endflg(l)=0
@@ -302,26 +277,16 @@ endif
 if(endflg(l).ne.endflg(l-1).or.l.eq.1)then
 l1=l1+1
 sl(l1)=i
-!if(sttr.eq.'$ctrl')sl1(l1)=1
 if(index(charst(i),'$ctrl').ne.0)sl1(l1)=1
-!if(sttr.eq.'$CTRL')sl1(l1)=1
-!if(sttr.eq.'$frag')sl1(l1)=2
 if(index(charst(i),'$frag').ne.0)sl1(l1)=2
-!if(sttr.eq.'$FRAG')sl1(l1)=2
-!if(sttr.eq.'$orb')sl1(l1)=3
 if(index(charst(i),'$orb').ne.0)sl1(l1)=3
-!if(sttr.eq.'$ORB')sl1(l1)=3
-!if(sttr.eq.'$bfi')sl1(l1)=4
 if(index(charst(i),'$bfi').ne.0)sl1(l1)=4
-!if(sttr.eq.'$BFI')sl1(l1)=4
 endif
 if(endflg(l).eq.0.and.endflg(l-1).eq.0)then
 print*,'You might forget to put $end somewhere in the .xmi file'
 stop
 endif
 endif
-!endif
-!enddo
 789 enddo
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -363,9 +328,6 @@ endif
 enddo
 endif
 
-!do i=1,l1
-!print*,'sl(i)',i,sl(i)
-!enddo
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 l=0
 l4=0
@@ -397,9 +359,7 @@ enddo
 
 keyn(l4)=l3
 do k=1,l3
-!if(trim(keywd(l4,k)(2:7)).eq.'frgtyp'.or.trim(keywd(l4,k)(2:7)).eq.'FRGTYP')key_frag=1
 if(trim(keywd(l4,k)(2:7)).eq.'frgtyp')key_frag=1
-!if(trim(keywd(l4,k)(2:4)).eq.'nae'.or.trim(keywd(l4,k)(2:4)).eq.'NAE')then
 if(trim(keywd(l4,k)(2:4)).eq.'nae')then
 ll=len(trim(keywd(l4,k)))
 do k1=1,ll+1
@@ -415,7 +375,6 @@ enddo
 
 
 do k=1,l3
-!if(trim(keywd(l4,k)(2:4)).eq.'nao'.or.trim(keywd(l4,k)(2:4)).eq.'NAO')then
 if(trim(keywd(l4,k)(2:4)).eq.'nao')then
 ll=len(trim(keywd(l4,k)))
 do k1=1,ll+1
@@ -430,7 +389,6 @@ enddo
 
 
 do k=1,l3
-!if(trim(keywd(l4,k)(2:5)).eq.'nmul'.or.trim(keywd(l4,k)(2:5)).eq.'NMUL')then
 if(trim(keywd(l4,k)(2:5)).eq.'nmul')then
 ll=len(trim(keywd(l4,k)))
 do k1=1,ll+1
@@ -444,7 +402,6 @@ endif
 enddo
 
 do k=1,l3
-!if(trim(keywd(l4,k)(2:7)).eq.'chinst'.or.trim(keywd(l4,k)(2:7)).eq.'CHINST')then
 if(trim(keywd(l4,k)(2:7)).eq.'chinst')then
 ll=len(trim(keywd(l4,k)))
 do k1=1,ll+1
@@ -467,18 +424,14 @@ enddo
 
 
 do k=1,l3
-!if(trim(keywd(l4,k)(2:4)).eq.'str'.or.trim(keywd(l4,k)(2:4)).eq.'STR')then
 if(trim(keywd(l4,k)(2:4)).eq.'str')then
 ll=len(trim(keywd(l4,k)))
 do k1=1,ll+1
 line5=keywd(l4,k)(k1:k1)
 if(line5.eq.'=')then
 line3=keywd(l4,k)(k1+1:ll)
-!if(trim(line3).eq.'full'.or.trim(line3).eq.'FULL')flgst=1
 if(trim(line3).eq.'full')flgst=1
-!if(trim(line3).eq.'cov'.or.trim(line3).eq.'COV')flgst=2
 if(trim(line3).eq.'cov')flgst=2
-!if(trim(line3).eq.'ion'.or.trim(line3).eq.'ION')flgst=3
 if(trim(line3).eq.'ion')flgst=3
 
 endif
@@ -492,7 +445,6 @@ if(sl1(i).eq.iorb)then
 !!!!! reading of orbital section !!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-!print*,'orbital section start'
 
 ll=0
 l=0
@@ -593,18 +545,8 @@ niao=l-1-nao
 endif
 
 do l=1,orbsl
-!print*,'orbitals',orbsl,niao,(orbs(l,k),k=1,orbn(l))
 print*,'orbitals',orbsl,niao,orbn(l),(orbs(l,k),k=1,4)
 enddo
-
-
-
-
-!do l=1,nfrag
-!print*,'fragments',nfrag,(frag_at(l,k),k=1,frag_atn(l))
-!enddo
-
-
 
 if(sl1(i).eq.4)then
 
@@ -614,7 +556,6 @@ do j=sl(i)+1,sl(i+1)-1
 l3=l3+1
 gap1(1)=0
 ll=len(trim(charst(j)))
-!print*,'trim(charst(j))',trim(charst(j))
 l=1
 l1=0
 do k=1,ll+1
@@ -626,13 +567,10 @@ if(line3.eq.'-')dash(l)=l
 endif
 enddo
 do k=2,l
-!print*,'trim(charst(j)(gap1(k-1):gap1(k)))',gap1(k)-gap1(k-1),trim(charst(j)(gap1(k-1)+1:gap1(k)-1))
 if(gap1(k)-gap1(k-1).gt.1)then
 l1=l1+1
 line3=trim(charst(j)(gap1(k-1)+1:gap1(k)-1))
-!print*,'l3,l1',l3,l1
 read(line3,'(I3)')bfimat(l3,l1)
-!print*,'bfimat',bfimat(l3,l1)
 if(dash(k).eq.k)then
 l1=l1+1
 bfimat(l3,l1)=0
@@ -641,30 +579,22 @@ endif
 enddo
 bfiln(l3)=l1
 enddo
-!do k=1,l3
-!print*,'bfimat(k,l2)',l1,(bfimat(k,k1),k1=1,bfiln(k))
-!enddo
 lastlbfi=l3
 l2=0
 j=lastlbfi
-!print*,'l1l1l1',l1,j,bfiln(j)
 do k=1,bfiln(j)-1
-!print*,'kkkkkk',k,bfimat(j,k)
 if(k.eq.1.and.bfimat(j,k).gt.1)then
 do k1=1,bfimat(j,k)-1
 l2=l2+1
 freezorb(l2)=k1
-!print*,'freezorb(l2)**',l2,freezorb(l2)
 enddo
 endif
 if(bfimat(j,k+1).ne.0.or.k.ne.1)then
 if(abs(bfimat(j,k+1)-bfimat(j,k)).ne.1)then
 if(abs(bfimat(j,k+1)-bfimat(j,k)).ne.bfimat(j,k+1))then
-!print*,'bfimat(j,k)+1,bfimat(j,k+1)',bfimat(j,k),bfimat(j,k+1),abs(bfimat(j,k+1)-bfimat(j,k))
 do k1=bfimat(j,k)+1,bfimat(j,k+1)-1
 l2=l2+1
 freezorb(l2)=k1
-!print*,'freezorb(l2)**',l2,freezorb(l2)
 enddo
 endif
 endif
@@ -673,16 +603,11 @@ enddo
 
 frzn=l2
 
-!do k1=1,frzn
-!print*,'freezorb(l2)',frzn,freezorb(k1)
-!enddo
-
 endif
 if(sl1(i).eq.ifrag)then
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!! reading of fragment section !!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!print*,'fragment section start'
 k6=0
 k7=0
 k8=0
@@ -692,7 +617,6 @@ gap1(j)=0
 enddo
 ll=0
 l=0
-!print*,'sl',sl(i),sl(i+1)-1
 do j=sl(i)+1,sl(i+1)-1
 ll=len(trim(charst(j)))
 line3=trim(charst(j)(1:1))
@@ -718,14 +642,11 @@ do k=2,k2
 if(abs(gap2(k)-gap2(k-1)).ne.1)then
 line3=trim(charst(j)(gap2(k-1)+1:gap2(k)-1))
 
-!print*,'line3:xmi',line3
-
 do l1=orbsl-nao+1,orbsl
 if(orbs(l1,1).eq.l-1)then
 ll=len(trim(line3))
 do k3=1,ll
 line2=trim(line3(k3:k3))
-!if(line2.eq.'S'.or.line2.eq.'s')then
 if(line2.eq.'s')then
 k6=k6+1
 orbsym(4,k6)=l1-1
@@ -734,7 +655,6 @@ endif
 enddo
 do k3=1,ll
 line2=trim(line3(k3:k3+1))
-!if(line2.eq.'PX'.or.line2.eq.'Px'.or.line2.eq.'px')then
 if(line2.eq.'px')then
 k7=k7+1
 orbsym(1,k7)=l1-1
@@ -743,7 +663,6 @@ endif
 enddo
 do k3=1,ll
 line2=trim(line3(k3:k3+1))
-!if(line2.eq.'PY'.or.line2.eq.'Py'.or.line2.eq.'py')then
 if(line2.eq.'py')then
 k8=k8+1
 orbsym(2,k8)=l1-1
@@ -752,7 +671,6 @@ endif
 enddo
 do k3=1,ll
 line2=trim(line3(k3:k3+1))
-!if(line2.eq.'PZ'.or.line2.eq.'Pz'.or.line2.eq.'pz')then
 if(line2.eq.'pz')then
 k9=k9+1
 orbsym(3,k9)=l1-1
@@ -767,47 +685,33 @@ l3=0
 ll=len(trim(line3))
 do k3=1,ll
 line2=trim(line3(k3:k3))
-!if(line2.eq.'S'.or.line2.eq.'s')then
 if(line2.eq.'s')then
 l3=l3+1
 norbsym1(l1-1,l3)='S'
-!print*,'norbsym1(l1-1,l3)S',l1-1,norbsym1(l1-1,l3)
-!print*,'k6k6',k6,orbsym(4,k6)
 goto 218
 endif
 enddo
 218 do k3=1,ll
 line2=trim(line3(k3:k3+1))
-!print*,'line2**',line2
-!if(line2.eq.'PX'.or.line2.eq.'Px'.or.line2.eq.'px')then
 if(line2.eq.'px')then
 l3=l3+1
 norbsym1(l1-1,l3)='X'
-!print*,'norbsym1(l1-1,l3)X',l1-1,norbsym1(l1-1,l3)
-!print*,'k7k7',k7
 goto 219
 endif
 enddo
 219 do k3=1,ll
 line2=trim(line3(k3:k3+1))
-!if(line2.eq.'PY'.or.line2.eq.'Py'.or.line2.eq.'py')then
 if(line2.eq.'py')then
 l3=l3+1
 norbsym1(l1-1,l3)='Y'
-!print*,'norbsym1(l1-1,l3)Y',l1-1,norbsym1(l1-1,l3)
-!print*,'k8k8',k8
 goto 220
 endif
 enddo
 220 do k3=1,ll
 line2=trim(line3(k3:k3+1))
-!if(line2.eq.'PZ'.or.line2.eq.'Pz'.or.line2.eq.'pz')then
 if(line2.eq.'pz')then
-!print*,'line2inside',line2
 l3=l3+1
 norbsym1(l1-1,l3)='Z'
-!print*,'norbsym1(l1-1,l3)Z',l1-1,norbsym1(l1-1,l3)
-!print*,'k9k9',k9,orbsym(3,k9)
 goto 221
 endif
 enddo
@@ -834,73 +738,56 @@ read(line6,'(I10)')orbn2
 do k4=orbn1,orbn2
 k5=k5+1
 frag_at(l,k5)=k4
-!print*,'frag_at',k5,frag_at(l,k5)
 enddo
 goto 454
 endif
 enddo
-!print*,'k55555',k5
 k5=k5+1
 read(line3,'(I10)')frag_at(l,k5)
 endif
 454 enddo
-!print*,'k5555',k5
 frag_atn(l)=k5
-!print*,'sourav_frag_atn',frag_atn(l)
 endif
 if(gap2(1).ne.1)then
 if(key_frag.eq.1)then
 line3=trim(charst(j)(1:gap2(1)-1))
-!print*,'line3:xmi',line3
 
 do l1=orbsl-nao+1,orbsl
 if(orbs(l1,1).eq.l-1)then
 ll=len(trim(line3))
 do k3=1,ll
 line2=trim(line3(k3:k3))
-!print*,'line2**',line2,line3
-!if(line2.eq.'S'.or.line2.eq.'s')then
 if(line2.eq.'s')then
 k6=k6+1
 orbsym(4,k6)=l1-1
-!print*,'k6k6',k6,orbsym(4,k6)
 goto 209
 endif
 enddo
 do k3=1,ll
 line2=trim(line3(k3:k3+1))
-!print*,'line2**',line2
-!if(line2.eq.'PX'.or.line2.eq.'Px'.or.line2.eq.'px')then
 if(line2.eq.'px')then
 k7=k7+1
 orbsym(1,k7)=l1-1
-!print*,'k7k7',k7
 goto 209
 endif
 enddo
 do k3=1,ll
 line2=trim(line3(k3:k3+1))
-!if(line2.eq.'PY'.or.line2.eq.'Py'.or.line2.eq.'py')then
 if(line2.eq.'py')then
 k8=k8+1
 orbsym(2,k8)=l1-1
-!print*,'k8k8',k8
 goto 209
 endif
 enddo
 do k3=1,ll
 line2=trim(line3(k3:k3+1))
-!if(line2.eq.'PZ'.or.line2.eq.'Pz'.or.line2.eq.'pz')then
 if(line2.eq.'pz')then
-!print*,'line2inside',line2
 k9=k9+1
 orbsym(3,k9)=l1-1
-!print*,'k9k9',k9,orbsym(3,k9)
 goto 209
 endif
 enddo
 endif
-!enddo
 209 enddo
 do l1=orbsl-nao+1,orbsl
 if(orbs(l1,1).eq.l-1)then
@@ -908,48 +795,34 @@ l3=0
 ll=len(trim(line3))
 do k3=1,ll
 line2=trim(line3(k3:k3))
-!print*,'line2**',line2
-!if(line2.eq.'S'.or.line2.eq.'s')then
 if(line2.eq.'s')then
 l3=l3+1
 norbsym1(l1-1,l3)='S'
-!print*,'norbsym1(l1-1,l3)S',l1-1,norbsym1(l1-1,l3)
-!print*,'k6k6',k6,orbsym(4,k6)
 goto 318
 endif
 enddo
 318 do k3=1,ll
 line2=trim(line3(k3:k3+1))
-!print*,'line2**',line2
-!if(line2.eq.'PX'.or.line2.eq.'Px'.or.line2.eq.'px')then
 if(line2.eq.'px')then
 l3=l3+1
 norbsym1(l1-1,l3)='X'
 print*,'norbsym1(l1-1,l3)X',l1-1,norbsym1(l1-1,l3)
-!print*,'k7k7',k7
 goto 319
 endif
 enddo
 319 do k3=1,ll
 line2=trim(line3(k3:k3+1))
-!if(line2.eq.'PY'.or.line2.eq.'Py'.or.line2.eq.'py')then
 if(line2.eq.'py')then
 l3=l3+1
 norbsym1(l1-1,l3)='Y'
-!print*,'norbsym1(l1-1,l3)Y',l1-1,norbsym1(l1-1,l3)
-!print*,'k8k8',k8
 goto 320
 endif
 enddo
 320 do k3=1,ll
 line2=trim(line3(k3:k3+1))
-!if(line2.eq.'PZ'.or.line2.eq.'Pz'.or.line2.eq.'pz')then
 if(line2.eq.'pz')then
-!print*,'line2inside',line2
 l3=l3+1
 norbsym1(l1-1,l3)='Z'
-!print*,'norbsym1(l1-1,l3)Z',l1-1,norbsym1(l1-1,l3)
-!print*,'k9k9',k9,orbsym(3,k9)
 goto 321
 endif
 enddo
@@ -960,10 +833,8 @@ endif
 
 k5=0
 do k=2,k2
-!print*,'k2222',k,k2,charst(j)
 line3=trim(charst(j)(gap2(k-1)+1:gap2(k)-1))
 if(trim(line3).eq.'') goto 404
-!print*,'fragk=2',line3
 ll=len(trim(line3))
 do k3=1,ll
 line2=trim(line3(k3:k3))
@@ -983,15 +854,11 @@ k5=k5+1
 404 read(line3,'(I10)')frag_at(l,k5)
 455 enddo
 frag_atn(l)=k5
-!print*,'sourav_frag_atnnnn',frag_atn(l)
 endif
 310 enddo
 rewind(21)
 nfrag=l
 
-!do i1=1,nfrag
-!print*,'frag_atoms',nfrag,(frag_at(i1,j),j=1,frag_atn(i1))
-!enddo
 norbsym(4)=k6
 norbsym(1)=k7
 norbsym(2)=k8
@@ -1008,10 +875,8 @@ nlp=nae-nao
 if(vacorb.gt.1)nlp=0
 nlast=(mult-1)
 
-if(chinst.eq.1)call input
 call read_info
 
-!print*,'exit read_xmi'
 500 return
 end subroutine read_xmi
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1044,9 +909,6 @@ IF (fileexists) THEN
 open (unit=29,file='x1e.int',status='old')
 read(29,*)ufrzorbn
 ovlp_int=0
-!close(29)
-
-!open (unit=29,file='x1e.int',status='old')
 MNP=0
 do
 read(29,'(a)',iostat=io)
@@ -1062,13 +924,11 @@ read(29,*),line
 if(trim(line(1:5)).eq.'SSF0')lnum=i
 enddo
 
-!close(29)
 ELSE
 PRINT*,' x1e.int file does not exist as a result I could not able &
 to check if your system has frozen orbitals or not hope you have previded &
 correct information otherwise result will be wrong'
 ufrzorbn=0
-!stop
 ENDIF
 
 
@@ -1085,7 +945,6 @@ do i=1,tot_atom
 read(39,*),nbasatom(i)
 k=k+nbasatom(i)
 nbas_slab(i)=k
-!print*,'nbasatom',nbasatom(i),nbas_slab(i)
 enddo
 
 
@@ -1127,47 +986,6 @@ atoset(i,j)=0
 enddo
 enddo
 
-!do i=1,orbsl
-!print*,'orbn**********',tot_atom,orbn(i),(orbs(i,j),j=1,orbn(i))
-!enddo
-
-!do i=2,niao+1
-!j=0
-!k=0
-!!print*,'iiiiii',i,(orbs(i,l),l=1,orbn(i))
-!do i1=1,tot_atom
-!!print*,'nbas',nbasatom(i1)
-!j=j+nbasatom(i1)
-!do l=1,orbn(i)
-!if(orbs(i,l).gt.j.or.orbs(i,l).le.j-nbasatom(i1))goto 310
-!k=k+1
-!atst_inact(i-1,k)=i1
-!goto 311
-!310 enddo
-!311 enddo
-!atst_inact_nm(i-1)=k
-!atst_inact_val(i-1)=2/k
-!enddo
-!!k=0
-!!do i=1,niao
-!!print*,(atst_inact(i,k),k=1,atst_inact_nm(i))
-!!enddo
-!do i1=1,tot_atom
-!inact_elecs(i1)=0
-!enddo
-!do i1=1,tot_atom
-!do i=1,niao
-!do i2=1,atst_inact_nm(i)
-!if(i1.eq.atst_inact(i,i2))then
-!inact_elecs(i1)=inact_elecs(i1)+atst_inact_val(i)
-!endif
-!enddo
-!enddo
-!enddo
-
-!print*,(inact_elecs(i),i=1,tot_atom)
-!stop
-
 k5=0
 j=0
 k1=0
@@ -1177,7 +995,6 @@ do i1=1,tot_atom
 k=0
 j=j+nbasatom(i1)
 do i=orbsl-nao+1,orbsl
-!print*,'active_orbs',i,orbn(i),orbsl,nao,mult
 k2=0
 do l=1,orbn(i)
 if(orbs(i,l).gt.j.or.orbs(i,l).le.j-nbasatom(i1))goto 200
@@ -1191,13 +1008,11 @@ if(i1.eq.active_atoms(i4))goto 207
 enddo
 k3=k3+1
 active_atoms(k3)=i1
-print*,'active_atoms_1',active_atoms(k3)
 
 207 atoset(i1,k)=i-1
 atn(i1)=k 
 active_orbs(k5)=i-1
 atm_nb_orbs(k5)=i1
-!print*,'orbs(i),j**',orbs(i,l),j,i,i1,k
 goto 201
 200 if(k2.ne.0.and.num_frag_cntr.eq.0)then
 k1=k1+1
@@ -1207,15 +1022,11 @@ k5=k5+1
 k=k+1
 k4=k4+1
 
-!print*,'k3k3k3**',k3
 do i4=1,k3
 if(i1.eq.active_atoms(i4))goto 206
-!print*,'i4i4i4',i4
 enddo
 k3=k3+1
-!print*,'k3k3**',k3
 active_atoms(k3)=i1
-print*,'active_atoms_2',active_atoms(k3)
 
 206 frag_cent(k4)=i1
 atoset(i1,k)=i-1
@@ -1230,46 +1041,28 @@ j1=0
 do i2=1,frag_cntr(i3)
 j1=j1+nbasatom(i2)
 enddo
-!print*,'j1',j1,frag_cntr(i3)
-!if(orbs(i,1).le.j1.and.orbs(i,1).gt.j1-nbasatom(i2))then
 k5=k5+1
 k=k+1
 k4=k4+1
-!print*,'k3k3k3:frag_cntr',k3
 do i4=1,k3
-print*,'i3i3i3',i3,active_atoms(i4)
 if(frag_cntr(i3).eq.active_atoms(i4))goto 205
-!print*,'i4i4i4',i4
 enddo
 k3=k3+1
-!print*,'k3k3sourav',k3
 active_atoms(k3)=frag_cntr(i3)
-print*,'active_atoms_3',active_atoms(k3)
 
 205 frag_cent(k4)=frag_cntr(i3)
 atoset(frag_cntr(i3),k)=i-1
 active_orbs(k5)=i-1
 atm_nb_orbs(k5)=frag_cntr(i3)
 atn(frag_cntr(i3))=k
-!print*,'kkkatn',k
-!endif
 
 enddo
 endif
 201 enddo
-!print*,'k33333',k3,i1
 enddo
 
 atom=k3
 nactorb=k5
-!print*,'active_orbs',nactorb,(active_orbs(i),i=1,nactorb)
-!print*,'atn',atom,(atn(active_atoms(i)),i=1,atom)
-print*,'active_atom',atom,(active_atoms(i),i=1,atom)
-!print*,'atm_nb_orbs(k5)',(atm_nb_orbs(i),i=1,nactorb)
-do i=1,tot_atom
-print*,'atoset:info',(atoset(i,j),j=1,atn(i))
-!
-enddo
 
 k5=1
 frag_cent1(k5)=frag_cent(1)
@@ -1281,8 +1074,6 @@ k5=k5+1
 frag_cent1(k5)=frag_cent(i-1)
 320 enddo
 nfragcent=k5
-!print*,'num of fragorbs',(fragorb(k),k=1,k1)
-!print*,'frag_cent1',(frag_cent1(i),i=1,k5)
 
 if(k1.ne.0.and.num_frag_cntr.eq.0)then
 if(k1.eq.1)print*,'You have fragment orbital ',fragorb(1),' . Please mention the &  
@@ -1299,22 +1090,11 @@ l2=l2+1
 do k2=1,20
 if(atoset(k1,k2).ne.0)then
 l1=l1+1
-!atoset(l2,l1)=atommat(k1,k2)
-!print*,'atoset',(atoset(k1,k2),k2=1,5)
 endif
 enddo
 atn(k1)=l1
 321 enddo
 atom=l2
-
-!do i=1,tot_atom
-!!print*,'iii',i
-!print*,'atoset_info_2',(atoset(i,j),j=1,5)
-!enddo
-do i=1,tot_atom
-!!print*,'iii**',i
-print*,'atoset_info_2',(atoset(i,j),j=1,atn(i))
-enddo
 
 endif
 
@@ -1323,67 +1103,20 @@ read(39,*),symat(i),symatno(i),coordx(i),coordy(i),coordz(i)
 coordx(i)=coordx(i)*0.529177
 coordy(i)=coordy(i)*0.529177
 coordz(i)=coordz(i)*0.529177
-!print*,'coord**',symat(i),symatno(i),coordx(i),coordy(i),coordz(i)
 all_at_num(i)=int(symatno(i))
-!print*,'all_at_num',all_at_num(i)
 enddo
 if(key_frag.eq.0)then
 do i=1,atom
 act_at_num(i)=symatno(active_atoms(i))
 val_state_num(i)=valence_state(act_at_num(i))
 enddo
-
-!print*,'act_at_num',(act_at_num(i),i=1,atom)
-!print*,'val_state_num',(val_state_num(i),i=1,atom)
 endif
 
-
-!if(k1.ne.0)then
-!write(*,*)'as you did not put the central atom of the fragments we took the atom number ='&
-!,(frag_cent1(i),i=1,k5),'(',(symat(frag_cent1(i)),i=1,nfragcent),')','as fragment center'
-!endif
-!990 format(a,1x,I2,1x,a,a,a,a)
-!print*,'tot_atom:info',tot_atom
-!n=0
-!n1=0
-!do i=1,tot_atom
-!if(atoset(i,1).eq.0)goto 189
-!print*,'**********',atoset(i,1),i,symat(i)
-!n1=n1+1
-!do i3=1,88
-!if(symat(i).eq.at_list(i3))then
-!print*,'symat(i).eq.at_list(i3)',symat(i),at_list(i3)
-!n=n+1
-!actv_atom(n)=i
-!at_num(n)=i3
-!endif
-!enddo
-!189 enddo
-!if(n1.ne.n)then
-!n=0
-!do i=1,tot_atom
-!if(atoset(i,1).eq.0)goto 190
-!print*,'**********',atoset(i,1),i,symat(i)
-!do i3=1,88
-!if(symat(i).eq.at_list_bold(i3))then
-!print*,'symat(i).eq.at_list(i3)',symat(i),at_list_bold(i3)
-!n=n+1
-!actv_atom(n)=i
-!at_num(n)=i3
-!endif
-!enddo
-!190 enddo
-!
-!endif
-!do i=1,n
-!print*,'at_num',symat(i),at_num(i),actv_atom(i)
-!enddo
 
 n=0
 do i=1,nbasis
 if(frzn.ne.0)then
 do j=1,frzn
-!print*,'frzn',frzn,freezorb(j)
 if(freezorb(j).eq.i)then
 read(39,*)atbas_frz(i)
 all_atbas(i)=atbas_frz(i)
@@ -1394,15 +1127,7 @@ endif
 n=n+1
 read(39,*),atbas(n)
 all_atbas(i)=atbas(n)
-!print*,'atbas:sourav',i,n,atbas(n)
 197 enddo
-
-!do i=1,nbasis
-!print*,'all_atbas(i)',i,all_atbas(i)
-!enddo
-
-!enddo
-
 
 if(key_frag.eq.0)then
 
@@ -1424,7 +1149,6 @@ k3=0
 do i=orbsl-nao+1,orbsl
 k7=0
 n=0
-!print*,'atom',atom
 do i2=1,atom
 do i3=1,atn(active_atoms(i2))
 print*,'ovlp_act_atm,atoset',active_atoms(i2),atoset(active_atoms(i2),i3)
@@ -1437,34 +1161,12 @@ enddo
 endif
 enddo
 enddo
-!print*,'n,nbasatom(k7)',k7,n,nbasatom(k7),n-nbasatom(k7),i-1,orbn(i)
-!do i2=1,orbn(i)
-!print*,'test_ovlp_atbas(orbs(i,i2)',i,orbs(i,i2),atbas(orbs(i,i2))
-!enddo
-
-
-
-
-!do k10=1,num_act_orb_typ(i)
-!l4=0
-!do k9=1,nbasis
-!if(all_atbas(k9).eq.act_orb_typ(i,k10))then
-!l4=l4+1
-!if(l4.eq.valence_state((i)))then
-!ovlp_basis_num(i,k10)=k9
-!endif
-!endif
-!enddo
-!enddo
-
-
 
 do i2=1,orbn(i)
 if(orbs(i,i2).le.n.and.orbs(i,i2).gt.n-nbasatom(k7))then
 if(atbas(orbs(i,i2)).eq.'S')then
 k=k+1
 orbsym(4,k)=i-1
-!print*,'orbsym(4,k)',orbsym(4,k)
 goto 208
 endif
 endif
@@ -1474,7 +1176,6 @@ if(orbs(i,i2).le.n.and.orbs(i,i2).gt.n-nbasatom(k7))then
 if(atbas(orbs(i,i2)).eq.'X')then
 k3=k3+1
 orbsym(1,k3)=i-1
-!print*,'orbsym(1,k)',orbsym(1,k3)
 goto 208
 endif
 endif
@@ -1484,18 +1185,15 @@ if(orbs(i,i2).le.n.and.orbs(i,i2).gt.n-nbasatom(k7))then
 if(atbas(orbs(i,i2)).eq.'Y')then
 k4=k4+1
 orbsym(2,k4)=i-1
-!print*,'orbsym(2,k)',orbsym(2,k4)
 goto 208
 endif
 endif
 enddo
 do i2=1,orbn(i)
 if(orbs(i,i2).le.n.and.orbs(i,i2).gt.n-nbasatom(k7))then
-!print*,'atbas(orbs(i,i2))',atbas(orbs(i,i2))
 if(atbas(orbs(i,i2)).eq.'Z')then
 k8=k8+1
 orbsym(3,k8)=i-1
-!print*,'orbsym(3,k)',orbsym(3,k8)
 goto 208
 endif
 endif
@@ -1561,9 +1259,7 @@ ovlp_bas_num(atoset(active_atoms(i),i3),k9)=n3
 endif
 if(n4.ne.0)then
 do i2=1,orbn(atoset(active_atoms(i),i3)+1)
-!print*,'orbn(i)',i2,orbn(atoset(active_atoms(i),i3)+1),orbs(atoset(active_atoms(i),i3)+1,i2)+n2
 n3=orbs(atoset(active_atoms(i),i3)+1,i2)+n2
-!print*,'all_atbas(n3)',n3,all_atbas(n3)
 if(n3.lt.n.or.n3.gt.n1)goto 631
 if(all_atbas(n3).eq.'S'.and.l1.eq.0)then
 l1=1
@@ -1590,10 +1286,6 @@ endif
 num_act_orb_typ(atoset(active_atoms(i),i3))=k9
 
 enddo
-!do i3=1,atn(active_atoms(i))
-!print*,'act_orb_typ',atoset(active_atoms(i),i3),(act_orb_typ(atoset(active_atoms(i),i3),k10),k10=1,k9)&
-!,(ovlp_bas_num(atoset(active_atoms(i),i3),k10),k10=1,k9)
-!enddo
 
 enddo
 
@@ -1601,65 +1293,6 @@ endif
 
 endif
 
-print*,'norbsymmmmm',norbsym(1),norbsym(2),norbsym(3),norbsym(4),atom
-!if(ovlp_int.eq.1.and.ovopt.eq.1)then
-!do i1=1,nactorb-1
-!do j=i1+1,nactorb
-!!do i1=1,nactorb
-!!do j=1,nactorb
-!oval=0.0
-!do i2=1,num_act_orb_typ(active_orbs(i1))
-!do i3=1,num_act_orb_typ(active_orbs(j))
-!n1=ovlp_bas_num(active_orbs(i1),i2)
-!n2=ovlp_bas_num(active_orbs(j),i3)
-!print*,'n1,n2,nbasis',n1,n2,nbasis,i2,i3
-!linenumi=(nbasis*(n1-1)+n2)/4
-!linenumj=mod(nbasis*(n1-1)+n2,4)
-!n4=linenumj
-!if(linenumj.eq.0)then
-!linenumi=linenumi-1
-!n4=4
-!endif
-!print*,'lnum',lnum,linenumi,linenumj
-!rewind(29)
-!do i=1,lnum
-!read(29,*),line
-!!print*,'line1',i,line
-!enddo
-!!if(linenumi.eq.0)goto 534
-!do i=lnum+1,lnum+linenumi
-!read(29,*)line
-!!print*,'line2',i,line
-!enddo
-!534 read(29,*)(a(i),i=1,4)
-!print*,(a(i),i=1,4)
-!!read(29,*)line
-!!print*,line
-!n3=num_act_orb_typ(active_orbs(i1))*num_act_orb_typ(active_orbs(j))
-!oval=oval+a(n4)/n3
-!print*,'oval',oval,a(n4),n3,n4,a(n4)/n3
-!rewind(29)
-!enddo
-!enddo
-!orb_ovlp_mat1(i1,j)=oval
-!enddo
-!enddo
-!
-!do i1=1,nactorb
-!orb_ovlp_mat1(i1,i1)=1.0
-!enddo
-!
-!do i1=1,nactorb-1
-!do j=i1+1,nactorb
-!orb_ovlp_mat1(j,i1)=orb_ovlp_mat1(i1,j)
-!enddo
-!enddo
-!
-!do i1=1,nactorb
-!print*,'orb_ovlp_mat1(i1,j)',(orb_ovlp_mat1(i1,j),j=1,nactorb)
-!enddo
-!
-!endif
 
 k5=0
 k6=0
@@ -1679,19 +1312,6 @@ enddo
 endif
 enddo
 nsym=k5
-
-
-do i=1,nsym
-print*,'atsymset',nsym,at_sym(i),(atsymset(i,j),j=1,syn(i))
-enddo
-!print*,'sig',(sig(i),i=1,nsig)
-!print*,'pi1',(pi1(i),i=1,npi1)
-!print*,'pi2',(pi2(i),i=1,npi2)
-
-!do i=1,nsym
-!print*,'atsymset:info',at_sym(i),(atsymset(i,j),j=1,syn(i))
-!enddo
-
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -1746,8 +1366,6 @@ enddo
 endif
 
 atoset(frag_at(orbs(k,1)+1,1),ind(frag_at(orbs(k,1)+1,1)))=k-1
-!print*,'atoset22',frag_at(orbs(k,1)+1,1),atoset(frag_at(orbs(k,1)+1,1),ind(frag_at(orbs(k,1)+1,1)))
-!print*,'frag_at(orbs(k,1)+1,1)',frag_at(orbs(k,1)+1,1),k-1,k1,atoset(frag_at(orbs(k,1)+1,1),k1)
 do i=1,8
 print*,'atn:geo_1',atn(active_atoms(i)),active_atoms(i)
 enddo
@@ -1768,61 +1386,6 @@ do i=1,k3
 print*,'atn:geo',atn(active_atoms(i)),active_atoms(i)
 enddo
 atom=k3
-
-!if(ovlp_int.eq.1.and.ovopt.eq.1)then
-!n2=0
-!do i=1,atom
-!n=0
-!n1=0
-!n4=0
-!do i2=1,active_atoms(i)-1
-!n=n+nbasatom(i2)
-!enddo
-!do i2=1,active_atoms(i)
-!n1=n1+nbasatom(i2)
-!enddo
-!!print*,'frzn',frzn,freezorb(j)
-!do i3=1,atn(active_atoms(i))
-!l2=0
-!l3=0
-!l4=0
-!k9=0
-!!print*,'atn(active_atoms(i)):geo',i3,atn(active_atoms(i))
-!do i2=1,num_norbsym1(atoset(active_atoms(i),i3))
-!l1=0
-!!print*,'orbn(i):geo',i2,orbn(atoset(active_atoms(i),i3)+1),orbs(atoset(active_atoms(i),i3)+1,i2)+n2
-!do n3=1+n,n1
-!!print*,'all_atbas(n3):geo',n3,all_atbas(n3),norbsym1(atoset(active_atoms(i),i3),i2)
-!!if(n3.lt.n.or.n3.gt.n1)goto 531
-!val_state_num1(i)=val_state_num(i)
-!if(norbsym1(atoset(active_atoms(i),i3),i2).eq.'X')val_state_num1(i)=val_state_num1(i)-1
-!if(norbsym1(atoset(active_atoms(i),i3),i2).eq.'Y')val_state_num1(i)=val_state_num1(i)-1
-!if(norbsym1(atoset(active_atoms(i),i3),i2).eq.'Z')val_state_num1(i)=val_state_num1(i)-1
-!!print*,'val_state_num(i)',val_state_num1(i)
-!if(all_atbas(n3).eq.norbsym1(atoset(active_atoms(i),i3),i2))then
-!l1=l1+1
-!if(l1.eq.val_state_num1(i))goto 530
-!endif
-!enddo
-!goto 531
-!530 k9=k9+1
-!act_orb_typ(atoset(active_atoms(i),i3),k9)=all_atbas(n3)
-!ovlp_bas_num(atoset(active_atoms(i),i3),k9)=n3
-!!print*,'ovlp_bas_num(atoset(active_atoms(i),i3),k9)i:geo',ovlp_bas_num(atoset(active_atoms(i),i3),k9),&
-!!all_atbas(n3)
-!531 enddo
-!num_act_orb_typ(atoset(active_atoms(i),i3))=k9
-!
-!enddo
-!!do i3=1,atn(active_atoms(i))
-!!print*,'act_orb_typ:geo',atoset(active_atoms(i),i3),(act_orb_typ(atoset(active_atoms(i),i3),k10),k10=1,&
-!!num_act_orb_typ(atoset(active_atoms(i),i3)))&
-!!,(ovlp_bas_num(atoset(active_atoms(i),i3),k10),k10=1,k9)
-!!enddo
-!
-!enddo
-!
-!endif
 
 endif
 
@@ -1845,9 +1408,6 @@ atn(k1)=l1
 atom=l2
 nactorb=l3
 
-!print*,'nactorb',nactorb,tot_atom
-print*,'active_atom**',atom,(active_atoms(i),i=1,atom)
-!print*,'atn:atn:sourav',(atn(active_atoms(i)),i=1,atom)
 do i=1,nactorb
 active_orb2(i)=active_orbs(i)
 atm_nb_orbs1(i)=atm_nb_orbs(i)
@@ -1895,64 +1455,6 @@ endif
 enddo
 enddo
 enddo
-!open (unit=29,file='x1e.int',status='old')
-!if(ovlp_int.eq.1.and.ovopt.eq.1)then
-!print*,'i am here'
-!stop
-!do i1=1,nactorb-1
-!do j=i1+1,nactorb
-!oval=0.0
-!do i2=1,num_act_orb_typ(active_orbs(i1))
-!do i3=1,num_act_orb_typ(active_orbs(j))
-!n1=ovlp_bas_num(active_orbs(i1),i2)
-!n2=ovlp_bas_num(active_orbs(j),i3)
-!linenumi=(nbasis*(n1-1)+n2)/4
-!linenumj=mod(nbasis*(n1-1)+n2,4)
-!n4=linenumj
-!if(linenumj.eq.0)then
-!linenumi=linenumi-1
-!n4=4
-!endif
-!rewind(29)
-!do i=1,lnum
-!read(29,*),line
-!enddo
-!do i=lnum+1,lnum+linenumi
-!read(29,*)line
-!enddo
-!534 read(29,*)(a(i),i=1,4)
-!n3=num_act_orb_typ(active_orbs(i1))*num_act_orb_typ(active_orbs(j))
-!oval=oval+a(n4)/n3
-!rewind(29)
-!enddo
-!enddo
-!orb_ovlp_mat1(i1,j)=oval
-!enddo
-!enddo
-!
-!print*,'sourav5'
-!do i1=1,nactorb
-!orb_ovlp_mat1(i1,i1)=1.0
-!enddo
-!
-!do i1=1,nactorb-1
-!do j=i1+1,nactorb
-!orb_ovlp_mat1(j,i1)=orb_ovlp_mat1(i1,j)
-!enddo
-!enddo
-!
-!!do i1=1,nactorb
-!!print*,'orb_ovlp_mat1(i1,j)',(orb_ovlp_mat1(i1,j),j=1,nactorb)
-!!enddo
-!endif
-!close(29)
-
-!do i=1,nactorb
-!print*,'norbsym1(active_atom(i))',active_orbs(i),(norbsym1(active_orbs(i),i1),i1=1,&
-!num_norbsym1(active_orbs(i)))
-!enddo
-!print*,'atm_nb_sym',(atm_nb_sym(i),i=1,nactorb)
-!print*,'active_orb',(active_orbs(i),i=1,nactorb)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!! if we take all 'pi' orbitals have non-zero overlapping!!!!
 
@@ -1963,24 +1465,17 @@ enddo
 do i=1,atom
 print*,'atoset_geo',(atoset(i,j),j=1,atn(i))
 enddo
-!endif
-!print*,'active_orbs',nactorb,(active_orbs(i),i=1,nactorb)
-!print*,'atn',atom,(atn(i),i=1,atom)
 print*,'active_atom',atom,(active_atoms(i),i=1,atom)
-!print*,'atm_nb_orbs**',(atm_nb_orbs(i),i=1,nactorb)
 990 format(a,x,I2,x,a,x,I2,x,a)
 
 print*,'tot_atom',tot_atom,atom
 j=0
 do ij=1,tot_atom-1
-!print*,'i',ij
 do ii1=ij+1,tot_atom
-!print*,'i1',ii1
 ddist=sqrt((coordx(ij)-coordx(ii1))**2.0+(coordy(ij)-coordy(ii1))**2.0+&
 (coordz(ij)-coordz(ii1))**2.0)
 dist_mat(ij,ii1)=ddist
 bond_dist=(at_covrad(all_at_num(ij))+at_covrad(all_at_num(ii1)))/100.0
-!print*,'ddist,bond_dist',ddist,bond_dist
 if(ddist.le.bond_dist)then
 k1=0
 do i2=1,atom
@@ -2023,24 +1518,6 @@ dist_rel_mat(i1,i)=dist_rel_mat(i,i1)
 dist_mat(i1,i)=dist_mat(i,i1)
 enddo
 enddo
-
-!do i=1,tot_atom
-!print*,'dist_mat',(dist_mat(i,i1),i1=1,tot_atom)
-!enddo
-!
-!do i=1,tot_atom
-!print*,'dist_rel_mat',(dist_rel_mat(i,i1),i1=1,tot_atom)
-!enddo
-!
-!do i=1,tot_atom
-!print*,'dist_act_rel_mat',(dist_act_rel_mat(i,i1),i1=1,tot_atom)
-!enddo
-!do i=1,k
-!print*,'read_info:nnmat_act',(nnmat_act(i,i1),i1=1,2)
-!enddo
-!do i=1,k2
-!print*,'read_info:nnmat_inact',(nnmat_inact(i,i1),i1=1,2)
-!enddo
 
 !!!!!!!!!!!! below active_atoms() moved to the regular order as
 !given in INFO ... for dist matrix formation it was (may be) necessary
@@ -2108,7 +1585,6 @@ nnnatom=j1
 do i=1,nnnatom
 do j=1,2
 nnat_bond(i,j)=nnmat_act(nnact_1(i),j)
-!print*,'nnat_bond',nnat_bond(i,j)
 enddo
 enddo
 
@@ -2157,25 +1633,6 @@ nnat_bond_inact(i,j)=nnmat_inact(nnact_1(i),j)
 enddo
 enddo
 
-!!do i=1,tot_atom
-!!print*,'dist_mat',(dist_mat(i,i1),i1=1,tot_atom)
-!!enddo
-!!
-!!do i=1,tot_atom
-!!print*,'dist_rel_mat',(dist_rel_mat(i,i1),i1=1,tot_atom)
-!!enddo
-!!
-!!do i=1,tot_atom
-!!print*,'dist_act_rel_mat',(dist_act_rel_mat(i,i1),i1=1,tot_atom)
-!!enddo
-!!do i=1,k
-!!print*,'read_info:nnmat_act',(nnmat_act(i,i1),i1=1,2)
-!!enddo
-!!do i=1,k2
-!!print*,'read_info:nnmat_inact',(nnmat_inact(i,i1),i1=1,2)
-!!enddo
-
-
 do i=1,nnnatom
 print*,'read_info:nnat_bond',nnnatom,(nnat_bond(i,i1),i1=1,2)
 enddo
@@ -2185,16 +1642,13 @@ print*,'read_info:nnat_bond_inact',nnatominact,(nnat_bond_inact(i,i1),i1=1,2)
 enddo
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!print*,'tot_atom:geo',tot_atom
 n=0
 n1=0
 do i=1,tot_atom
 if(atoset(i,1).eq.0)goto 189
-!print*,'**********',atoset(i,1),i,symat(i)
 n1=n1+1
 do i3=1,88
 if(symat(i).eq.at_list(i3))then
-!print*,'symat(i).eq.at_list(i3)',symat(i),at_list(i3)
 n=n+1
 actv_atom(n)=i
 at_num(n)=i3
@@ -2206,10 +1660,8 @@ if(n1.ne.n)then
 n=0
 do i=1,tot_atom
 if(atoset(i,1).eq.0)goto 190
-!print*,'**********',atoset(i,1),i,symat(i)
 do i3=1,88
 if(symat(i).eq.at_list_bold(i3))then
-!print*,'symat(i).eq.at_list(i3)',symat(i),at_list_bold(i3)
 n=n+1
 actv_atom(n)=i
 at_num(n)=i3
@@ -2352,19 +1804,10 @@ endif
 enddo
 nncatm=ncatm
 ncatm=k
-!print*,'ncatm,nncatm',ncatm,nncatm
 if(nncatm.ne.ncatm)goto 242
 nisland(i4)=k
-!print*,'nisland(i4)',nisland(i4)
 245 enddo
 nland=i4
-!print*,'nland',nland
-!do i=1,nland
-!print*,'islands',(islands(i,i1),i1=1,nisland(i))
-!enddo
-
-
-
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!lowest distance between two islands
@@ -2384,7 +1827,6 @@ if(dist_act_rel_mat(islands(i,i1),islands(j,i2)).lt.least.and.dist_act_rel_mat&
 (islands(i,i1),islands(j,i2)).ne.0.0)least=dist_act_rel_mat(islands(i,i1),islands(j,i2))
 enddo
 enddo
-!print*,'island:least',least
 island_mat(i,j)=least
 island_mat(j,i)=least
 enddo
@@ -2471,16 +1913,13 @@ nkey=20
 l=len(trim(line))
 k=0
 do j=1,l+1
-!print*,'line(j:j)',j,'>',line(j:j)
 do i=1,26
 if(line(j:j).eq.lower(i))then
 k=k+1
 line1(k:k)=lower(i)
-!print*,'line1',k,line1(k:k)
 goto 100
 endif
 enddo
-!print*,'line1',line1,line,len(trim(line1))
 if(len(trim(line1)).gt.0)then
 do i=1,nkey
 if(trim(line1).eq.Keywd(i))then
@@ -2516,7 +1955,6 @@ data upper/'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q'&
 data lower/'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q',&
 'r','s','t','u','v','w','x','y','z'/
 
-!print*,'line1',line
 l=len(line)
 
 do j=1,l
@@ -2529,1932 +1967,10 @@ endif
 enddo
 100 enddo
 
-!print*,'line2',line
 lowercase=line
 return
 end function lowercase
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine input
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-use commondat
-use commondat1
-implicit none
-
-integer::i,MDP,io,a,b,i1,j,j1,i2,i3,d,i5,i6,i4,i7,st_num1(100),st_num2(100),num(500),m5,m6,k,kk,p,q,&
-l,ll,stn,k1,k2,k3,k4,qult1(100),nbond,nel,n,nset(10),pent_set(5),info_val(4),argnum,num_2,ovlp,runn
-character(len=4)::abc,at_orb(100),im_bnd(100),ato,str,at_bas_sym(100),strc,rumr,info_set(4)
-character(len=200)::charst(1000)
-character(len=2)::prio
-character(len=200)::line34,line35,line5,lowercase
-character(len=5)::pent,stn1,stn2,stn3
-!character(len=15)::sttr,charst(100)
-character(len=200)::sttr,Seq(20),aa
-real*8::num_1(500)
-logical :: fileexists
-character(len=35)::inputfilename
-integer::atsymset(20,20),nsym,syn(50),at_sym(50),MDP1
-
-common/ats/atsymset,nsym,syn,at_sym
-print*,'enter input_1'
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!! default values !!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-symtype='loose'
-set_order=0
-iab_length=0.0
-noq0=1000
-noq1=1000
-noq2=1000
-noq3=1000
-symm=0
-ovval=1.000
-ovopt=0
-nlpset=0
-nfset=0
-runn=0
-mset=2
-qflg=0
-!mult=1
-ovlp_int=0
-  if(input_flg.eq.1)flg1=1
- if(input_flg.eq.1)nsym=1
-if(input_flg.eq.1)nstrt=0
- if(input_flg.eq.1)flgst=1
- if(input_flg.eq.1)niach=0
- if(input_flg.eq.1)niabd=0
- if(input_flg.eq.1)nialp=0
-!do i=1,10
-!nset(i)=100
-!enddo
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-MDP=0
-i6=0
-i7=0
-n=0
-
-if(input_flg.eq.1)then
-open(unit=21,file='input.dat',status='unknown')
-
-
-do
-read(21,'(a)',iostat=io)
-
-if(io.ne.0)exit
-MDP=MDP+1
-enddo
-rewind(21)
-
-do i=1,MDP
-read(21,'(a)')charst(i)
-print*,charst(i)
-enddo
-
-rewind(21)
-endif
-!! do
-!!print*,'sourav'
-!!      read( 21, *, iostat = IO )sttr    ! reads to EOF -- GOOD!!
-!!      if ( IO < 0 ) exit               ! if EOF is reached, exit do
-!!      i = i + 1
-!!!      NumRec = i                       ! used later for total no. of records
-!!!      allocate( Seq(I) )
-!!      Seq(I) = sttr
-!!      print*, I, Seq(I)
-!!      X = Len_Trim( Seq(I) )           ! length of individual sequence
-!!      print*, 'Sequence size: ', X
-!!      print*
-!!    end do
-!!stop
-
-
-if(input_flg.eq.0)then
-
-call getarg(1,inputfilename)
-INQUIRE(FILE=TRIM(inputfilename),EXIST=fileexists)
-IF (fileexists) THEN
-open(unit=21,file=TRIM(inputfilename),status='old')
-ELSE
-write(*,*)'SORRY This input file does not exist or you may not provide the &
-filename at all'
-stop
-ENDIF
-
-do
-read(21,'(a)',iostat=io)
-
-if(io.ne.0)exit
-MDP=MDP+1
-enddo
-rewind(21)
-
-do i=1,MDP
-read(21,'(a)')charst(i)
-if(index(lowercase(charst(i)),'$end').ne.0)then
-MDP1=i
-endif
-enddo
-
-rewind(21)
-endif
-
-
-
-
-do i=MDP1+1,MDP
-
-kk=0
-q=0
-do j=1,100
-st_num1(j)=0
-st_num2(j)=0
-enddo
-do j=1,500
-num(j)=0
-enddo
-
-!ll=len(trim(charst(i)))
-!do k=1,ll+1
-!line5=charst(i)(k:k)
-!if(line5.eq.'')then
-!sttr=trim(charst(i)(1:k-1))
-!goto 111
-!endif
-!enddo
-
-if(index(charst(i),'#').eq.1)goto 789
-if(index(charst(i),'#').gt.1)then
-ll=index(charst(i),'#')
-do k=1,ll
-line5=charst(i)(k:k)
-if(line5.eq.'')then
-!print*,'charst(i)(1:k-1)',charst(i)(1:k-1)
-if(trim(charst(i)(1:k-1)).ne.'')then
-charst(i)=charst(i)(1:ll-1)
-goto 111
-endif
-endif
-enddo
-endif
-
-
-!111 if (sttr.eq.'info'.and.input_flg.eq.1)then
-111 charst(i)=lowercase(charst(i))
-call Keycheck(charst(i))
-
-if (index(charst(i),'info').ne.0.and.input_flg.eq.1)then
-do j=1,i-1
-read(21,*)
-enddo
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-q=0
-kk=0
-p=0
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 133
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 143
-133 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-143 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-!if(fg10.eq.1)goto 189
-if(line34(a:b).ne.'info')then
-if(line34(a:b).eq.'nao')then 
-stn=stn+1
-info_set(stn)='nao'
-goto 169
-endif
-if(line34(a:b).eq.'nae')then 
-stn=stn+1
-info_set(stn)='nae'
-goto 169
-endif
-if(line34(a:b).eq.'mult')then 
-stn=stn+1
-info_set(stn)='mult'
-goto 169
-endif
-if(line34(a:b).eq.'niao')then 
-stn=stn+1
-info_set(stn)='niao'
-goto 169
-endif
-if(stn.ne.0)then
-read(line34(a:b),'(I10)')num(stn)
-!print*,num(stn),stn
-info_val(stn)=num(stn)
-!print*,'info_val(stn)',info_val(stn),stn,info_set(stn)
-endif
-endif
-endif
-169 enddo
-!if(stn.ne.4)then
-do k=1,stn
-if(info_set(k).eq.'nao')then
-nao=info_val(k)
-goto 171
-endif
-enddo
-write(*,*)'number of active orbitals "nao" is not given'
-stop 
-171 do k=1,stn
-if(info_set(k).eq.'nae')then
-nae=info_val(k)
-goto 172
-endif
-enddo
-write(*,*)'number of active orbitals "nae" is not given'
-stop 
-172 do k=1,stn
-if(info_set(k).eq.'mult')then
-mult=info_val(k)
-goto 173
-endif
-enddo
-write(*,*)'number of active orbitals "mult" is not given'
-stop 
-173 do k=1,stn
-if(info_set(k).eq.'niao')then
-niao=info_val(k)
-goto 174
-endif
-enddo
-write(*,*)'number of active orbitals "niao" is not given'
-stop 
-174 rewind(21)
-endif 
-
-
-
-!if (sttr.eq.'ovlp')then
-if (index(charst(i),'ovlp').ne.0)then
-do j=1,i-1
-read(21,*)
-enddo
-!read(21,*)abc,symm
-
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-p=0
-q=0
-kk=0
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 53
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 54
-53 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-54 enddo
-stn=0
-do k=1,500
-num_1(k)=0
-enddo
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-!if(fg10.eq.1)goto 389
-if(line34(a:b).eq.'ovlp')ovlp=1
-if(line34(a:b).ne.'ovlp')then
-if(line34(a:b).ne.'')then
-stn=stn+1
-!if(line34(a:b).ne.'-')then
-if(stn.eq.2)then
-read(line34(a:b),*)num_1(stn)
-ovval=num_1(stn)
-endif
-if(stn.eq.1)then
-read(line34(a:b),'(I10)')num_2
-ovlp=num_2
-endif
-!print*,num(stn),stn
-!endif
-endif
-endif
-endif
-enddo
-print*,'ovval',ovval,ovlp
-
-rewind(21)
-endif
-
-!if (sttr.eq.'sym')then
-if (index(charst(i),'sym').ne.0)then
-symm=1
-!do j=1,i-1
-!read(21,*)
-!enddo
-
-!read(21,'(a)')line34
-if(index(charst(i),'loose').ne.0)then
-symtype='loose'
-endif
-if(index(charst(i),'tight').ne.0)then
-symtype='tight'
-endif
-if(index(charst(i),'check').ne.0)then
-symtype='check'
-endif
-!stn1='qual'
-!stn2='s2b'
-!stn3='b2s'
-if(index(charst(i),'qual').ne.0)then
-set_order=0
-endif
-if(index(charst(i),'stob').ne.0)then
-set_order=1
-endif
-if(index(charst(i),'btos').ne.0)then
-set_order=2
-endif
-
-!print*,'set_order',set_order
-rewind(21)
-endif
-
-if(index(charst(i),'inactive_bonds').ne.0.and.symm.eq.1.and.input_flg.eq.1)then
-do j=1,i-1
-read(21,*)
-enddo
-read(21,'(a)')line34
-print*,line34
-line35=line34
-ll=len(trim(line34))
-p=0
-q=0
-kk=0
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 2739
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 2740
-2739 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-2740 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-m5=0
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-if(line34(a:b).ne.'inactive_bonds')then
-stn=stn+1
-if(line34(a:b).ne.'-')then
-read(line34(a:b),'(I10)')num(stn)
-m5=m5+1
-iabd(m5)=num(stn)
-endif
-endif
-endif
-enddo
-niabd=m5
-!print*,'iabd(m5)',(iabd(k),k=1,m5),niabd
-rewind(21)
-endif
-
-
-!if(sttr.eq.'inactive_lnps'.and.symm.eq.1.and.input_flg.eq.1)then
-if(index(charst(i),'inactive_lnps').ne.0.and.symm.eq.1.and.input_flg.eq.1)then
-
-do j=1,i-1
-read(21,*)
-enddo
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-p=0
-q=0
-kk=0
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 3739
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 3740
-3739 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-3740 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-m5=0
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-if(line34(a:b).ne.'inactive_lnps')then
-stn=stn+1
-read(line34(a:b),'(I10)')num(stn)
-m5=m5+1
-ialp(m5)=num(stn)
-endif
-endif
-enddo
-nialp=m5
-rewind(21)
-endif
-
-!if(sttr.eq.'inactive_chrg'.and.symm.eq.1.and.input_flg.eq.1)then
-if(index(charst(i),'inactive_chrg').ne.0.and.symm.eq.1.and.input_flg.eq.1)then
-
-do j=1,i-1
-read(21,*)
-enddo
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-p=0
-q=0
-kk=0
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 339
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 340
-339 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-340 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-m5=0
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-if(line34(a:b).ne.'inactive_chrg')then
-stn=stn+1
-read(line34(a:b),'(I10)')num(stn)
-m5=m5+1
-iach(m5)=num(stn)
-endif
-endif
-enddo
-niach=m5
-rewind(21)
-endif
-
-
-!if (sttr.eq.'frag_cntr')then
-if (index(charst(i),'frag_cntr').ne.0)then
-do j=1,i-1
-read(21,*)
-enddo
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 3841
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 3842
-3841 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-3842 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-m5=0
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-if(line34(a:b).ne.'frag_cntr')then
-stn=stn+1
-read(line34(a:b),'(I10)')num(stn)
-m5=m5+1
-frag_cntr(m5)=num(stn)
-endif
-endif
-enddo
-num_frag_cntr=m5
-!print*,'frag_cntrs =',(frag_cntr(k),k=1,num_frag_cntr),'num_frag_cntr =',num_frag_cntr
-rewind(21)
-endif 
-
-
-
-if(index(charst(i),'mout').ne.0)then
-do j=1,i-1
-read(21,*)
-enddo
-Read(21,*),aa,mset
-if(mset.eq.0)mset=1
-mset=mset+1
-rewind(21)
-endif
-
-
-
-!if (sttr.eq.'nset')then
-if(index(charst(i),'nset').ne.0)then
-
-do j=1,i-1
-read(21,*)
-enddo
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 3839
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 3840
-3839 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-3840 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-m5=0
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-if(line34(a:b).ne.'nset')then
-if(line34(a:b).ne.'')then
-stn=stn+1
-read(line34(a:b),'(I10)')num(stn)
-m5=m5+1
-nset(m5)=num(stn)
-if(m5.eq.1)nfset=nset(1)
-!if(nset(1).ne.2)then
-if(nset(1).ne.0)then
-!print*,'m555555555',m5,nset(m5)
- if(m5.eq.2)noq0=nset(2)
- if(m5.eq.3)noq1=nset(3)
- if(m5.eq.4)noq2=nset(4)
- if(m5.eq.5)noq3=nset(5)
-endif
-endif
-endif
-endif
-enddo
-print*,'noq0,noq1,noq2,noq3',noq0,noq1,noq2,noq3,nfset
-!print*,'nset',(nset(k),k=1,5)
-rewind(21)
-endif 
-!print*,'nfset',abc,nfset
-
-
-!if (sttr.eq.'atoms'.and.input_flg.eq.1)then
-if (index(charst(i),'atoms').ne.0.and.input_flg.eq.1)then
-do j=1,i-1
-read(21,*)
-enddo
-!read(21,*)abc,atom
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-kk=0
-p=0
-q=0
-do k=1,10
-pent_set(k)=0
-enddo
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 263
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 265
-263 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-265 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-m5=0
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-if(line34(a:b).ne.'atoms')then
-stn=stn+1
-read(line34(a:b),'(I10)')num(stn)
-m5=m5+1
-pent_set(m5)=num(stn)
-endif
-endif
-enddo
-atom=pent_set(1)
-if(atom.eq.0)then
-write(*,*)'plese write the number of active atoms (atoms corresponding to &
-the active orbitals) after the keyword "atoms" and give the orbital &
-numbers corresponding to the each atom in the next line' 
-stop
-endif
-!print*,'atom',atom
-
-do i2=1,atom
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-p=0
-q=0
-kk=0
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 139
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 140
-139 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-140 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-n=0
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-do i3=1,88
-if(line34(a:b).eq.at_list(i3))then
-n=n+1
-at_num(i2)=i3
-goto 189
-elseif(line34(a:b).eq.at_list_bold(i3))then
-n=n+1
-at_num(i2)=i3
-!print*,'at_num**',at_num(i2)
-goto 189
-endif
-enddo
-if(n.eq.0)then
-write(*,991),'Your atom',line34(a:b),'is not included in our list (atomic number 1 to &
-88 are included) or you have just made a mistake'
-stop
-endif
-991 format(a,x,a,x,a)
-if(line34(a:b).ne.'-')then
-stn=stn+1
-read(line34(a:b),'(I10)')num(stn)
-!print*,num(stn),stn
-atoset(i2,stn)=num(stn)
-active_atoms(i2)=i2
-endif
-endif
-189 enddo
-atn(i2)=stn
-atn(i6)=m5
-!print*,'atoset_sr',i2,atn(i2),(atoset(i2,i7),i7=1,atn(i2))
-!print*,'at_num',at_num(n)
-enddo
-rewind(21)
-!do i3=1,atom
-!print*,'at_num:input_1',at_num(i3)
-!enddo
-endif
-
-!if (sttr.eq.'orbsym'.and.input_flg.eq.1)then
-if (index(charst(i),'orbsym').ne.0.and.input_flg.eq.1)then
-do j=1,i-1
-read(21,*)
-enddo
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-kk=0
-p=0
-q=0
-do k=1,10
-pent_set(k)=0
-enddo
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 25
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 26
-25 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-26 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-m5=0
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-if(line34(a:b).ne.'orbsym')then
-stn=stn+1
-read(line34(a:b),'(I10)')num(stn)
-m5=m5+1
-pent_set(m5)=num(stn)
-endif
-endif
-enddo
-nsym=pent_set(1)
-if(nsym.ge.1)then
-!do i2=1,nsym
-!i3=i2
-!write(str,'(I1)') i3
-!at_sym(i2)=trim('sym')//trim(str)
-!enddo
-do i4=1,nsym
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-p=0
-q=0
-kk=0
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 27
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 28
-27 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-28 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-!if(fg10.eq.1)goto 289
-!print*,'at_sym(i4)',i4,at_sym(i4)
-if(line34(a:b).eq.'pi')at_sym(i4)=1
-if(line34(a:b).eq.'sig')at_sym(i4)=2
-if(line34(a:b).ne.'pi')then
-if(line34(a:b).ne.'sig')then
-stn=stn+1
-if(line34(a:b).ne.'-')then
-!print*,'line34(a:b)',line34(a:b)
-read(line34(a:b),'(I10)')num(stn)
-!print*,num(stn),stn
-endif
-endif
-endif
-endif
-enddo
-m5=0
-do k=1,stn
-if(num(k).eq.0)then
-do m6=num(k-1)+1,num(k+1)-1
-m5=m5+1
-atsymset(i4,m5)=m6
-enddo
-endif
-if(num(k).ne.0)then
-m5=m5+1
-atsymset(i4,m5)=num(k)
-endif
-enddo
-syn(i4)=m5
-!print*,noqult,(qult(k),k=1,noqult)
-!read(21,*)abc,a,(atsymset(i7,i5),i5=1,syn(i7))
-!print*,'syn,symset',syn(i4),at_sym(i4),(atsymset(i4,i5),i5=1,syn(i4))
-enddo
-endif
-rewind(21)
-endif
-
-
-!if (sttr.eq.'at_basis_sym'.and.input_flg.eq.1)then
-if (index(charst(i),'at_basis_sym').ne.0.and.input_flg.eq.1)then
-do j=1,i-1
-read(21,*)
-enddo
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-kk=0
-p=0
-q=0
-do k=1,10
-pent_set(k)=0
-enddo
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 253
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 255
-253 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-255 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-m5=0
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-if(line34(a:b).ne.'at_basis_sym')then
-stn=stn+1
-read(line34(a:b),'(I10)')num(stn)
-m5=m5+1
-pent_set(m5)=num(stn)
-endif
-endif
-enddo
-nabsym=pent_set(1)
-
-!print*,'nabset',nabsym
-if(nabsym.ge.1)then
-do i2=1,nabsym
-i3=i2
-write(str,'(I1)') i3
-at_bas_sym(i2)=trim('sym')//trim(str)
-enddo
-do i4=1,nabsym
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-p=0
-q=0
-kk=0
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 239
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 240
-239 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-240 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-!if(fg10.eq.1)goto 289
-!print*,'at_bas_sym(i4)',i4,at_bas_sym(i4)
-if(line34(a:b).ne.at_bas_sym(i4))then
-stn=stn+1
-if(line34(a:b).ne.'-')then
-!print*,'line34(a:b)',line34(a:b)
-read(line34(a:b),'(I10)')num(stn)
-!print*,num(stn),stn
-endif
-endif
-endif
-enddo
-m5=0
-do k=1,stn
-if(num(k).eq.0)then
-do m6=num(k-1)+1,num(k+1)-1
-m5=m5+1
-at_ab_symset(i4,m5)=m6
-enddo
-endif
-if(num(k).ne.0)then
-m5=m5+1
-at_ab_symset(i4,m5)=num(k)
-endif
-enddo
-absyn(i4)=m5
-!print*,noqult,(qult(k),k=1,noqult)
-!read(21,*)abc,a,(atsymset(i7,i5),i5=1,syn(i7))
-!print*,'syn,at_ab_symset',absyn(i4),(at_ab_symset(i4,i5),i5=1,absyn(i4))
-enddo
-endif
-rewind(21)
-endif
-
-
-!if (sttr.eq.'strc'.and.input_flg.eq.1)then
-if (index(charst(i),'strc').ne.0.and.input_flg.eq.1)then
-!print*,'sttr',sttr,i
-do j=1,i-1
-read(21,*)
-enddo
-read(21,'(a)')line34
-line35=line34
-!print*,line35
-ll=len(trim(line34))
-kk=0
-p=0
-q=0
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 539
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 540
-539 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-540 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-m5=0
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-if(line34(a:b).ne.'strc')then
-abc=line34(a:b)
-endif
-endif
-enddo
-
-
-rewind(21)
-if(abc.eq.'full') flgst=1
-if(abc.eq.'all') flgst=1
-if(abc.eq.'covt') flgst=2
-if(abc.eq.'cov') flgst=2
-if(abc.eq.'ionc') flgst=3
-if(abc.eq.'ion') flgst=3
-!print*,flgst
-endif 
-
-
-
-!if (sttr.eq.'imbd')then
-if (index(charst(i),'imbd').ne.0)then
-do j=1,i-1
-read(21,*)
-enddo
-!read(21,*)abc,imbd
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-kk=0
-p=0
-q=0
-do k=1,10
-pent_set(k)=0
-enddo
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 4939
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 4940
-4939 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-4940 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-m5=0
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-if(line34(a:b).ne.'imbd')then
-stn=stn+1
-read(line34(a:b),'(I10)')num(stn)
-m5=m5+1
-pent_set(m5)=num(stn)
-endif
-endif
-enddo
-imbd=pent_set(1)
-if(imbd.ne.0)then
-
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-kk=0
-q=0
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 1739
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 1740
-1739 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-1740 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-if(line34(a:b).ne.'-')then
-stn=stn+1
-read(line34(a:b),'(I10)')num(stn)
-endif
-endif
-enddo
-m5=0
-do k=1,stn
-if(num(k).ne.0)then
-m5=m5+1
-main_bond(m5)=num(k)
-!print*,'mian_bond',main_bond(m5)
-endif
-enddo
-nmbond=m5/2
-!print*,'nmbond',nmbond
-m5=0
-i1=0
-
-endif
-rewind(21)
-endif
-
-
-!if(sttr.eq.'nnat'.and.input_flg.eq.1)then
-if(index(charst(i),'nnat').ne.0.and.input_flg.eq.1)then
-do j=1,i-1
-read(21,*)
-enddo
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 739
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 740
-739 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-740 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-!if(fg10.eq.1)goto 389
-if(line34(a:b).ne.'nnat')then
-stn=stn+1
-if(line34(a:b).ne.'-')then
-read(line34(a:b),'(I10)')num(stn)
-!print*,num(stn),stn
-endif
-endif
-endif
-enddo
-m5=0
-do k=1,stn
-if(num(k).ne.0)then
-m5=m5+1
-pbond(m5)=num(k)
-endif
-enddo
-nbond=m5
-m5=0
-i1=0
-do k=1,nbond,2
-i2=0
-i1=i1+1
-do m5=k,k+1
-i2=i2+1
-nnat_bond(i1,i2)=pbond(m5)
-enddo
-enddo
-nnnatom=nbond/2
-!print*,'nbond',nbond
-do i1=1,nnnatom
-!print*,'nnbond',nnnatom,i1,(nnat_bond(i1,k),k=1,2)
-enddo
-rewind(21)
-endif
-
-
-!if(sttr.eq.'prad')then
-if(index(charst(i),'prad').ne.0)then
-do j=1,i-1
-read(21,*)
-enddo
-!read(21,*)abc,prad
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-p=0
-q=0
-kk=0
-do k=1,10
-pent_set(k)=0
-enddo
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 6939
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 6940
-6939 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-6940 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-m5=0
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-if(line34(a:b).ne.'prad')then
-stn=stn+1
-read(line34(a:b),'(I10)')num(stn)
-m5=m5+1
-pent_set(m5)=num(stn)
-!print*,num(stn),stn
-endif
-endif
-enddo
-prad=pent_set(1)
-if(prad.ne.0)then
-j1=0
-do j=i,i+prad-1
-do k=1,100
-st_num1(k)=0
-st_num2(k)=0
-enddo
-kk=0
-q=0
-p=0
-j1=j1+1
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 839
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 840
-839 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-840 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll+1)then
- a=st_num1(k)
- b=st_num2(k+1)
-stn=stn+1
-read(line34(a:b),'(I10)')num(stn)
-endif
-enddo
-m5=0
-do k=1,stn
-if(num(k).ne.0)then
-m5=m5+1
-prio_rad(j1,m5)=num(k)
-endif
-enddo
-norad(j1)=m5
-enddo
-endif
-rewind(21)
-endif
-
-!if(sttr.eq.'lpst')then
-if(index(charst(i),'lpst').ne.0)then
-do j=1,i-1
-read(21,*)
-enddo
-
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-do k=1,10
-pent_set(k)=0
-enddo
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 5939
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 5940
-5939 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-5940 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-m5=0
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-if(line34(a:b).ne.'lpst')then
-stn=stn+1
-read(line34(a:b),'(I10)')num(stn)
-m5=m5+1
-pent_set(m5)=num(stn)
-endif
-endif
-enddo
-nlpset=pent_set(1)
-if(nlpset.ne.0)then
-
-
-
-do j=1,nlpset
-kk=1
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 939
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 940
-939 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-940 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-if(line34(a:b).ne.'lset')then
-stn=stn+1
-read(line34(a:b),'(I10)')num(stn)
-endif
-endif
-enddo
-m5=0
-do k=1,stn
-if(num(k).eq.0)then
-do m6=num(k-1)+1,num(k+1)-1
-m5=m5+1
-plpair(j,m5)=num(k)
-enddo
-endif
-if(num(k).ne.0)then
-m5=m5+1
-plpair(j,m5)=num(k)
-endif
-enddo
-lp(j)=m5
-enddo
-endif
-rewind(21)
-endif
-
-
-!if(sttr.eq.'imps')then
-if(index(charst(i),'imps').ne.0)then
-do j=1,i-1
-read(21,*)
-enddo
-
-
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-kk=0
-p=0
-q=0
-do k=1,10
-pent_set(k)=0
-enddo
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 439
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 440
-439 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-440 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-m5=0
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-if(line34(a:b).ne.'imps')then
-stn=stn+1
-read(line34(a:b),'(I10)')num(stn)
-m5=m5+1
-pent_set(m5)=num(stn)
-endif
-endif
-enddo
-nstrt=pent_set(1)
-if(nstrt.ne.0)then
-l=0
-do j=1,nstrt
-kk=1
-p=0
-q=0
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 1139
-!print*,k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 1140
-1139 kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-1140 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-!print*,'kk',kk
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-stn=stn+1
-read(line34(a:b),'(I10)')num(stn)
-endif
-enddo
-m5=0
-if(stn.eq.0)goto 490
-l=l+1
-do k=1,stn
-if(num(k).eq.0)then
-do m6=num(k-1)+1,num(k+1)-1
-m5=m5+1
-strt_struc(l,m5)=num(k)
-enddo
-endif
-if(num(k).ne.0)then
-m5=m5+1
-strt_struc(l,m5)=num(k)
-endif
-enddo
-nel=m5
-if(nel.ne.nae)then
-write(*,*)'please check your starting structures, may be number of active electrons are wrong'
-stop
-endif
-enddo
-endif
-490 rewind(21)
-print*,'imps',stn,nel,nstrt
-do m6=1,nstrt
-print*,(strt_struc(m6,j),j=1,nel)
-enddo
-endif
-
-
-
-!if (sttr.eq.'iab'.or.sttr.eq.'sbb'.or.sttr.eq.'nnb'.or.sttr.eq.'udr'.or.sttr.eq.'udb')then
-if (index(charst(i),'iab').ne.0.or.index(charst(i),'sbb').ne.0&
-.or.index(charst(i),'nnb').ne.0.or.index(charst(i),'udr').ne.0&
-.or.index(charst(i),'udb').ne.0)then
-runn=runn+1
-if(runn.eq.1)then
-itb=0
-syb=0
-nnb=0
-radical=0
-mnbond=0
-endif
-
-do j=1,i-1
-read(21,*)
-enddo
-
-read(21,'(a)')line34
-line35=line34
-ll=len(trim(line34))
-q=0
-kk=0
-p=0
-do k=1,ll+1
-line5=line34(k:k)
-if(line5.eq.'')then
-q=q+1
-if(k.eq.1)p=1
-if(p.eq.1)goto 3949
-!print*,'k',k
-if(q.eq.1)then
-kk=1
-st_num1(1)=1
-endif
-kk=kk+1
-st_num1(kk)=k+1
-st_num2(kk)=k
-goto 3941
-3949 kk=kk+1
-!print*,'k**',k
-st_num1(kk)=k+1
-st_num2(kk)=k
-endif
-3941 enddo
-stn=0
-do k=1,500
-num(k)=0
-enddo
-m5=0
-!print*,'kk**',kk
-do k=1,kk
-a=0
-b=0
-if(st_num2(k+1)-st_num2(k).ne.1.and.st_num2(k).le.ll)then
- a=st_num1(k)
- b=st_num2(k+1)
-if(line34(a:b).eq.'iab')then
-pent=line34(a:b)
-stn=stn+1
-goto 117
-endif
-if(line34(a:b).eq.'sbb')then
-pent=line34(a:b)
-stn=stn+1
-goto 117
-endif
-if(line34(a:b).eq.'nnb')then
-pent=line34(a:b)
-stn=stn+1
-goto 117
-endif
-if(line34(a:b).eq.'udr')then
-pent=line34(a:b)
-stn=stn+1
-goto 117
-endif
-if(line34(a:b).eq.'udb')then
-pent=line34(a:b)
-stn=stn+1
-goto 117
-endif
-read(line34(a:b),'(I10)')num(stn)
-
-endif
-
-
-
-117 enddo
-
-if(pent.eq.'iab')itb=num(stn)
-if(pent.eq.'sbb')syb=num(stn)
-if(pent.eq.'nnb')nnb=num(stn)
-if(pent.eq.'udr')radical=num(stn)
-if(pent.eq.'udb')mnbond=num(stn)
-print*,'itb,syb,nnb,radical,mnbond:input',itb,syb,nnb,radical,mnbond
-endif
-rewind(21)
-
-!if (sttr.eq.'iab_len')then
-if (index(charst(i),'iab_len').ne.0)then
-
-do j=1,i-1
-read(21,*)
-enddo
-
-read(21,*)line34,iab_length
-rewind(21)
-endif
-
-789 enddo
-
-
-
-!do i1=1,6
-!print*,nmbond(i1),i1,(main_bond(i1,k),k=1,nmbond(i1))
-!enddo
-!do j=1,nlpset
-!print*,nlpset,lp,(plpair(j,k),k=1,lp)
-!enddo
-!print*,'input_1',nao,nae,mult,niao,atn(1),atn(2)
-
-vacorb=nao-nae
-nlp=nae-nao
-if(vacorb.gt.1)nlp=0
-if(qult(1).eq.0)then
-noqult=(1+(nae-nlast-nlp*2)/2)*(1+(nae-nlast-nlp*2)/2)
-do j=1,noqult
-qult(j)=j
-enddo
-endif
-
-do i=1,10
-pent_set(i)=0
-enddo
-!print*,'itb,syb,nnb,radical,mnbond:11',itb,syb,nnb,radical,mnbond
-if(prad.eq.0)radical=0
-if(imbd.eq.0)mnbond=0
-!print*,'itb,syb,nnb,radical,mnbond:22',itb,syb,nnb,radical,mnbond
-pent_set(1)=itb
-pent_set(2)=syb
-pent_set(3)=nnb
-pent_set(4)=radical
-pent_set(5)=mnbond
-print*,'itb,syb,nnb,radical,mnbond:22',itb,syb,nnb,radical,mnbond
-
-l=1
-do j=1,5
-if(l.lt.pent_set(j))l=pent_set(j)
-enddo
-
-!print*,'ll:pent_set',l
-k=0
-do j=1,l
-do i=1,5
-if(pent_set(i).eq.j)then
-k=k+1
-goto 131
-!pent_set(i)=k
-endif
-enddo
-goto 130
-131 do i=1,5
-if(pent_set(i).eq.j)then
-pent_set(i)=k
-endif
-enddo
-130 enddo
-itb=pent_set(1)
-syb=pent_set(2)
-nnb=pent_set(3)
-radical=pent_set(4)
-mnbond =pent_set(5)
-       
-itb=itb+1
-syb=syb+1
-nnb=nnb+1
-radical=radical+1
-mnbond=mnbond+1
-print*,'itb,syb,nnb,radical,mnbond',itb,syb,nnb,radical,mnbond
-if(itb.eq.1.and.syb.eq.1.and.nnb.eq.1.and.radical.eq.1.and.mnbond.eq.1.and.flg1.ne.1)then
-!itb=1
-!syb=2
-!nnb=3
-!radical=4
-!mnbond=5
-qflg=1
-endif
-nlast=(mult-1)
-
-if(ovlp.eq.0)ovopt=0
-if(ovlp.eq.2)ovopt=1
-if(ovlp.eq.1.and.nfset.eq.0)ovopt=0
-if(ovlp.eq.1.and.nfset.eq.1)ovopt=1
-if(ovlp.eq.1.and.nfset.eq.2)ovopt=1
-if(ovlp.eq.1.and.nfset.eq.3)ovopt=1
-!!!!!!!!! "vpt" is the option for user specifying overlap value "ovval". It will work
-!!!!!!!!!!!!!only for vpt=1. To lock it please put any other value
-vpt=1
-
-write(7,*)'******************************************************************************************'
-write(7,900)'*','active orbs =',nao,'active electrons =',nae,'multiplicity =',mult,'inactive orbs =',niao
-write(7,*)'******************************************************************************************'
-write(7,*)'******************************************************************************************'
-900 format(a,1x,a,1x,I4,3x,a,1x,I4,3x,a,1x,I4,3x,a,1x,I4)
-
-!print*,'itb,syb,nnb,radical,mnbond',itb,syb,nnb,radical,mnbond
-!print*,'exit input_1'
-
-return
-end subroutine input
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 subroutine cov_struc
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -4562,12 +2078,10 @@ k4=k4+1
 strct(i,k4)=strc(nn(k2),k5)
 enddo
 enddo
-!print*,'strct',(strct(i,k),k=1,k4)
 goto 122
 endif
 
 do i3=i2+1,totset
-!print*,'sourav',i3
 j=3
 l=0
 do k1=1,j-1
@@ -4577,7 +2091,6 @@ l=l+1
 endif
 enddo
 enddo
-!print*,'i3,l',i2,l
 if(l.eq.0)goto 143
 goto 123
 143 l=0 
@@ -4599,11 +2112,9 @@ k4=0
 do k2=1,bonds
 do k5=1,2
 k4=k4+1
-!print*,strc(nn(k2),k5)
 strct(i,k4)=strc(nn(k2),k5)
 enddo
 enddo
-!print*,'strct',(strct(i,k),k=1,k4)
 goto 123
 endif
 
@@ -4641,7 +2152,6 @@ k4=k4+1
 strct(i,k4)=strc(nn(k2),k5)
 enddo
 enddo
-!print*,'strct',(strct(i,k),k=1,k4)
 goto 124
 endif
 
@@ -4680,7 +2190,6 @@ k4=k4+1
 strct(i,k4)=strc(nn(k2),k5)
 enddo
 enddo
-!print*,'strct',(strct(i,k),k=1,k4)
 goto 125
 endif
 
@@ -4709,24 +2218,19 @@ enddo
 if(l.eq.0)goto 166
 goto 126
 166 nn(6)=i6
-!print*,'nn4',nn(6)
 if(j.eq.bonds)then
-!print*,'sourav2',nn(1),nn(2)
 i=i+1
 k4=0
 do k2=1,bonds
 do k5=1,2
 k4=k4+1
-!print*,strc(nn(k2),k5)
 strct(i,k4)=strc(nn(k2),k5)
 enddo
 enddo
-!print*,'strct',(strct(i,k),k=1,k4)
 goto 126
 endif
 
 do i7=i6+1,totset
-!print*,'souravi4',i7,totset
 j=7
 l=0
 do k1=1,j-1
@@ -4736,7 +2240,6 @@ l=l+1
 endif
 enddo
 enddo
-!print*,'i3,l',i2,l
 if(l.eq.0)goto 147
 goto 127
 147 l=0 
@@ -4752,19 +2255,15 @@ enddo
 if(l.eq.0)goto 167
 goto 127
 167 nn(7)=i7
-!print*,'nn4',nn(7)
 if(j.eq.bonds)then
-!print*,'sourav2',nn(1),nn(2)
 i=i+1
 k4=0
 do k2=1,bonds
 do k5=1,2
 k4=k4+1
-!print*,strc(nn(k2),k5)
 strct(i,k4)=strc(nn(k2),k5)
 enddo
 enddo
-!print*,'strct',(strct(i,k),k=1,k4)
 goto 127
 endif
 
@@ -4789,9 +2288,6 @@ do k4=1,bonds*2
 strc(i1,k4)=strct(i1,k4)
 enddo
 enddo
-!do i1=1,i
-!print*,(strc(i1,k4),k4=1,bonds*2)
-!enddo
 
 !!!!! production of the lone pairs and radical part of the structures starts !!!!!!
 if(nlast.ne.0.or.lonep.ne.0)then
@@ -5105,12 +2601,6 @@ if(symm.eq.1) then
 if(sig_sym_flg.eq.1)call symmetry_cal_sig(nlp,fullcovstr,alstr,symsc,symq,nssym)
 if(sig_sym_flg.ne.1)call symmetry_cal_pi(nlp,fullcovstr,alstr,symsc,symq,nssym)
 
-!do ij=1,alstr
-!print*,'qulsym(ij),symq(ij)',qulsym(ij),symq(ij),(fullcovstr(ij,j1),j1=1,nao-nlp+nlp*2)
-!print*,'qulsym(ij),symq(ij)',qulsym(ij),symq(ij),alstr,nssym,tnqs
-!enddo
-
-
 nnn=0
 do ij=1,tnqs
 do ijk=nssym,1,-1
@@ -5163,1160 +2653,10 @@ if(nfset.ne.5)write(10,913),'IAB','NNB','SBB','fqual'
 write(23,913),'IAB','NNB','SBB','fqual'
 913 format(x,a,x,a,x,a,x,a)
 call str_selection(fullcovstr,nlp,alstr,perm_nstr)
-!print*,'total num covstr',tncs
 print*,'exit cove_struc'
 return
 end subroutine cov_struc
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine ion_struc
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-use commondat
-implicit none
-
-common/quality/str_quality_1,str_quality_2,bondq,tqlty,bqlty,sqlty,tnqs,nssym,qulsym,symq,&
-sigsym,tnqs_sig
-common/str/str5,nstr7
-
-   integer::i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,perm_nstr,nssym,nnn,x,y, &
-i14,i15,i16,i17,i18,i19,i20,i21,k1,k2,STDOUT,rns,jjj,m1,c,c1,d,e,f,elporb,wig2,tnqs
-   integer::i,j,k,l,l2,j1,m,j2,ii,jj,iii,n1,j3,j4,j5,nnlp,nnao,nos,nofs,j6,j7,j8,ij,ijk,nstruc
-   integer::alionstr,symq(15000),sigsym(15000),tnqs_sig,ion_str_p(1000,15),ald_ionstr(5000,20)&
-   ,qulsym(15000),fullionstr(15000,20),str_quality_1(15000),str5(2000,20),nstr7,ll,lll,&
-   str_quality_2(15000),bondq(15000),tqlty,bqlty,sqlty,str_p(1000,15),istrbn,strbn
-integer::llll,str2(15000,20),str3(15000,20),str4(15000,20),space(1000),covnris(1000)&
-,covris(1000),fvec(15000,1000),strn(10000),l1,m119,m20,q_fac(15000),quality_fac(15000)
-integer::bonds,alstr,totset,allp,k4,k5,l3,l4,a,b,totistr
-   real*8::factorial,symsc(15000)
-   integer,dimension(:,:),allocatable::strc,strct,num,istrc
-   integer,dimension(:),allocatable::n,nn,num1
-
-print*,'enter ion_struc',niao
-x=100000
-y=100
-
-!allocate(strc(x,y))
-allocate(strct(x,y))
-allocate(istrc(x,y))
-allocate(num(x,y))
-allocate(num1(x))
-allocate(n(x))
-allocate(nn(x))
-
-!strc(x,y)=0
-strct(x,y)=0
-istrc(x,y)=0
-n(x)=0
-nn(x)=0
-num(x,y)=0
-num1(x)=0
-
-write(7,*)''
-write(7,*)'                              ionic structures '
-write(7,*)'                              ---------------- '
-
-flg_ion=1
-flg_cov=0
-
-symm=0
-
-m=0
-j=0
-i=0
-nos=0
-nofs=0
-nnao=0
-jjj=0
-!print*,'nnlp',nlp,nao,nlast
-if(vacorb.gt.0)nlp=nlp+1
-do nnlp=nlp+1,nlp+(nao-nlp-nlast)/2
-allocate(strc(x,y))
-strc(x,y)=0
-
-bonds=(nae-nnlp*2-nlast)/2
-d=nao
-e=2
-f=d-e
-!print*,'fac',d,e,f,elporb,bonds
-c=factorial(d)/(factorial(e)*factorial(f))
-
-c=bonds
-d=nae-nnlp*2
-b=int(d/2)
-a=2**b
-e=nae-nnlp*2-2*b
-totistr=factorial(d)/(factorial(e)*a*factorial(c))
-
-!print*,'totistr',totistr
-!!!! production of the set of bonded orbitals strats !!!!!
-
-if(bonds.ne.0)then
-i4=0
-do i1=1,nao-1
-do i2=i1+1,nao
-i4=i4+1
-do i3=1,2
-i5=i2
-if(i3.eq.1)i5=i1
-strc(i4,i3)=i5
-n(i4)=i1
-enddo
-enddo
-enddo
-!do j2=1,i4
-!print*,'bond',j2,n(j2),(strc(j2,j1),j1=1,2)
-!enddo
-totset=i4
-!print*,'totset',i4
-!!!! production of the set of bonded orbitals ends !!!!!
-
-!!!! production of the covalent bonding part of the structures start !!!!!
-i=0
-j=0
-do i1=1,totset
-!print*,'sourav',i1,totset
-j=1
-nn(1)=i1
-!print*,'nn1',nn(1)
-if(j.eq.bonds)then
-!print*,'sourav1',j
-i=i+1
-k4=0
-do k2=1,bonds
-do k5=1,2
-k4=k4+1
-strct(i,k4)=strc(nn(k2),k5)
-enddo
-enddo
-goto 121
-endif
-
-do i2=i1+1,totset
-j=2
-l=0
-do k=1,2
-if(strc(nn(1),k).eq.n(i2))then
-l=l+1
-endif
-enddo
-if(l.eq.0)goto 142
-goto 122
-142 l=0 
- do k=1,2
-do k1=1,2
-if(strc(i2,k).eq.strc(nn(1),k1))then
-l=l+1
-endif
-enddo
-enddo
-if(l.eq.0)goto 162
-goto 122
-162 nn(2)=i2
-if(j.eq.bonds)then
-i=i+1
-k4=0
-do k2=1,bonds
-do k5=1,2
-k4=k4+1
-!print*,strc(nn(k2),k5)
-strct(i,k4)=strc(nn(k2),k5)
-enddo
-enddo
-!print*,'strct',(strct(i,k),k=1,k4)
-goto 122
-endif
-
-do i3=i2+1,totset
-j=3
-l=0
-do k1=1,j-1
-do k=1,2
-if(strc(nn(k1),k).eq.n(i3))then
-l=l+1
-endif
-enddo
-enddo
-if(l.eq.0)goto 143
-goto 123
-143 l=0 
-do k2=1,j-1
- do k=1,2
-do k1=1,2
-if(strc(i3,k).eq.strc(nn(k2),k1))then
-l=l+1
-endif
-enddo
-enddo
-enddo
-if(l.eq.0)goto 163
-goto 123
-163 nn(3)=i3
-if(j.eq.bonds)then
-i=i+1
-k4=0
-do k2=1,bonds
-do k5=1,2
-k4=k4+1
-strct(i,k4)=strc(nn(k2),k5)
-enddo
-enddo
-!print*,'strct',(strct(i,k),k=1,k4)
-goto 123
-endif
-
-do i4=i3+1,totset
-!print*,'souravi4',i4,totset
-j=4
-l=0
-do k1=1,j-1
-do k=1,2
-if(strc(nn(k1),k).eq.n(i4))then
-l=l+1
-endif
-enddo
-enddo
-!print*,'i3,l',i2,l
-if(l.eq.0)goto 144
-goto 124
-144 l=0 
-do k2=1,j-1
- do k=1,2
-do k1=1,2
-if(strc(i4,k).eq.strc(nn(k2),k1))then
-l=l+1
-endif
-enddo
-enddo
-enddo
-if(l.eq.0)goto 164
-goto 124
-164 nn(4)=i4
-!print*,'nn4',nn(4)
-if(j.eq.bonds)then
-!print*,'sourav2',nn(1),nn(2)
-i=i+1
-k4=0
-do k2=1,bonds
-do k5=1,2
-k4=k4+1
-!print*,strc(nn(k2),k5)
-strct(i,k4)=strc(nn(k2),k5)
-enddo
-enddo
-!print*,'strct',(strct(i,k),k=1,k4)
-goto 124
-endif
-
-
-do i5=i4+1,totset
-!print*,'souravi4',i5,totset
-j=5
-l=0
-do k1=1,j-1
-do k=1,2
-if(strc(nn(k1),k).eq.n(i5))then
-l=l+1
-endif
-enddo
-enddo
-!print*,'i3,l',i2,l
-if(l.eq.0)goto 145
-goto 125
-145 l=0 
-do k2=1,j-1
- do k=1,2
-do k1=1,2
-if(strc(i5,k).eq.strc(nn(k2),k1))then
-l=l+1
-endif
-enddo
-enddo
-enddo
-if(l.eq.0)goto 165
-goto 125
-165 nn(5)=i5
-!print*,'nn4',nn(5)
-if(j.eq.bonds)then
-!print*,'sourav2',nn(1),nn(2)
-i=i+1
-k4=0
-do k2=1,bonds
-do k5=1,2
-k4=k4+1
-!print*,strc(nn(k2),k5)
-strct(i,k4)=strc(nn(k2),k5)
-enddo
-enddo
-!print*,'strct',(strct(i,k),k=1,k4)
-goto 125
-endif
-
-do i6=i5+1,totset
-!print*,'souravi4',i4,totset
-j=6
-l=0
-do k1=1,j-1
-do k=1,2
-if(strc(nn(k1),k).eq.n(i6))then
-l=l+1
-endif
-enddo
-enddo
-!print*,'i3,l',i2,l
-if(l.eq.0)goto 146
-goto 126
-146 l=0 
-do k2=1,j-1
- do k=1,2
-do k1=1,2
-if(strc(i6,k).eq.strc(nn(k2),k1))then
-l=l+1
-endif
-enddo
-enddo
-enddo
-if(l.eq.0)goto 166
-goto 126
-166 nn(6)=i6
-!print*,'nn4',nn(6)
-if(j.eq.bonds)then
-!print*,'sourav2',nn(1),nn(2)
-i=i+1
-k4=0
-do k2=1,bonds
-do k5=1,2
-k4=k4+1
-!print*,strc(nn(k2),k5)
-strct(i,k4)=strc(nn(k2),k5)
-enddo
-enddo
-!print*,'strct',(strct(i,k),k=1,k4)
-goto 126
-endif
-
-do i7=i6+1,totset
-!print*,'souravi4',i7,totset
-j=7
-l=0
-do k1=1,j-1
-do k=1,2
-if(strc(nn(k1),k).eq.n(i7))then
-l=l+1
-endif
-enddo
-enddo
-!print*,'i3,l',i2,l
-if(l.eq.0)goto 147
-goto 127
-147 l=0 
-do k2=1,j-1
- do k=1,2
-do k1=1,2
-if(strc(i7,k).eq.strc(nn(k2),k1))then
-l=l+1
-endif
-enddo
-enddo
-enddo
-if(l.eq.0)goto 167
-goto 127
-167 nn(7)=i7
-!print*,'nn4',nn(7)
-if(j.eq.bonds)then
-!print*,'sourav2',nn(1),nn(2)
-i=i+1
-k4=0
-do k2=1,bonds
-do k5=1,2
-k4=k4+1
-!print*,strc(nn(k2),k5)
-strct(i,k4)=strc(nn(k2),k5)
-enddo
-enddo
-!print*,'strct',(strct(i,k),k=1,k4)
-goto 127
-endif
-
-127 enddo
-126 enddo
-125 enddo
-124 enddo
-123 enddo
-122 enddo
-121 enddo
-!!!! production of the covalent bonding part of the structures ends !!!!!
-
-alstr=i
-
-strc(x,y)=0
-n(x)=0
-nn(x)=0
-
-
-do i1=1,alstr
-do k4=1,bonds*2
-strc(i1,k4)=strct(i1,k4)
-enddo
-enddo
-!do i1=1,alstr
-!print*,(strc(i1,k4),k4=1,bonds*2)
-!enddo
-endif
-if(bonds.eq.0)then
-alstr=1
-strc(x,y)=0
-strct(x,y)=0
-endif
-!do i1=1,1000
-!print*,'strc',(strc(i1,i2),i2=1,4)
-!enddo
-!!!!! production of the lone pairs and radical part of the structures starts !!!!!!
-if(nlast.ne.0.or.nnlp.ne.0)then
-i=0
-j5=0
-ll=0
-do ii=1,alstr
-k5=0
-i2=0
-if(bonds.ne.0)then
-do i1=1,nao
-do k1=1,bonds*2
-if(i1.eq.strct(ii,k1)) goto 530
-enddo
-i2=i2+1
-num(ii,i2)=i1
-
-530 enddo
-else
-do i1=1,nao
-i2=i2+1
-num(ii,i2)=i1
-enddo
-endif
-allp=i2
-
-!print*,'num*****',nnlp,(num(ii,i2),i2=1,allp)
-
-!!!!! production of the lone pair part of the structures starts !!!!!!
-
-if(nnlp.ne.0)then
-!print*,'cov:lp',nnlp,allp
-j=0
-m=0
-do i1=1,allp
-!if(nnlp.eq.3)then
-!print*,'allp',i1
-!endif
-j=1
-n(1)=i1
-!if(nnlp.eq.3)print*,'sourav1'
-if (j.eq.nnlp) then
-i=i+1
-j4=0
-do j1=nnlp,1,-1
-do j2=1,2
-j4=j4+1
-strc(i,j4)=num(ii,n(j1))
-enddo
-enddo
-j2=0
-do j3=1,bonds*2
-j2=j3+j4
-strc(i,j2)=strct(ii,j3)
-enddo
-!print*,(strc(i,l),l=1,nao)
-goto 399
-endif
-
-do i2=i1+1,allp
-!if(nnlp.eq.3)print*,'sourav2',i2
-j=2
-if(i2.eq.n(1))goto 401
-n(2)=i2
-if (j.eq.nnlp) then
-i=i+1
-j4=0
-do j1=1,nnlp
-do j2=1,2
-j4=j4+1
-strc(i,j4)=num(ii,n(j1))
-enddo
-enddo
-j2=0
-do j3=1,bonds*2
-j2=j3+j4
-strc(i,j2)=strct(ii,j3)
-enddo
-!print*,(strc(i,l),l=1,nao)
-goto 401
-endif
-
-do i3=i2+1,allp
-!if(nnlp.eq.3)print*,'sourav2',i3
-j=3
-do k=1,2
-if(i3.eq.n(k))goto 402
-enddo
-n(3)=i3
-!print*,'n3',n(3)
-if (j.eq.nnlp) then
-i=i+1
-j4=0
-!if(nnlp.eq.3)print*,'sourav3',num(1,n(3)),i,nnlp,ii
-!print*,(strc(i,j1),j1=1,2)
-do j1=1,nnlp
-!print*,'jjj',j
-!print*,num(ii,n(j1))
-do j2=1,2
-j4=j4+1
-strc(i,j4)=num(ii,n(j1))
-!print*,'strc',strc(i,j4)
-enddo
-enddo
-
-!if(nnlp.eq.3)print*,'sourav4'
-if(bonds.ne.0)then
-j2=0
-do j3=1,bonds*2
-j2=j3+j4
-strc(i,j2)=strct(ii,j3)
-enddo
-endif
-!print*,'sourav_strc',(strc(i,l),l=1,j4)
-goto 402
-endif
-
-do i4=i3+1,allp
-j=4
-do k=1,3
-if(i4.eq.n(k))goto 403
-enddo
-n(4)=i4
-!print*,(n(l),l=1,nao)
-if (j.eq.nnlp) then
-i=i+1
-j4=0
-do j1=1,nnlp
-do j2=1,2
-j4=j4+1
-strc(i,j4)=num(ii,n(j1))
-!print*,'num',i,num(ii,n(j1)),strc(i,j4)
-enddo
-enddo
-j2=0
-do j3=1,bonds*2
-j2=j3+j4
-strc(i,j2)=strct(ii,j3)
-enddo
-!print*,'sourav gadha'
-!print*,'strc',(strc(i,l),l=1,nae)
-goto 403
-endif
-
-!print*,'sourav4'
-do i5=i4+1,allp
-j=5
-do k=1,4
-if(i5.eq.n(k))goto 404
-enddo
-n(5)=i5
-if (j.eq.nnlp) then
-i=i+1
-j4=0
-do j1=1,nnlp
-do j2=1,2
-j4=j4+1
-strc(i,j4)=num(ii,n(j1))
-enddo
-enddo
-j2=0
-do j3=1,bonds*2
-j2=j3+j4
-strc(i,j2)=strct(ii,j3)
-enddo
-!print*,(strc(i,l),l=1,nao)
-goto 404
-endif
-
-do i6=i5+1,allp
-j=6
-do k=1,5
-if(i6.eq.n(k))goto 405
-enddo
-n(6)=i6
-if (j.eq.nnlp) then
-i=i+1
-j4=0
-do j1=1,nnlp
-do j2=1,2
-j4=j4+1
-strc(i,j4)=num(ii,n(j1))
-enddo
-enddo
-j2=0
-do j3=1,bonds*2
-j2=j3+j4
-strc(i,j2)=strct(ii,j3)
-enddo
-!print*,(strc(i,l),l=1,nao)
-goto 405
-endif
-
-do i7=i6+1,allp
-j=7
-do k=1,6
-if(i7.eq.n(k))goto 406
-enddo
-n(7)=i7
-if (j.eq.nnlp) then
-i=i+1
-j4=0
-do j1=1,nnlp
-do j2=1,2
-j4=j4+1
-strc(i,j4)=num(ii,n(j1))
-enddo
-enddo
-j2=0
-do j3=1,bonds*2
-j2=j3+j4
-strc(i,j2)=strct(ii,j3)
-enddo
-goto 406
-endif
-
-do i8=i7+1,allp
-j=8
-do k=1,7
-if(i8.eq.n(k))goto 407
-enddo
-n(8)=i8
-if (j.eq.nnlp) then
-i=i+1
-j4=0
-do j1=1,nnlp
-do j2=1,2
-j4=j4+1
-strc(i,j4)=num(ii,n(j1))
-enddo
-enddo
-j2=0
-do j3=1,bonds*2
-j2=j3+j4
-strc(i,j2)=strct(ii,j3)
-enddo
-goto 407
-endif
-
-do i9=i8+1,allp
-j=9
-do k=1,8
-if(i9.eq.n(k))goto 408
-enddo
-n(9)=i9
-if (j.eq.nnlp) then
-i=i+1
-j4=0
-do j1=1,nnlp
-do j2=1,2
-j4=j4+1
-strc(i,j4)=num(ii,n(j1))
-enddo
-enddo
-j2=0
-do j3=1,bonds*2
-j2=j3+j4
-strc(i,j2)=strct(ii,j3)
-enddo
-goto 408
-endif
-
-do i10=i9+1,allp
-j=10
-do k=1,9
-if(i10.eq.n(k))goto 409
-enddo
-n(10)=i10
-if (j.eq.nnlp) then
-i=i+1
-j4=0
-do j1=1,nnlp
-do j2=1,2
-j4=j4+1
-strc(i,j4)=num(ii,n(j1))
-enddo
-enddo
-j2=0
-do j3=1,bonds*2
-j2=j3+j4
-strc(i,j2)=strct(ii,j3)
-enddo
-goto 409
-endif
-
-409 enddo
-408 enddo
-407 enddo
-406 enddo
-405 enddo
-404 enddo
-403 enddo
-402 enddo
-401 enddo
-399 enddo
-endif
-if(bonds.eq.0)j2=j4
-!do j1=ll+1,i
-!print*,'strccc',j1,(strc(j1,i2),i2=1,j2)
-!enddo
-
-if(nlast.ne.0)then
-do j1=ll+1,i
-l=0
-do i3=1,allp
-do i2=1,nnlp*2,2
-!print*,'strcnum',strc(j1,i2),num(ii,i3)
-if(strc(j1,i2).eq.num(ii,i3))goto 439
-enddo
-l=l+1
-num1(l)=num(ii,i3)
-439 enddo
-!print*,'num1',(num1(i1),i1=1,l)
-
-do i2=1,l
-j=1
-nn(1)=num1(i2)
-if(nlast.eq.j)then
-j5=j5+1
-l4=0
-do l2=1,j2
-istrc(j5,l2)=strc(j1,l2)
-enddo
-do l2=j2+1,nae
-l4=l4+1
-istrc(j5,l2)=nn(l4)
-enddo
-!print*,'istrc',(istrc(j5,l2),l2=1,nae)
-goto 501
-endif
-
-do i3=i2+1,l
-j=2
-nn(2)=num1(i3)
-if(nlast.eq.j)then
-j5=j5+1
-l4=0
-do l2=1,j2
-istrc(j5,l2)=strc(j1,l2)
-enddo
-do l2=j2+1,nae
-l4=l4+1
-istrc(j5,l2)=nn(l4)
-enddo
-goto 502
-endif
-
-do i4=i3+1,l
-j=3
-nn(3)=num1(i4)
-if(nlast.eq.j)then
-j5=j5+1
-l4=0
-do l2=1,j2
-istrc(j5,l2)=strc(j1,l2)
-enddo
-do l2=j2+1,nae
-l4=l4+1
-istrc(j5,l2)=nn(l4)
-enddo
-goto 503
-endif
-
-do i5=i4+1,l
-j=4
-nn(4)=num1(i5)
-if(nlast.eq.j)then
-j5=j5+1
-l4=0
-do l2=1,j2
-istrc(j5,l2)=strc(j1,l2)
-enddo
-do l2=j2+1,nae
-l4=l4+1
-istrc(j5,l2)=nn(l4)
-enddo
-goto 504
-endif
-
-
-do i6=i5+1,l
-j=5
-nn(5)=num1(i6)
-if(nlast.eq.j)then
-j5=j5+1
-l4=0
-do l2=1,j2
-istrc(j5,l2)=strc(j1,l2)
-enddo
-do l2=j2+1,nae
-l4=l4+1
-istrc(j5,l2)=nn(l4)
-enddo
-goto 505
-endif
-
-
-do i7=i6+1,l
-j=6
-nn(6)=num1(i7)
-if(nlast.eq.j)then
-j5=j5+1
-l4=0
-do l2=1,j2
-istrc(j5,l2)=strc(j1,l2)
-enddo
-do l2=j2+1,nae
-l4=l4+1
-istrc(j5,l2)=nn(l4)
-enddo
-goto 506
-endif
-
-
-506 enddo
-505 enddo
-504 enddo
-503 enddo
-502 enddo
-501 enddo
-
-
-enddo
-endif
-
-ll=i
-enddo
-if(nlast.ne.0)then
-alstr=j5
-
-strc(x,y)=0
-
-
-do i1=1,alstr
-do k4=1,nae
-strc(i1,k4)=istrc(i1,k4)
-enddo
-enddo
-endif
-
-!print*,'j5j5',j5
-if (nnlp.ne.0) alstr=i
-if (nlast.ne.0) alstr=j5
-!do i1=1,alstr
-!print*,(strc(i1,k4),k4=1,nae)
-!enddo
-
-
-
-endif
-
-
-
-990 format(30I3)
-
-!!!!!!! new structures generation part ends !!!!!!!!!!!!!!!!!!!!!!!
-
-
-write(7,902)'number of lone pairs=',nnlp
-write(7,*)'                              '
-do i=1,alstr
-do i1=1,nae
-!print*,'sourav1',i,i1,alstr,nae,nlp
-fullionstr(i,i1)=strc(i,i1)+niao
-enddo
-!print*,'fullionstr',i,(fullionstr(i,i1),i1=1,nae)
-enddo
-deallocate(strc)
-
-!do j1=1,rns
-!print*,j1,')',(allionstr(j1,j2),j2=1,nae)
-!enddo
-!print*,'***********************************'
-d=nao
-e=nao-nnlp
-f=d-e
-elporb=nae-nnlp*2
-c=factorial(d)/(factorial(e)*factorial(f))
-call wigner(elporb,wig2)
-
-d=0
-e=0
-f=0
-d=nao-nnlp
-e=nae-2*nnlp
-f=(nao-nnlp)-(nae-2*nnlp)
-c1=factorial(d)/(factorial(e)*factorial(f))
-perm_nstr=wig2*c1*c
-write(7,307)' You have ',alstr,' ionic structures of the &
-set of ',nnlp,' lone pair'
-write(7,307)'among which',wig2*c1*c,'  structures are permissible mathematically'
-write(7,*)'*******************************************************************&
-*************************'
-307 format(2x,a,I7,a,I3,a)
-if(symm.eq.1)then
-
-if(sig_sym_flg.eq.1)call symmetry_cal_sig(nlp,fullionstr,alstr,symsc,symq,nssym)
-if(sig_sym_flg.ne.1)call symmetry_cal_pi(nlp,fullionstr,alstr,symsc,symq,nssym)
-
-nnn=0
-do ijk=nssym,1,-1
-do j2=1,alstr
-if(symq(j2).eq.ijk)then
-nnn=nnn+1
-if(niao.eq.0)then
-write(7,900),'ion structure',nnn,')',qulsym(j2),(fullionstr(j2,j1),j1=1,nao-nlp+nlp*2)
-endif
-if(niao.ne.0)then
-write(7,901),'ion structure',nnn,')',qulsym(j2),1,':',niao,(fullionstr(j2,j1),j1=1,nao-nlp+nlp*2)
-endif
-endif
-210 enddo
-write(7,*)'******************************************************'
-enddo
-else
-do j2=1,alstr
-if(niao.eq.0)then
-write(7,903),'ion structure',j2,')',(fullionstr(j2,j1),j1=1,nao-nlp+nlp*2)
-endif
-if(niao.ne.0)then
-write(7,904),'ion structure',j2,')',1,':',niao,(fullionstr(j2,j1),j1=1,nao-nlp+nlp*2)
-endif
-enddo
-write(7,*)'******************************************************'
-endif
-900 format(a,I5,a,x,I3,3x,30(I5))
-901 format(a,I5,a,x,I3,3x,I3,x,a,I3,30(I5))
-903 format(a,I5,a,x,30(I5))
-904 format(a,I5,a,x,I3,x,a,I3,30(I5))
-
-902 format(30x,a,x,I5)
-
-
-write(7,*)''
-write(7,*)'--------------------------------------------------------------------------'
-write(7,*)''
-
-jj=alstr
-nos=i
-nofs=jjj
-is=jj
-write(10,*)
-write(23,*)
-write(10,*)'----------------  Ionic Structures  -------------'
-write(23,*)'----------------  Ionic Structures  -------------'
-write(10,312),perm_nstr,' ionic structures of ',nnlp,' lone pair'
-write(23,312),perm_nstr,' ionic structures of ',nnlp,' lone pair'
-write(10,913),'IAB','NNB','SBB','fqual'
-write(23,913),'IAB','NNB','SBB','fqual'
-913 format(x,a,x,a,x,a,x,a)
-
-if(perm_nstr.eq.is.or.nfset.ne.0) call str_selection(fullionstr,nnlp,alstr,perm_nstr)
-if(perm_nstr.ne.is.and.nfset.eq.0)then
-
-230 format(a,20I5)
-!do i=1,nstr7
-!print*,(str5(i,j),j=1,nae)
-!enddo
-do i=1,nstr7
-ll=0
-do j=nlp*2+1,nae-nlast,2
-ll=ll+1
-str_p(i,ll)=prime_num(str5(i,j))*prime_num(str5(i,j+1))
-enddo
-if(nlast.ne.0)then
-do j=nae-nlast+1,nae
-ll=ll+1
-str_p(i,ll)=prime_num(str5(i,j))
-enddo
-endif
-enddo
-strbn=ll
-
-!do i=1,nstr7
-!print*,(str_p(i,j),j=1,strbn)
-!enddo
-
-do i=1,jj
-ll=0
-do j=nnlp*2+1,nae-nlast,2
-ll=ll+1
-ion_str_p(i,ll)=prime_num(fullionstr(i,j))*prime_num(fullionstr(i,j+1))
-space(i)=ion_str_p(i,ll)
-enddo
-if(nlast.ne.0)then
-do j=nae-nlast+1,nae
-ll=ll+1
-ion_str_p(i,ll)=prime_num(fullionstr(i,j))
-space(i)=space(i)*prime_num(fullionstr(i,j))
-enddo
-endif
-istrbn=ll
-enddo
-
-!do i=1,jj
-!print*,i,(ion_str_p(i,j),j=1,istrbn),space(i)
-!enddo
-
-lll=0
-llll=0
-do i=1,jj
-do i1=1,nstr7
-ll=0
-do i3=1,istrbn
-do i2=1,strbn
-!print*,ion_str_p(i,i3),str_p(i1,i2)
-if(ion_str_p(i,i3).eq.str_p(i1,i2))then
-ll=ll+1
-goto 721
-endif
-enddo
-721 enddo
-if(ll.eq.istrbn)then
-lll=lll+1
-covris(lll)=i
-goto 717
-endif
-enddo 
-717 enddo 
-
-llll=0
-do i=1,jj
-do i1=1,lll
-if(i.eq.covris(i1))goto 718
-enddo
-llll=llll+1
-covnris(llll)=i
-!print*,'covnris(llll)',llll,covnris(llll)
-718 enddo
-
-ll=0
-do i=lll+1,lll+llll
-ll=ll+1
-covris(i)=covnris(ll)
-enddo
-
-do i=1,lll+llll
-!print*,'1111111111',i
-ll=0
-if(space(covris(i)).ne.0)then
-!print*,'iiiiisourav',i
-do i1=i,lll
-l2=0
-do i2=1,nnlp*2,2
-do i3=1,nnlp*2,2
-if(fullionstr(covris(i),i2).eq.fullionstr(covris(i1),i3))l2=l2+1
-enddo
-enddo
-
-if(space(covris(i)).eq.space(covris(i1)).and.l2.eq.nnlp)then
-ll=ll+1
-strn(ll)=covris(i1)
-do j=1,nae
-str3(ll,j)=fullionstr(covris(i1),j)
-enddo
-!print*,i1,ll,space(covris(i1)),(str3(ll,j),j=1,nae)
-if(i.ne.i1)space(covris(i1))=0
-endif
-
-enddo
-!print*,'wig2',wig2,ll,llll
-if(ll.eq.wig2)then
-call quality_factor(nnlp,str3,ll,quality_fac,str_quality_1,str_quality_2,bondq)
-do m119=1,ll
-if(niao.eq.0)then
-write(10,800),str_quality_1(m119),bondq(m119),str_quality_2(m119)&
-,quality_fac(m119),'|',(str3(m119,m20),m20=1,nae)
-endif
-if(niao.gt.1)then
-write(10,801),str_quality_1(m119),bondq(m119),str_quality_2(m119)&
-,quality_fac(m119),'|',1,':',niao,(str3(m119,m20),m20=1,nae)
-endif
-if(niao.eq.1)then
-write(10,809),str_quality_1(m119),bondq(m119),str_quality_2(m119)&
-,quality_fac(m119),'|',1,1,(str3(m119,m20),m20=1,nae)
-endif
-enddo
-else
-l=0
-do i1=1,llll
-!print*,'space(covris(i)),covnris(i1)',i1,space(covris(i)),space(covnris(i1))
-l2=0
-do i2=1,nnlp*2,2
-do i3=1,nnlp*2,2
-if(fullionstr(covris(i),i2).eq.fullionstr(covnris(i1),i3))l2=l2+1
-enddo
-enddo
-if(space(covris(i)).eq.space(covnris(i1)).and.l2.eq.nnlp)then
-l=l+1
-ll=ll+1
-strn(ll)=covnris(i1)
-do j=1,nae
-str4(l,j)=fullionstr(covnris(i1),j)
-enddo
-do j=1,nae
-str3(ll,j)=fullionstr(covnris(i1),j)
-enddo
-!print*,'str3ll',ll,covnris(i1),(str3(ll,j),j=1,nae)
-if(i.ne.i1+lll)space(covris(lll+i1))=0
-endif
-enddo
-
-!do i1=1,ll
-!print*,'str3',(str3(i1,j),j=1,nae)
-!enddo
-
-
-
-if(ll.eq.totistr)then
-if(l.gt.1) call quality_factor(nnlp,str4,l,quality_fac,str_quality_1,str_quality_2,bondq)
-if(l.gt.1) call qult_str_arrange(nnlp,str4,l,quality_fac,str2,q_fac)
-l1=0
-do i1=l+1,ll
-l1=l1+1
-do j=1,nae
-str3(i1,j)=str2(l1,j)
-enddo
-enddo
-call quality_factor(nnlp,str3,ll,quality_fac,str_quality_1,str_quality_2,bondq)
-call vector_rep(nnlp,str3,ll,fvec)
-call write_xmi_new_2(nnlp,wig2,str3,ll,q_fac,quality_fac,fvec) 
-endif
-endif
-endif
-enddo
-
-endif
-
-312 format(I3,x,a,x,I3,x,a)
- enddo
-
-tnis=nofs
-
-800 format(I3,2x,I3,2x,I3,2x,I3,x,a,x,25I4)
-801 format(I3,2x,I3,2x,I3,2x,I3,x,a,x,I2,a,I2,x,25I4)
-809 format(I3,2x,I3,2x,I3,2x,I3,x,a,x,I3,I3,x,25I4)
-
-deallocate(strct)
-deallocate(istrc)
-deallocate(n)
-deallocate(nn)
-deallocate(num)
-deallocate(num1)
-
-print*,'exit ion_struc'
-
-return
-end subroutine ion_struc
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 function factorial(n)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -6326,17 +2666,13 @@ implicit none
 integer::i,j,n
 real*8::factorial
 
-!print*,'enter factorial'
-!print*,'n,n
 j=1
 do i=n,1,-1
 j=j*i
 enddo
 factorial=j
-!print*,'fact',j
 
 n=0
-!print*,'exit factorial'
 return
 end function factorial
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -6348,14 +2684,11 @@ implicit none
 integer::i,j,n
 real*8::dfactorial
 
-!print*,'enter dfactorial'
-!print*,'n,n
 j=1
 do i=n,1,-2
 j=j*i
 enddo
 dfactorial=j
-!print*,'fact',j
 
 n=0
 print*,'exit dfactorial'
@@ -6374,7 +2707,6 @@ integer::wig2,nm,s,i,j,k,l,b,m,nnae
 real*8::a,factorial,ss
 
 
-!print*,'enter wigner2'
 j=0
 m=mod(nnae,2)
 if(m.eq.1)then
@@ -6466,20 +2798,13 @@ write(10,912)'Overlap of this set of the structures =',1.0-ovlp
 endif
 write(10,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
 
-!write(10,910)'intra bond quality','sym break quality','nnbond quality'
-!write(10,911),tqlty,sqlty,bqlty
-
-
 914 format(I3,x,I3,x,I3,x,a,x,25I4)
 915 format(I3,x,I3,x,I3,x,a,x,I1,a,I1,x,25I4)
 916 format(I3,x,I3,x,I3,x,a,x,I3,I3,x,25I4)
 910 format(a,a,I3,x,a,I3,x,a,I3)
 912 format(a,3x,F10.3)
-!910 format(a,x,a,x,a,x,a)
-!911 format(15x,I3,7x,I3,7x,I3)
 print*,'exit write_rumer_xmi'
     
-!201 close(21)
 201 return
 end subroutine write_rumer_xmi
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -11416,116 +7741,116 @@ return
 end subroutine vector_rep
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine overlap(nl,str1,totstr)
+!subroutine overlap(nl,str1,totstr)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!use commondat
+!use commondat1
+!implicit none
+!
+!integer::i,i1,i2,i3,i4,i5,i6,i7,j,k,l,col1(2,1000),nl,str1(15000,20),totstr,nio
+!real::orb_ovlp_mat1_norm(10,10)
+!Double Precision::D1(1000),aldet_new
+!double precision::ovlp_mat(5000,100)
+!
+!nio=niao
+!if(ovlp_int.eq.0)then
+!  do i=1,nactorb
+!    do j=1,nactorb
+!      if(i.eq.j)then
+!      orb_ovlp_mat1(i,j)=4.0
+!      else
+!        if(atm_nb_sym(i).eq.atm_nb_sym(j))then 
+!          if(atm_nb_orbs(i).eq.atm_nb_orbs(j))then
+!          orb_ovlp_mat1(i,j)=3.0
+!          else
+!          orb_ovlp_mat1(i,j)=2.0/dist_rel_mat(atm_nb_orbs(i),atm_nb_orbs(j))
+!          endif
+!        else
+!        orb_ovlp_mat1(i,j)=0.0
+!        endif
+!      endif
+!    enddo
+!  enddo
+!endif
+!
+!do i1=1,5000
+!  do i2=1,100
+!    ovlp_mat(i1,i2)=0.0
+!  enddo
+!enddo
+!
+!
+!do i1=1,totstr
+!  do i2=i1,totstr
+!    do i3=1,ndet
+!      do i4=1,ndet
+!      aldet_new=1.0
+!        do i5=1,nalpha+nl
+!        col1(1,i5)=detmnt(str_det_sec(i1,i3),i5)-nio
+!        enddo
+!        do i5=1,nalpha+nl
+!        col1(2,i5)=detmnt(str_det_sec(i2,i4),i5)-nio
+!        enddo
+!        call MatLDR1('orb',col1,nalpha+nl,D1)
+!        do i6=1,nalpha+nl
+!        aldet_new=aldet_new*D1(i6)
+!        enddo
+!        do i6=1,20
+!        col1(1,i6)=0
+!        col1(2,i6)=0
+!        enddo
+!        i6=0
+!        do i5=nalpha+nl+1,nalpha+nl+nbeta+nl
+!        i6=i6+1
+!        col1(1,i6)=detmnt(str_det_sec(i1,i3),i5)-nio
+!        enddo
+!        i6=0
+!        do i5=nalpha+nl+1,nalpha+nl+nbeta+nl
+!        i6=i6+1
+!        col1(2,i6)=detmnt(str_det_sec(i2,i4),i5)-nio
+!        enddo
+!        call MatLDR1('orb',col1,nbeta+nl,D1)
+!        do i6=1,nbeta+nl
+!        aldet_new=aldet_new*D1(i6)
+!        enddo
+!        ovlp_mat(i1,i2)=ovlp_mat(i1,i2)+aldet_new*det_sign(str_det_sec(i1,i3))*det_sign(str_det_sec(i2,i4))
+!      enddo
+!    enddo
+!  enddo
+!enddo
+!
+!do i1=1,totstr
+!  do i2=i1+1,totstr
+!  ovlp_mat(i2,i1)=ovlp_mat(i1,i2)
+!  enddo
+!enddo
+!
+!do i1=1,totstr
+!  do i2=1,totstr
+!  ovlp_mat_norm(i1,i2)=ovlp_mat(i1,i2)/sqrt(ovlp_mat(i1,i1)*ovlp_mat(i2,i2))
+!  enddo
+!enddo
+!
+!321 format(I5,a,50I3)
+!320 format(I5,a,50F11.3)
+!
+!return
+!end subroutine overlap
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-use commondat
-use commondat1
-implicit none
-
-integer::i,i1,i2,i3,i4,i5,i6,i7,j,k,l,col1(2,1000),nl,str1(15000,20),totstr,nio
-real::orb_ovlp_mat1_norm(10,10)
-Double Precision::D1(1000),aldet_new
-double precision::ovlp_mat(5000,100)
-
-nio=niao
-if(ovlp_int.eq.0)then
-  do i=1,nactorb
-    do j=1,nactorb
-      if(i.eq.j)then
-      orb_ovlp_mat1(i,j)=4.0
-      else
-        if(atm_nb_sym(i).eq.atm_nb_sym(j))then 
-          if(atm_nb_orbs(i).eq.atm_nb_orbs(j))then
-          orb_ovlp_mat1(i,j)=3.0
-          else
-          orb_ovlp_mat1(i,j)=2.0/dist_rel_mat(atm_nb_orbs(i),atm_nb_orbs(j))
-          endif
-        else
-        orb_ovlp_mat1(i,j)=0.0
-        endif
-      endif
-    enddo
-  enddo
-endif
-
-do i1=1,5000
-  do i2=1,100
-    ovlp_mat(i1,i2)=0.0
-  enddo
-enddo
-
-
-do i1=1,totstr
-  do i2=i1,totstr
-    do i3=1,ndet
-      do i4=1,ndet
-      aldet_new=1.0
-        do i5=1,nalpha+nl
-        col1(1,i5)=detmnt(str_det_sec(i1,i3),i5)-nio
-        enddo
-        do i5=1,nalpha+nl
-        col1(2,i5)=detmnt(str_det_sec(i2,i4),i5)-nio
-        enddo
-        call MatLDR1('orb',col1,nalpha+nl,D1)
-        do i6=1,nalpha+nl
-        aldet_new=aldet_new*D1(i6)
-        enddo
-        do i6=1,20
-        col1(1,i6)=0
-        col1(2,i6)=0
-        enddo
-        i6=0
-        do i5=nalpha+nl+1,nalpha+nl+nbeta+nl
-        i6=i6+1
-        col1(1,i6)=detmnt(str_det_sec(i1,i3),i5)-nio
-        enddo
-        i6=0
-        do i5=nalpha+nl+1,nalpha+nl+nbeta+nl
-        i6=i6+1
-        col1(2,i6)=detmnt(str_det_sec(i2,i4),i5)-nio
-        enddo
-        call MatLDR1('orb',col1,nbeta+nl,D1)
-        do i6=1,nbeta+nl
-        aldet_new=aldet_new*D1(i6)
-        enddo
-        ovlp_mat(i1,i2)=ovlp_mat(i1,i2)+aldet_new*det_sign(str_det_sec(i1,i3))*det_sign(str_det_sec(i2,i4))
-      enddo
-    enddo
-  enddo
-enddo
-
-do i1=1,totstr
-  do i2=i1+1,totstr
-  ovlp_mat(i2,i1)=ovlp_mat(i1,i2)
-  enddo
-enddo
-
-do i1=1,totstr
-  do i2=1,totstr
-  ovlp_mat_norm(i1,i2)=ovlp_mat(i1,i2)/sqrt(ovlp_mat(i1,i1)*ovlp_mat(i2,i2))
-  enddo
-enddo
-
-321 format(I5,a,50I3)
-320 format(I5,a,50F11.3)
-
-return
-end subroutine overlap
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine matrx_norm(ovlp_mat,totstr,ovlp_mat_norm)
-implicit none
-
-integer::i1,i2,totstr
-double precision::ovlp_mat(5000,100),ovlp_mat_norm(5000,100)
-
-do i1=1,totstr
-do i2=1,totstr
-ovlp_mat_norm(i1,i2)=ovlp_mat(i1,i2)/sqrt(ovlp_mat(i1,i1)*ovlp_mat(i2,i2))
-enddo
-enddo
-
-
-end subroutine matrx_norm
+!subroutine matrx_norm(ovlp_mat,totstr,ovlp_mat_norm)
+!implicit none
+!
+!integer::i1,i2,totstr
+!double precision::ovlp_mat(5000,100),ovlp_mat_norm(5000,100)
+!
+!do i1=1,totstr
+!do i2=1,totstr
+!ovlp_mat_norm(i1,i2)=ovlp_mat(i1,i2)/sqrt(ovlp_mat(i1,i1)*ovlp_mat(i2,i2))
+!enddo
+!enddo
+!
+!
+!end subroutine matrx_norm
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 subroutine intra_bond_factor(nl,str,tonstruc,str_quality_1)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -11620,3320 +7945,6 @@ print*,'exit symm_break_factor'
 return
 end subroutine symm_break_factor
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!subroutine w_s_x(nl,strn,str3,ncqs,q_fac2)
-!!!
-!!!!!!! this subroutine select the independent structures and write them in the .xmi file 
-!!!!!!! for the symmetric set of structures of a symmetric molecule (as opted by user) ....
-!!!!!!! subroutine started to select the structures of highest quality biggest
-!!!!!!! symmetric set and select the structures as a set of symmetric set if
-!!!!!!! they are independent with the previous sets or reject the full set
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!use commondat
-!!implicit none
-!!common/quality/str_quality_1,str_quality_2,bondq,tqlty,bqlty,sqlty,tnqs,nssym,qulsym,symq,&
-!!sigsym,tnqs_sig
-!!common/str/str5,nstr7
-!!
-!!integer::nl,strn,ncqs,tostr,initstr,i,i1,i2,i3,i4,i5,i6,i7,i8,i9,m119,m18,m19,m20,m21,m23,m24,count&
-!!,qul(100),nqul,j,jj,jjj,fg,flg,ii5,m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15,m16,m17,x,y,strs
-!!integer::i5up16,i16i7,m16m21,i5up15,i15i7,m15m21,i5up14,i14i7,m14m21,i5up13,i13i7,m13m21,i5up12,i12i7,m12m21,&
-!!i5up11,i11i7,m11m21,i5up10,i10i7,m10m21,i5up9,i9i7,m9m21,i5up8,i8i7,m8m21,i5up7,i7i7,m7m21,i5up6,i6i7,m6m21,&
-!!i5up5,i5i7,m5m21,i5up4,i4i7,m4m21,i5up3,i3i7,m3m21,i5up2,i2i7,m2m21,i5up1,i1i7,m1m21,i5up17,i17i7,m17m21
-!!integer::str3(15000,20),q_fac2(15000),finalvec(15000),strset(1000),col(1000),sigsym(15000),tnqs_sig,&
-!!ffvec2(15000,1000),bondq(15000),bondq4(15000),nqset(15000),str5(2000,20),nstr7,&
-!!tndet,totstr,Ifail,indpnt,strno(1000),str_quality_1(15000),str_quality_2(15000),ttqlty0,ttqlty&
-!!,tqlty,bqlty,sqlty,hqlty,tnqs,nssym,qulsym(15000),symq(15000),set_number,ttqlty1,det_inv,ttqlty2,ttqlty3
-!!integer::rumer(15000),rumer_rad(15000),quality_fac(15000),rumset,u1,max_set,mns
-!!!integer,dimension(:),allocatable::qq1,qq2,qq
-!!integer::qq1(5000),qq2(5000),qq(5000),str2(2000,20),Rid,set_num(100)
-!!real*8::ovlp
-!!Double Precision::D(1000)
-!!character(10)::dd,a
-!!character(len=100)::outfile
-!!
-!!
-!!print*,'enter write_symm_xmi'
-!!!x=100000
-!!!y=100
-!!!
-!!!allocate(str2(x,y))
-!!!allocate(qq(x))
-!!!allocate(qq1(x))
-!!!allocate(qq2(x))
-!!!str2(x,y)=0
-!!!qq(x)=0
-!!!qq1(x)=0
-!!!qq2(x)=0
-!!mns=0
-!!u1=1
-!!max_set=75000
-!!
-!!if(nfset.eq.3.or.nfset.eq.5)then
-!!rumset=0
-!!call rumer_structures(nl,str3,ncqs,rumer,rumer_rad)
-!!call write_rumer_xmi(nl,str3,ncqs,rumer,rumer_rad,quality_fac)
-!!endif
-!!
-!!!print *,'write_symm_xmi'
-!!set_number=0
-!!bqlty=0
-!!tqlty=0
-!!sqlty=0
-!!hqlty=0
-!!indpnt=2
-!!!ovlpval=1.0
-!!if(noq0.gt.strn)then
-!!ttqlty0=noq0
-!!else
-!!ttqlty0=strn+noq0
-!!endif
-!!ttqlty1=strn+noq1
-!!ttqlty2=strn+noq2
-!!ttqlty3=strn+noq3
-!!
-!!write(*,*)'ttqlty1,ttqlty2,ttqlty3',ttqlty1,ttqlty2,ttqlty3,ttqlty0,noq1,noq2,noq3,noq0,nfset
-!!!!!!!!! strn = number of permissible structures !!!!
-!!!print*,'sou1',strn,ndet,nl,ncqs
-!!do i=1,ncqs
-!!write(*,231),i,(str3(i,j),j=1,nae),q_fac2(i),str_quality_1(i),str_quality_2(i),bondq(i)
-!!enddo
-!!!if(indpnt.eq.1)then
-!!!call vector_rep(nl,str3,ncqs,ffvec2)
-!!!endif
-!!!print*,'sou1',strn,ndet,nl,ncqs
-!!!do i1=1,ncqs
-!!!print*,(ffvec2(i1,i),i=1,ndet)
-!!!enddo
-!!!call quality_factor(nl,str3,ncqs,q_fac2,q_1,q_2)
-!!jj=1
-!!do m19=1,ncqs
-!!!print*,'q_fac2',q_fac2(m19)
-!!if(m19.eq.1)qul(1)=q_fac2(1)
-!!j=jj
-!!do i=1,j
-!!if(qul(i).eq.q_fac2(m19))goto 373
-!!enddo
-!!jj=jj+1
-!!qul(i)=q_fac2(m19)
-!!!print*,qul(i)
-!!373 enddo
-!!nqul=jj
-!!!print*,'ncqs',ncqs
-!!
-!!do i=1,nqul
-!!jjj=0
-!!jj=0
-!!do m19=1,ncqs
-!!!print*,qul(i),q_fac2(m19)
-!!if(qul(i).eq.q_fac2(m19))then
-!!jjj=jjj+1
-!!jj=m19
-!!endif
-!!enddo
-!!nqset(i)=jjj
-!!strset(i)=jj
-!!print*,'nqset(i)',i,nqset(i),qul(i),strset(i)
-!!!write(*,231),(str3(i,j),j=1,nae)
-!!enddo
-!!
-!!flg=0
-!!totstr=0
-!!i7=0
-!!m21=0
-!!i5=ndet
-!!do i8=1,1000
-!!finalvec(i8)=0
-!!enddo
-!!do m19=1,10000
-!!do m18=1,15
-!!str2(m19,m18)=0
-!!enddo
-!!enddo
-!!
-!!
-!!i5up1=i5
-!!i1i7=i7
-!!m1m21=m21
-!!
-!!!!!!! LOOP STARTS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!
-!!!!!!! loop 1 >>>
-!!do m1=1,nqul
-!!print*,'loop1'
-!!
-!!do i=i5up1+1,i5
-!!finalvec(i)=0
-!!enddo
-!!
-!!do m19=i1i7+1,i7
-!!strno(m19)=0
-!!do i8=1,15
-!!str2(m19,i8)=0
-!!enddo
-!!enddo
-!!
-!!i7=i1i7
-!!totstr=i1i7
-!!m21=m1m21
-!!
-!!jj=0
-!!
-!!flg=0
-!!
-!!if(nqset(m1).gt.strn)goto 701
-!!
-!!if(m1.eq.1)then
-!!do i=1,strset(m1)
-!!totstr=totstr+1
-!!strno(totstr)=i
-!!enddo
-!!else
-!!do i=strset(m1-1)+1,strset(m1)
-!!totstr=totstr+1
-!!strno(totstr)=i
-!!enddo
-!!endif
-!!if(totstr.gt.strn)goto 701
-!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!if(Ifail.eq.1)goto 701
-!!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!call MatLDR('str',strno,totstr,D)
-!!
-!!ovlp=1.0
-!!do i=1,totstr
-!!ovlp=ovlp*D(i)
-!!enddo
-!!if(1.0-ovlp.gt.ovval)goto 701
-!!endif
-!!
-!!m21=m21+nqset(m1)
-!!if(m21.gt.strn) goto 701
-!!
-!!if(m1.eq.1)strs=0
-!!if(m1.ne.1)strs=strset(m1-1)
-!!
-!!do m19=strs+1,strset(m1)
-!!if(q_fac2(m19).ne.qul(m1))goto 601
-!!i7=i7+1
-!!do i3=1,nae
-!!str2(i7,i3)=str3(m19,i3)
-!!enddo
-!!col(i7)=m19
-!!qq(i7)=q_fac2(m19)
-!!qq1(i7)=str_quality_1(m19)
-!!qq2(i7)=str_quality_2(m19)
-!!bondq4(i7)=bondq(m19)
-!!flg=1
-!!count=1
-!!601 enddo
-!!if(i7.eq.strn) then
-!!ttqlty=0
-!!tqlty=0
-!!bqlty=0
-!!sqlty=0
-!!do m119=1,i7
-!!ttqlty=ttqlty+qq(m119)
-!!enddo
-!!if(ttqlty.le.ttqlty0)then
-!!set_number=set_number+1
-!!mns=mns+1
-!!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!!if(nfset.eq.1.and.set_number.gt.1)then
-!!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!!
-!!do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!!endif
-!!if(niao.gt.1)then
-!!write(9,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!!if(niao.eq.1)then
-!!write(9,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!endif
-!!enddo
-!!if(nfset.eq.3)then
-!!Rumwrite=1
-!!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!!endif
-!!
-!!if(ovopt.eq.1) then
-!!call MatLDR('str',col,i7,D)
-!!
-!!ovlp=1.0
-!!do i=1,i7
-!!ovlp=ovlp*D(i)
-!!enddo
-!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-!!endif
-!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
-!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!bqlty=0
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!!if(mns.eq.max_set)then
-!!if(u1.eq.mset-1) goto 379
-!!close(9+u1)
-!!mns=0
-!!u1=u1+1
-!!if(u1.le.9)then
-!!write(a,'(I1)')u1
-!!endif
-!!if(u1.gt.9.and.u1.lt.100)then
-!!write(a,'(I2)')u1
-!!endif
-!!if(u1.gt.99.and.u1.lt.1000)then
-!!write(a,'(I3)')u1
-!!endif
-!!if(u1.eq.1000)then
-!!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!!sets. Please increase the limit'
-!!goto 379
-!!endif
-!!outfile='structure_set_'//trim(a)//trim('.dat')
-!!open(unit=9+u1,file=outfile,status='unknown')
-!!endif
-!!
-!!goto 701
-!!endif
-!!
-!!i5up2=i5
-!!i2i7=i7
-!!m2m21=m21
-!!
-!!!!!!! loop 2 >>>
-!!
-!!do m2=m1+1,nqul
-!!print*,'loop2'
-!!
-!!do i=i5up2+1,i5
-!!finalvec(i)=0
-!!enddo
-!!
-!!do m19=i2i7+1,i7
-!!strno(m19)=0
-!!do i8=1,15
-!!str2(m19,i8)=0
-!!enddo
-!!enddo
-!!
-!!i7=i2i7
-!!totstr=i2i7
-!!m21=m2m21
-!!
-!!jj=0
-!!
-!!flg=0
-!!
-!!if(nqset(m2).gt.strn)goto 702
-!!
-!!do i=strset(m2-1)+1,strset(m2)
-!!totstr=totstr+1
-!!strno(totstr)=i
-!!enddo
-!!if(totstr.gt.strn)goto 702
-!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!
-!!if(Ifail.eq.1) goto 702
-!!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!call MatLDR('str',strno,totstr,D)
-!!
-!!ovlp=1.0
-!!do i=1,totstr
-!!ovlp=ovlp*D(i)
-!!enddo
-!!if(1.0-ovlp.gt.ovval)goto 702
-!!endif
-!!
-!!
-!!m21=m21+nqset(m2)
-!!if(m21.gt.strn) goto 702
-!!
-!!
-!!do m19=strset(m2-1)+1,strset(m2)
-!!if(q_fac2(m19).ne.qul(m2))goto 602
-!!i7=i7+1
-!!do i3=1,nae
-!!str2(i7,i3)=str3(m19,i3)
-!!enddo
-!!col(i7)=m19
-!!qq(i7)=q_fac2(m19)
-!!qq1(i7)=str_quality_1(m19)
-!!qq2(i7)=str_quality_2(m19)
-!!bondq4(i7)=bondq(m19)
-!!flg=1
-!!count=2
-!!602 enddo
-!!if(i7.eq.strn) then
-!!!if(nfset.gt.0)then
-!!ttqlty=0
-!!tqlty=0
-!!bqlty=0
-!!sqlty=0
-!!do m119=1,i7
-!!ttqlty=ttqlty+qq(m119)
-!!enddo
-!!if(ttqlty.le.ttqlty0)then
-!!set_number=set_number+1
-!!mns=mns+1
-!!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!!if(nfset.eq.1.and.set_number.gt.1)then
-!!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!!
-!!do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!!endif
-!!if(niao.gt.1)then
-!!write(9,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!!if(niao.eq.1)then
-!!write(9,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!endif
-!!enddo
-!!if(nfset.eq.3)then
-!!Rumwrite=1
-!!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!!endif
-!!if(ovopt.eq.1) then
-!!call MatLDR('str',col,i7,D)
-!!
-!!ovlp=1.0
-!!do i=1,i7
-!!ovlp=ovlp*D(i)
-!!enddo
-!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-!!endif
-!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
-!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!bqlty=0
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!!if(mns.eq.max_set)then
-!!if(u1.eq.mset-1) goto 379
-!!close(9+u1)
-!!mns=0
-!!u1=u1+1
-!!if(u1.le.9)then
-!!write(a,'(I1)')u1
-!!endif
-!!if(u1.gt.9.and.u1.lt.100)then
-!!write(a,'(I2)')u1
-!!endif
-!!if(u1.gt.99.and.u1.lt.1000)then
-!!write(a,'(I3)')u1
-!!endif
-!!if(u1.eq.1000)then
-!!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!!sets. Please increase the limit'
-!!goto 379
-!!endif
-!!outfile='structure_set_'//trim(a)//trim('.dat')
-!!open(unit=9+u1,file=outfile,status='unknown')
-!!endif
-!!goto 702
-!!endif
-!!
-!!
-!!i5up3=i5
-!!i3i7=i7
-!!m3m21=m21
-!!
-!!!!!!! loop 3 >>>
-!!
-!!do m3=m2+1,nqul
-!!print*,'loop3'
-!!
-!!do i=i5up3+1,i5
-!!finalvec(i)=0
-!!enddo
-!!
-!!do m19=i3i7+1,i7
-!!strno(m19)=0
-!!do i8=1,15
-!!str2(m19,i8)=0
-!!enddo
-!!enddo
-!!
-!!i7=i3i7
-!!totstr=i3i7
-!!m21=m3m21
-!!
-!!jj=0
-!!
-!!flg=0
-!!
-!!!do m19=strset(m3-1)+1,strset(m3)
-!!
-!!if(nqset(m3).gt.strn)goto 703
-!!
-!!do i=strset(m3-1)+1,strset(m3)
-!!totstr=totstr+1
-!!strno(totstr)=i
-!!print*,'strno',strno(totstr)
-!!enddo
-!!if(totstr.gt.strn)goto 703
-!!do i=1,totstr
-!!print*,'strno_all',strno(i)
-!!enddo
-!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!!write(9,*),'ifail',ifail,det_inv
-!!
-!!print*,'Ifail',Ifail,i7,q_fac2(m19)
-!!if(Ifail.eq.1) goto 703
-!!!do i=strset(m3-1)+1,strset(m3)
-!!!strno(totstr)=0
-!!!totstr=totstr-1
-!!!enddo
-!!!goto 703
-!!!endif
-!!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!!print*,'MatLDR_write_xmi',totstr
-!!call MatLDR('str',strno,totstr,D)
-!!
-!!!print*,'DDD',(D(i),i=1,totstr)
-!!ovlp=1.0
-!!do i=1,totstr
-!!ovlp=ovlp*D(i)
-!!enddo
-!!!print*,'ovval',1.0-ovlp,ovlp
-!!if(1.0-ovlp.gt.ovval)goto 703
-!!endif
-!!
-!!m21=m21+nqset(m3)
-!!if(m21.gt.strn) goto 703
-!!!print*,'sourav_xmi_sym'
-!!
-!!!303 enddo
-!!
-!!
-!!do m19=strset(m3-1)+1,strset(m3)
-!!if(q_fac2(m19).ne.qul(m3))goto 603
-!!i7=i7+1
-!!print*,'new struc',i7,m19,q_fac2(m19),str_quality_1(m19),str_quality_2(m19),bondq(m19)
-!!do i3=1,nae
-!!str2(i7,i3)=str3(m19,i3)
-!!enddo
-!!col(i7)=m19
-!!qq(i7)=q_fac2(m19)
-!!qq1(i7)=str_quality_1(m19)
-!!qq2(i7)=str_quality_2(m19)
-!!bondq4(i7)=bondq(m19)
-!!flg=1
-!!count=3
-!!603 enddo
-!!if(i7.eq.strn) then
-!!!if(nfset.gt.0)then
-!!ttqlty=0
-!!tqlty=0
-!!bqlty=0
-!!sqlty=0
-!!do m119=1,i7
-!!ttqlty=ttqlty+qq(m119)
-!!!tqlty=tqlty+qq1(m119)
-!!!bqlty=bqlty+bondq4(m119)
-!!!sqlty=sqlty+qq2(m119)
-!!enddo
-!!!endif
-!!print*,'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!!if(ttqlty.le.ttqlty0)then
-!!set_number=set_number+1
-!!mns=mns+1
-!!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!!if(nfset.eq.1.and.set_number.gt.1)then
-!!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!!write(9,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!endif
-!!
-!!do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!!endif
-!!if(niao.gt.1)then
-!!write(9,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!!if(niao.eq.1)then
-!!write(9,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!endif
-!!enddo
-!!!if(nfset.eq.0.or.nfset.gt.1) then
-!!if(ovopt.eq.vpt) then
-!!call MatLDR('str',col,i7,D)
-!!
-!!ovlp=1.0
-!!do i=1,i7
-!!ovlp=ovlp*D(i)
-!!enddo
-!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-!!endif
-!!!write(9,910)'quality value',ttqlty
-!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
-!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!!bqlty=0
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!!endif
-!!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!!'ovval',1.0-ovlp
-!!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!!if(mns.eq.max_set)then
-!!if(u1.eq.mset-1) goto 379
-!!close(9+u1)
-!!mns=0
-!!u1=u1+1
-!!if(u1.le.9)then
-!!write(a,'(I1)')u1
-!!endif
-!!if(u1.gt.9.and.u1.lt.100)then
-!!write(a,'(I2)')u1
-!!endif
-!!if(u1.gt.99.and.u1.lt.1000)then
-!!write(a,'(I3)')u1
-!!endif
-!!if(u1.eq.1000)then
-!!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!!sets. Please increase the limit'
-!!goto 379
-!!endif
-!!outfile='structure_set_'//trim(a)//trim('.dat')
-!!open(unit=9+u1,file=outfile,status='unknown')
-!!endif
-!!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!!write(9,911),tqlty,sqlty,bqlty
-!!!bqlty=0
-!!!!set_number=set_number+1
-!!!write(9,*),'Set_number=',set_number
-!!!write(9,*),'    '
-!!!endif
-!!!endif
-!!!if(nfset.eq.1)goto 379
-!!goto 703
-!!endif
-!!
-!!i5up4=i5
-!!i4i7=i7
-!!m4m21=m21
-!!
-!!!!! loop 4 >>>
-!!do m4=m3+1,nqul
-!!print*,'loop4'
-!!!print*,'m4m4m4',m4
-!!do i=i5up4+1,i5
-!!finalvec(i)=0
-!!enddo
-!!do m19=i4i7+1,i7
-!!strno(m19)=0
-!!do i8=1,15
-!!str2(m19,i8)=0
-!!enddo
-!!enddo
-!!i7=i4i7
-!!totstr=i4i7
-!!m21=m4m21
-!!
-!!jj=0
-!!
-!!flg=0
-!!!do m19=strset(m4-1)+1,strset(m4)
-!!
-!!if(nqset(m4).gt.strn)goto 704
-!!
-!!do i=strset(m4-1)+1,strset(m4)
-!!totstr=totstr+1
-!!strno(totstr)=i
-!!print*,'strno',strno(totstr)
-!!enddo
-!!
-!!if(totstr.gt.strn)goto 704
-!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!!write(9,*),'ifail',ifail,det_inv
-!!!print*,'ifail4',ifail
-!!print*,'Ifail',Ifail,i7,q_fac2(m19)
-!!if(Ifail.eq.1) goto 704
-!!!strno(totstr)=0
-!!!totstr=totstr-1
-!!!goto 304
-!!!endif
-!!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!!print*,'MatLDR_write_xmi',totstr
-!!call MatLDR('str',strno,totstr,D)
-!!
-!!!print*,'DDD',(D(i),i=1,totstr)
-!!ovlp=1.0
-!!do i=1,totstr
-!!ovlp=ovlp*D(i)
-!!enddo
-!!!print*,'ovval',1.0-ovlp,ovlp
-!!if(1.0-ovlp.gt.ovval)goto 704
-!!endif
-!!
-!!
-!!m21=m21+nqset(m4)
-!!if(m21.gt.strn) goto 704
-!!!print*,'sourav_xmi_sym'
-!!
-!!!304 enddo
-!!
-!!
-!!do m19=strset(m4-1)+1,strset(m4)
-!!if(q_fac2(m19).ne.qul(m4))goto 604
-!!i7=i7+1
-!!print*,'new struc',i7,m19,q_fac2(m19),str_quality_1(m19),str_quality_2(m19),bondq(m19)
-!!do i3=1,nae
-!!str2(i7,i3)=str3(m19,i3)
-!!enddo
-!!col(i7)=m19
-!!qq(i7)=q_fac2(m19)
-!!qq1(i7)=str_quality_1(m19)
-!!qq2(i7)=str_quality_2(m19)
-!!bondq4(i7)=bondq(m19)
-!!flg=1
-!!count=4
-!!604 enddo
-!!if(i7.eq.strn) then
-!!!if(nfset.gt.0)then
-!!ttqlty=0
-!!tqlty=0
-!!bqlty=0
-!!sqlty=0
-!!do m119=1,i7
-!!ttqlty=ttqlty+qq(m119)
-!!!tqlty=tqlty+qq1(m119)
-!!!bqlty=bqlty+bondq4(m119)
-!!!sqlty=sqlty+qq2(m119)
-!!enddo
-!!!endif
-!!print*,'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!!if(ttqlty.le.ttqlty0)then
-!!set_number=set_number+1
-!!mns=mns+1
-!!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!!if(nfset.eq.1.and.set_number.gt.1)then
-!!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!!write(9,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!endif
-!!
-!!do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.ne.0)then
-!!if(niao.gt.1)then
-!!write(9,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.eq.0)then
-!!if(niao.eq.1)then
-!!write(9,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!endif
-!!enddo
-!!!if(nfset.eq.0.or.nfset.gt.1) then
-!!if(ovopt.eq.vpt) then
-!!call MatLDR('str',col,i7,D)
-!!
-!!ovlp=1.0
-!!do i=1,i7
-!!ovlp=ovlp*D(i)
-!!enddo
-!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-!!endif
-!!!write(9,910)'quality value',ttqlty
-!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
-!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!!bqlty=0
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!!endif
-!!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!!'ovval',1.0-ovlp
-!!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!!if(mns.eq.max_set)then
-!!if(u1.eq.mset-1) goto 379
-!!close(9+u1)
-!!mns=0
-!!u1=u1+1
-!!if(u1.le.9)then
-!!write(a,'(I1)')u1
-!!endif
-!!if(u1.gt.9.and.u1.lt.100)then
-!!write(a,'(I2)')u1
-!!endif
-!!if(u1.gt.99.and.u1.lt.1000)then
-!!write(a,'(I3)')u1
-!!endif
-!!if(u1.eq.1000)then
-!!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!!sets. Please increase the limit'
-!!goto 379
-!!endif
-!!outfile='structure_set_'//trim(a)//trim('.dat')
-!!open(unit=9+u1,file=outfile,status='unknown')
-!!endif
-!!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!!write(9,911),tqlty,sqlty,bqlty
-!!!bqlty=0
-!!!!set_number=set_number+1
-!!!write(9,*),'Set_number=',set_number
-!!!write(9,*),'    '
-!!!endif
-!!!endif
-!!!if(nfset.eq.1)goto 379
-!!goto 704
-!!endif
-!!
-!!i5up5=i5
-!!i5i7=i7
-!!m5m21=m21
-!!
-!!!!!!! loop 5 >>>
-!!do m5=m4+1,nqul
-!!print*,'loop5'
-!!!print*,'m5m5m5',m5
-!!do i=i5up5+1,i5
-!!finalvec(i)=0
-!!enddo
-!!do m19=i5i7+1,i7
-!!strno(m19)=0
-!!do i8=1,15
-!!str2(m19,i8)=0
-!!enddo
-!!enddo
-!!i7=i5i7
-!!totstr=i5i7
-!!!print*,'totstr5',totstr
-!!m21=m5m21
-!!
-!!jj=0
-!!
-!!flg=0
-!!!do m19=strset(m5-1)+1,strset(m5)
-!!
-!!if(nqset(m5).gt.strn)goto 705
-!!
-!!do i=strset(m5-1)+1,strset(m5)
-!!totstr=totstr+1
-!!strno(totstr)=i
-!!print*,'strno',strno(totstr)
-!!enddo
-!!
-!!if(totstr.gt.strn)goto 705
-!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!!write(9,*),'ifail',ifail,det_inv
-!!print*,'Ifail',Ifail,i7,q_fac2(m19)
-!!if(Ifail.eq.1) goto 705
-!!
-!!!strno(totstr)=0
-!!!totstr=totstr-1
-!!!goto 305
-!!!endif
-!!!endif
-!!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!!print*,'MatLDR_write_xmi',totstr
-!!call MatLDR('str',strno,totstr,D)
-!!
-!!!print*,'DDD',(D(i),i=1,totstr)
-!!ovlp=1.0
-!!do i=1,totstr
-!!ovlp=ovlp*D(i)
-!!enddo
-!!!print*,'ovval',1.0-ovlp,ovlp
-!!if(1.0-ovlp.gt.ovval)goto 705
-!!endif
-!!
-!!
-!!m21=m21+nqset(m5)
-!!if(m21.gt.strn) goto 705
-!!!print*,'sourav_xmi_sym'
-!!
-!!!305 enddo
-!!
-!!!print*,'jj',jj,m5,nqul
-!!!print*,'******jj',jj
-!!
-!!do m19=strset(m5-1)+1,strset(m5)
-!!if(q_fac2(m19).ne.qul(m5))goto 605
-!!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!!i7=i7+1
-!!print*,'new struc',i7,m19,q_fac2(m19),str_quality_1(m19),str_quality_2(m19),bondq(m19)
-!!do i3=1,nae
-!!str2(i7,i3)=str3(m19,i3)
-!!enddo
-!!col(i7)=m19
-!!qq(i7)=q_fac2(m19)
-!!qq1(i7)=str_quality_1(m19)
-!!qq2(i7)=str_quality_2(m19)
-!!bondq4(i7)=bondq(m19)
-!!flg=1
-!!count=5
-!!605 enddo
-!!!print*,'i7 5',i7,m5
-!!if(i7.eq.strn) then
-!!!if(nfset.gt.0)then
-!!ttqlty=0
-!!tqlty=0
-!!bqlty=0
-!!sqlty=0
-!!do m119=1,i7
-!!ttqlty=ttqlty+qq(m119)
-!!!tqlty=tqlty+qq1(m119)
-!!!bqlty=bqlty+bondq4(m119)
-!!!sqlty=sqlty+qq2(m119)
-!!enddo
-!!!endif
-!!print*,'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!!if(ttqlty.le.ttqlty0)then
-!!set_number=set_number+1
-!!mns=mns+1
-!!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!!if(nfset.eq.1.and.set_number.gt.1)then
-!!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!!write(9,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!endif
-!!
-!!do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.ne.0)then
-!!if(niao.gt.1)then
-!!write(9,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.eq.0)then
-!!if(niao.eq.1)then
-!!write(9,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!endif
-!!enddo
-!!!if(nfset.eq.0.or.nfset.gt.1) then
-!!if(nfset.eq.3)then
-!!Rumwrite=1
-!!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!!endif
-!!if(ovopt.eq.1) then
-!!call MatLDR('str',col,i7,D)
-!!
-!!ovlp=1.0
-!!do i=1,i7
-!!ovlp=ovlp*D(i)
-!!enddo
-!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-!!endif
-!!!write(9,910)'quality value',ttqlty
-!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
-!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!!bqlty=0
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!!endif
-!!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!!'ovval',1.0-ovlp
-!!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!!if(mns.eq.max_set)then
-!!if(u1.eq.mset-1) goto 379
-!!close(9+u1)
-!!mns=0
-!!u1=u1+1
-!!if(u1.le.9)then
-!!write(a,'(I1)')u1
-!!endif
-!!if(u1.gt.9.and.u1.lt.100)then
-!!write(a,'(I2)')u1
-!!endif
-!!if(u1.gt.99.and.u1.lt.1000)then
-!!write(a,'(I3)')u1
-!!endif
-!!if(u1.eq.1000)then
-!!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!!sets. Please increase the limit'
-!!goto 379
-!!endif
-!!outfile='structure_set_'//trim(a)//trim('.dat')
-!!open(unit=9+u1,file=outfile,status='unknown')
-!!endif
-!!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!!write(9,911),tqlty,sqlty,bqlty
-!!!bqlty=0
-!!!!set_number=set_number+1
-!!!write(9,*),'Set_number=',set_number
-!!!write(9,*),'    '
-!!!endif
-!!!endif
-!!!if(nfset.eq.1)goto 379
-!!goto 705
-!!endif
-!!
-!!i5up6=i5
-!!i6i7=i7
-!!m6m21=m21
-!!
-!!do m6=m5+1,nqul
-!!
-!!print*,'loop6'
-!!!print*,'m6m6m6',m6
-!!do i=i5up6+1,i5
-!!finalvec(i)=0
-!!enddo
-!!do m19=i6i7+1,i7
-!!strno(m19)=0
-!!do i8=1,15
-!!str2(m19,i8)=0
-!!enddo
-!!enddo
-!!i7=i6i7
-!!totstr=i6i7
-!!!print*,'totstr6',totstr
-!!m21=m6m21
-!!
-!!jj=0
-!!
-!!flg=0
-!!!do m19=strset(m6-1)+1,strset(m6)
-!!
-!!if(nqset(m6).gt.strn)goto 706
-!!
-!!do i=strset(m6-1)+1,strset(m6)
-!!totstr=totstr+1
-!!strno(totstr)=i
-!!print*,'strno',strno(totstr)
-!!enddo
-!!
-!!if(totstr.gt.strn)goto 706
-!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!!write(9,*),'ifail',ifail,det_inv
-!!!print*,'ifail6',ifail
-!!print*,'Ifail',Ifail,i7,q_fac2(m19),str_quality_1(m19),str_quality_2(m19),bondq(m19)
-!!if(Ifail.eq.1)goto 706
-!!!!do i8=1,nae
-!!!!str4(totstr,i8)=0
-!!!!enddo
-!!!strno(totstr)=0
-!!!totstr=totstr-1
-!!!goto 306
-!!!endif
-!!!endif
-!!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!!print*,'MatLDR_write_xmi',totstr
-!!call MatLDR('str',strno,totstr,D)
-!!
-!!!print*,'DDD',(D(i),i=1,totstr)
-!!ovlp=1.0
-!!do i=1,totstr
-!!ovlp=ovlp*D(i)
-!!enddo
-!!!print*,'ovval',1.0-ovlp,ovlp
-!!if(1.0-ovlp.gt.ovval)goto 706
-!!endif
-!!
-!!
-!!m21=m21+nqset(m6)
-!!if(m21.gt.strn) goto 706
-!!!print*,'sourav_xmi_sym'
-!!
-!!!306 enddo
-!!
-!!!print*,'jj',jj,m6,nqul
-!!!print*,'******jj',jj
-!!
-!!do m19=strset(m6-1)+1,strset(m6)
-!!if(q_fac2(m19).ne.qul(m6))goto 606
-!!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!!i7=i7+1
-!!print*,'new struc',i7,m19,q_fac2(m19),str_quality_1(m19),str_quality_2(m19),bondq(m19)
-!!do i3=1,nae
-!!str2(i7,i3)=str3(m19,i3)
-!!enddo
-!!col(i7)=m19
-!!qq(i7)=q_fac2(m19)
-!!qq1(i7)=str_quality_1(m19)
-!!qq2(i7)=str_quality_2(m19)
-!!bondq4(i7)=bondq(m19)
-!!flg=1
-!!count=6
-!!606 enddo
-!!!print*,'i7  6',i7,m6
-!!if(i7.eq.strn) then
-!!!if(nfset.gt.0)then
-!!ttqlty=0
-!!tqlty=0
-!!bqlty=0
-!!sqlty=0
-!!do m119=1,i7
-!!ttqlty=ttqlty+qq(m119)
-!!!tqlty=tqlty+qq1(m119)
-!!!bqlty=bqlty+bondq4(m119)
-!!!sqlty=sqlty+qq2(m119)
-!!enddo
-!!!endif
-!!print*,'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!!write(9,*),'ttqlty,ttqlty0',ttqlty,ttqlty0,tqlty,ttqlty1,bqlty,ttqlty2,sqlty,ttqlty3
-!!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!!if(ttqlty.le.ttqlty0)then
-!!set_number=set_number+1
-!!mns=mns+1
-!!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!!if(nfset.eq.1.and.set_number.gt.1)then
-!!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!!write(9,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!endif
-!!
-!!do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.ne.0)then
-!!if(niao.gt.1)then
-!!write(9,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.eq.0)then
-!!if(niao.eq.1)then
-!!write(9,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!endif
-!!enddo
-!!!if(nfset.eq.0.or.nfset.gt.1) then
-!!if(nfset.eq.3)then
-!!Rumwrite=1
-!!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!!endif
-!!if(ovopt.eq.1) then
-!!call MatLDR('str',col,i7,D)
-!!
-!!ovlp=1.0
-!!do i=1,i7
-!!ovlp=ovlp*D(i)
-!!enddo
-!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-!!endif
-!!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!!!write(9,910)'quality value',ttqlty
-!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
-!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!bqlty=0
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!!endif
-!!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!!'ovval',1.0-ovlp
-!!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!!if(mns.eq.max_set)then
-!!if(u1.eq.mset-1) goto 379
-!!close(9+u1)
-!!mns=0
-!!u1=u1+1
-!!if(u1.le.9)then
-!!write(a,'(I1)')u1
-!!endif
-!!if(u1.gt.9.and.u1.lt.100)then
-!!write(a,'(I2)')u1
-!!endif
-!!if(u1.gt.99.and.u1.lt.1000)then
-!!write(a,'(I3)')u1
-!!endif
-!!if(u1.eq.1000)then
-!!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!!sets. Please increase the limit'
-!!goto 379
-!!endif
-!!outfile='structure_set_'//trim(a)//trim('.dat')
-!!open(unit=9+u1,file=outfile,status='unknown')
-!!endif
-!!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!!write(9,911),tqlty,sqlty,bqlty
-!!!bqlty=0
-!!!!set_number=set_number+1
-!!!write(9,*),'Set_number=',set_number
-!!!write(9,*),'    '
-!!!endif
-!!!endif
-!!!if(nfset.eq.1)goto 379
-!!goto 706
-!!endif
-!!
-!!i5up7=i5
-!!i7i7=i7
-!!m7m21=m21
-!!
-!!do m7=m6+1,nqul
-!!print*,'loop7'
-!!!print*,'m7m7m7',m7
-!!do i=i5up7+1,i5
-!!finalvec(i)=0
-!!enddo
-!!do m19=i7i7+1,i7
-!!strno(m19)=0
-!!do i8=1,15
-!!str2(m19,i8)=0
-!!enddo
-!!enddo
-!!i7=i7i7
-!!totstr=i7i7
-!!!print*,'totstr7',totstr
-!!m21=m7m21
-!!
-!!jj=0
-!!
-!!flg=0
-!!!do m19=strset(m7-1)+1,strset(m7)
-!!
-!!if(nqset(m7).gt.strn)goto 707
-!!
-!!do i=strset(m7-1)+1,strset(m7)
-!!totstr=totstr+1
-!!strno(totstr)=i
-!!print*,'strno',strno(totstr)
-!!enddo
-!!if(totstr.gt.strn)goto 707
-!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!!write(9,*),'ifail',ifail,det_inv
-!!print*,'Ifail',Ifail,i7,q_fac2(m19)
-!!if(Ifail.eq.1)goto 707
-!!!!do i8=1,nae
-!!!!str4(totstr,i8)=0
-!!!!enddo
-!!!strno(totstr)=0
-!!!totstr=totstr-1
-!!!goto 307
-!!!endif
-!!!endif
-!!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!!print*,'MatLDR_write_xmi',totstr
-!!call MatLDR('str',strno,totstr,D)
-!!
-!!!print*,'DDD',(D(i),i=1,totstr)
-!!ovlp=1.0
-!!do i=1,totstr
-!!ovlp=ovlp*D(i)
-!!enddo
-!!!print*,'ovval',1.0-ovlp,ovlp
-!!if(1.0-ovlp.gt.ovval)goto 707
-!!endif
-!!
-!!
-!!m21=m21+nqset(m7)
-!!if(m21.gt.strn) goto 707
-!!!print*,'sourav_xmi_sym'
-!!
-!!!307 enddo
-!!
-!!!print*,'jj',jj,m7,nqul
-!!!407 if(jj.eq.nqset(m7))then
-!!!print*,'******jj',jj
-!!
-!!do m19=strset(m7-1)+1,strset(m7)
-!!if(q_fac2(m19).ne.qul(m7))goto 607
-!!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!!i7=i7+1
-!!print*,'new struc',i7,m19,q_fac2(m19),str_quality_1(m19),str_quality_2(m19),bondq(m19)
-!!do i3=1,nae
-!!str2(i7,i3)=str3(m19,i3)
-!!enddo
-!!col(i7)=m19
-!!qq(i7)=q_fac2(m19)
-!!qq1(i7)=str_quality_1(m19)
-!!qq2(i7)=str_quality_2(m19)
-!!bondq4(i7)=bondq(m19)
-!!flg=1
-!!count=7
-!!607 enddo
-!!print*,'i7 7',i7,strn
-!!if(i7.eq.strn) then
-!!!if(nfset.gt.0)then
-!!ttqlty=0
-!!tqlty=0
-!!bqlty=0
-!!sqlty=0
-!!do m119=1,i7
-!!ttqlty=ttqlty+qq(m119)
-!!!tqlty=tqlty+qq1(m119)
-!!!bqlty=bqlty+bondq4(m119)
-!!!sqlty=sqlty+qq2(m119)
-!!enddo
-!!!endif
-!!print*,'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!!if(ttqlty.le.ttqlty0)then
-!!set_number=set_number+1
-!!mns=mns+1
-!!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!!if(nfset.eq.1.and.set_number.gt.1)then
-!!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!!write(9,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!endif
-!!
-!!do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.ne.0)then
-!!if(niao.gt.1)then
-!!write(9,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.eq.0)then
-!!if(niao.eq.1)then
-!!write(9,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!endif
-!!enddo
-!!!if(nfset.eq.0.or.nfset.gt.1) then
-!!if(nfset.eq.3)then
-!!Rumwrite=1
-!!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!!endif
-!!if(ovopt.eq.1) then
-!!call MatLDR('str',col,i7,D)
-!!
-!!ovlp=1.0
-!!do i=1,i7
-!!ovlp=ovlp*D(i)
-!!enddo
-!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-!!endif
-!!!write(9,910)'quality value',ttqlty
-!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
-!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!!bqlty=0
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!!endif
-!!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!!'ovval',1.0-ovlp
-!!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!!if(mns.eq.max_set)then
-!!if(u1.eq.mset-1) goto 379
-!!close(9+u1)
-!!mns=0
-!!u1=u1+1
-!!if(u1.le.9)then
-!!write(a,'(I1)')u1
-!!endif
-!!if(u1.gt.9.and.u1.lt.100)then
-!!write(a,'(I2)')u1
-!!endif
-!!if(u1.gt.99.and.u1.lt.1000)then
-!!write(a,'(I3)')u1
-!!endif
-!!if(u1.eq.1000)then
-!!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!!sets. Please increase the limit'
-!!goto 379
-!!endif
-!!outfile='structure_set_'//trim(a)//trim('.dat')
-!!open(unit=9+u1,file=outfile,status='unknown')
-!!endif
-!!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!!write(9,911),tqlty,sqlty,bqlty
-!!!bqlty=0
-!!!!set_number=set_number+1
-!!!write(9,*),'Set_number=',set_number
-!!!write(9,*),'    '
-!!!endif
-!!!endif
-!!!if(nfset.eq.1)goto 379
-!!goto 707
-!!endif
-!!
-!!i5up8=i5
-!!i8i7=i7
-!!m8m21=m21
-!!
-!!do m8=m7+1,nqul
-!!print*,'loop8'
-!!!print*,'m8m8m8',m8
-!!do i=i5up8+1,i5
-!!finalvec(i)=0
-!!enddo
-!!do m19=i8i7+1,i7
-!!strno(m19)=0
-!!do i8=1,15
-!!str2(m19,i8)=0
-!!enddo
-!!enddo
-!!i7=i8i7
-!!totstr=i8i7
-!!!print*,'totstr8',totstr
-!!m21=m8m21
-!!
-!!jj=0
-!!
-!!flg=0
-!!!do m19=strset(m8-1)+1,strset(m8)
-!!
-!!if(nqset(m8).gt.strn)goto 708
-!!
-!!do i=strset(m8-1)+1,strset(m8)
-!!totstr=totstr+1
-!!strno(totstr)=i
-!!print*,'strno',strno(totstr)
-!!enddo
-!!
-!!if(totstr.gt.strn)goto 708
-!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!!write(9,*),'ifail',ifail,det_inv
-!!print*,'Ifail',Ifail,i7,q_fac2(m19)
-!!if(Ifail.eq.1)goto 708
-!!
-!!!!do i8=1,nae
-!!!!str4(totstr,i8)=0
-!!!!enddo
-!!!strno(totstr)=0
-!!!totstr=totstr-1
-!!!goto 308
-!!!endif
-!!!endif
-!!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!!print*,'MatLDR_write_xmi',totstr
-!!call MatLDR('str',strno,totstr,D)
-!!
-!!!print*,'DDD',(D(i),i=1,totstr)
-!!ovlp=1.0
-!!do i=1,totstr
-!!ovlp=ovlp*D(i)
-!!enddo
-!!!print*,'ovval',1.0-ovlp,ovlp
-!!if(1.0-ovlp.gt.ovval)goto 708
-!!endif
-!!
-!!
-!!m21=m21+nqset(m8)
-!!if(m21.gt.strn) goto 708
-!!!print*,'sourav_xmi_sym'
-!!
-!!!308 enddo
-!!
-!!!print*,'jj',jj,m7,nqul
-!!!408 if(jj.eq.nqset(m8))then
-!!!print*,'******jj',jj
-!!
-!!do m19=strset(m8-1)+1,strset(m8)
-!!if(q_fac2(m19).ne.qul(m8))goto 608
-!!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!!i7=i7+1
-!!print*,'new struc',i7,m19,q_fac2(m19)
-!!do i3=1,nae
-!!str2(i7,i3)=str3(m19,i3)
-!!enddo
-!!col(i7)=m19
-!!qq(i7)=q_fac2(m19)
-!!qq1(i7)=str_quality_1(m19)
-!!qq2(i7)=str_quality_2(m19)
-!!bondq4(i7)=bondq(m19)
-!!flg=1
-!!count=8
-!!608 enddo
-!!!print*,'i7 8',i7,m8
-!!print*,'i7 7',i7,strn
-!!if(i7.eq.strn) then
-!!!if(nfset.gt.0)then
-!!ttqlty=0
-!!tqlty=0
-!!bqlty=0
-!!sqlty=0
-!!do m119=1,i7
-!!ttqlty=ttqlty+qq(m119)
-!!!tqlty=tqlty+qq1(m119)
-!!!bqlty=bqlty+bondq4(m119)
-!!!sqlty=sqlty+qq2(m119)
-!!enddo
-!!!endif
-!!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!!if(ttqlty.le.ttqlty0)then
-!!set_number=set_number+1
-!!mns=mns+1
-!!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!!if(nfset.eq.1.and.set_number.gt.1)then
-!!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!!write(9,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!endif
-!!
-!!do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.ne.0)then
-!!if(niao.gt.1)then
-!!write(9,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.eq.0)then
-!!if(niao.eq.1)then
-!!write(9,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!endif
-!!enddo
-!!!if(nfset.eq.0.or.nfset.gt.1) then
-!!if(nfset.eq.3)then
-!!Rumwrite=1
-!!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!!endif
-!!if(ovopt.eq.1) then
-!!call MatLDR('str',col,i7,D)
-!!
-!!ovlp=1.0
-!!do i=1,i7
-!!ovlp=ovlp*D(i)
-!!enddo
-!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-!!endif
-!!!write(9,910)'quality value',ttqlty
-!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
-!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!!bqlty=0
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!!endif
-!!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!!'ovval',1.0-ovlp
-!!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!!if(mns.eq.max_set)then
-!!if(u1.eq.mset-1) goto 379
-!!close(9+u1)
-!!mns=0
-!!u1=u1+1
-!!if(u1.le.9)then
-!!write(a,'(I1)')u1
-!!endif
-!!if(u1.gt.9.and.u1.lt.100)then
-!!write(a,'(I2)')u1
-!!endif
-!!if(u1.gt.99.and.u1.lt.1000)then
-!!write(a,'(I3)')u1
-!!endif
-!!if(u1.eq.1000)then
-!!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!!sets. Please increase the limit'
-!!goto 379
-!!endif
-!!outfile='structure_set_'//trim(a)//trim('.dat')
-!!open(unit=9+u1,file=outfile,status='unknown')
-!!endif
-!!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!!write(9,911),tqlty,sqlty,bqlty
-!!!bqlty=0
-!!!!set_number=set_number+1
-!!!write(9,*),'Set_number=',set_number
-!!!write(9,*),'    '
-!!!endif
-!!!endif
-!!!if(nfset.eq.1)goto 379
-!!goto 708
-!!endif
-!!
-!!i5up9=i5
-!!i9i7=i7
-!!m9m21=m21
-!!
-!!do m9=m8+1,nqul
-!!print*,'loop9'
-!!!print*,'m9m9m9',m9
-!!do i=i5up9+1,i5
-!!finalvec(i)=0
-!!enddo
-!!do m19=i9i7+1,i7
-!!strno(m19)=0
-!!do i8=1,15
-!!str2(m19,i8)=0
-!!enddo
-!!enddo
-!!i7=i9i7
-!!totstr=i9i7
-!!!print*,'totstr9',totstr
-!!m21=m9m21
-!!
-!!jj=0
-!!
-!!flg=0
-!!!do m19=strset(m9-1)+1,strset(m9)
-!!
-!!if(nqset(m9).gt.strn)goto 709
-!!
-!!do i=strset(m9-1)+1,strset(m9)
-!!totstr=totstr+1
-!!strno(totstr)=i
-!!print*,'strno',strno(totstr)
-!!enddo
-!!
-!!if(totstr.gt.strn)goto 709
-!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!!write(9,*),'ifail',ifail,det_inv
-!!!print*,'ifail9',ifail
-!!print*,'Ifail',Ifail,i7,q_fac2(m19)
-!!if(Ifail.eq.1)goto 709
-!!!!do i8=1,nae
-!!!!str4(totstr,i8)=0
-!!!!enddo
-!!!strno(totstr)=0
-!!!totstr=totstr-1
-!!!goto 309
-!!!endif
-!!!endif
-!!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!!print*,'MatLDR_write_xmi',totstr
-!!call MatLDR('str',strno,totstr,D)
-!!
-!!!print*,'DDD',(D(i),i=1,totstr)
-!!ovlp=1.0
-!!do i=1,totstr
-!!ovlp=ovlp*D(i)
-!!enddo
-!!!print*,'ovval',1.0-ovlp,ovlp
-!!if(1.0-ovlp.gt.ovval)goto 709
-!!endif
-!!
-!!
-!!m21=m21+nqset(m9)
-!!if(m21.gt.strn) goto 709
-!!!print*,'sourav_xmi_sym'
-!!
-!!!309 enddo
-!!
-!!!print*,'jj',jj,m9,nqul
-!!!409 if(jj.eq.nqset(m9))then
-!!!print*,'******jj',jj
-!!
-!!do m19=strset(m9-1)+1,strset(m9)
-!!if(q_fac2(m19).ne.qul(m9))goto 609
-!!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!!i7=i7+1
-!!print*,'new struc',i7,m19,q_fac2(m19)
-!!do i3=1,nae
-!!str2(i7,i3)=str3(m19,i3)
-!!enddo
-!!col(i7)=m19
-!!qq(i7)=q_fac2(m19)
-!!qq1(i7)=str_quality_1(m19)
-!!qq2(i7)=str_quality_2(m19)
-!!bondq4(i7)=bondq(m19)
-!!flg=1
-!!count=9
-!!609 enddo
-!!!print*,'i7 9',i7,m9
-!!print*,'i7 7',i7,strn
-!!if(i7.eq.strn) then
-!!!if(nfset.gt.0)then
-!!ttqlty=0
-!!tqlty=0
-!!bqlty=0
-!!sqlty=0
-!!do m119=1,i7
-!!ttqlty=ttqlty+qq(m119)
-!!!tqlty=tqlty+qq1(m119)
-!!!bqlty=bqlty+bondq4(m119)
-!!!sqlty=sqlty+qq2(m119)
-!!enddo
-!!!endif
-!!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!!if(ttqlty.le.ttqlty0)then
-!!set_number=set_number+1
-!!mns=mns+1
-!!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!!if(nfset.eq.1.and.set_number.gt.1)then
-!!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!!write(9,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!endif
-!!
-!!do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.ne.0)then
-!!if(niao.gt.1)then
-!!write(9,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.eq.0)then
-!!if(niao.eq.1)then
-!!write(9,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!endif
-!!enddo
-!!!if(nfset.eq.0.or.nfset.gt.1) then
-!!if(nfset.eq.3)then
-!!Rumwrite=1
-!!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!!endif
-!!if(ovopt.eq.1) then
-!!call MatLDR('str',col,i7,D)
-!!
-!!ovlp=1.0
-!!do i=1,i7
-!!ovlp=ovlp*D(i)
-!!enddo
-!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-!!endif
-!!!write(9,910)'quality value',ttqlty
-!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
-!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!!bqlty=0
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!!endif
-!!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!!'ovval',1.0-ovlp
-!!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!!if(mns.eq.max_set)then
-!!if(u1.eq.mset-1) goto 379
-!!close(9+u1)
-!!mns=0
-!!u1=u1+1
-!!if(u1.le.9)then
-!!write(a,'(I1)')u1
-!!endif
-!!if(u1.gt.9.and.u1.lt.100)then
-!!write(a,'(I2)')u1
-!!endif
-!!if(u1.gt.99.and.u1.lt.1000)then
-!!write(a,'(I3)')u1
-!!endif
-!!if(u1.eq.1000)then
-!!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!!sets. Please increase the limit'
-!!goto 379
-!!endif
-!!outfile='structure_set_'//trim(a)//trim('.dat')
-!!open(unit=9+u1,file=outfile,status='unknown')
-!!endif
-!!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!!write(9,911),tqlty,sqlty,bqlty
-!!!bqlty=0
-!!!!set_number=set_number+1
-!!!write(9,*),'Set_number=',set_number
-!!!write(9,*),'    '
-!!!endif
-!!!endif
-!!!if(nfset.eq.1)goto 379
-!!goto 709
-!!endif
-!!
-!!i5up10=i5
-!!i10i7=i7
-!!m10m21=m21
-!!
-!!do m10=m9+1,nqul
-!!print*,'loop10'
-!!!print*,'m10m10m10',m10
-!!do i=i5up10+1,i5
-!!finalvec(i)=0
-!!enddo
-!!do m19=i10i7+1,i7
-!!strno(m19)=0
-!!do i8=1,15
-!!str2(m19,i8)=0
-!!enddo
-!!enddo
-!!i7=i10i7
-!!totstr=i10i7
-!!!print*,'totstr10',totstr
-!!m21=m10m21
-!!
-!!jj=0
-!!
-!!flg=0
-!!!do m19=strset(m10-1)+1,strset(m10)
-!!
-!!if(nqset(m10).gt.strn)goto 710
-!!
-!!do i=strset(m10-1)+1,strset(m10)
-!!totstr=totstr+1
-!!strno(totstr)=i
-!!print*,'strno',strno(totstr)
-!!enddo
-!!
-!!if(totstr.gt.strn)goto 710
-!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!!write(9,*),'ifail',ifail,det_inv
-!!print*,'Ifail',Ifail,i7,q_fac2(m19)
-!!if(Ifail.eq.1)goto 710
-!!!!do i8=1,nae
-!!!!str4(totstr,i8)=0
-!!!!enddo
-!!!strno(totstr)=0
-!!!totstr=totstr-1
-!!!goto 310
-!!!endif
-!!!endif
-!!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!!print*,'MatLDR_write_xmi',totstr
-!!call MatLDR('str',strno,totstr,D)
-!!
-!!!print*,'DDD',(D(i),i=1,totstr)
-!!ovlp=1.0
-!!do i=1,totstr
-!!ovlp=ovlp*D(i)
-!!enddo
-!!!print*,'ovval',1.0-ovlp,ovlp
-!!if(1.0-ovlp.gt.ovval)goto 710
-!!endif
-!!
-!!
-!!m21=m21+nqset(m10)
-!!if(m21.gt.strn) goto 710
-!!!print*,'sourav_xmi_sym'
-!!
-!!!310 enddo
-!!
-!!!print*,'jj',jj,m10,nqul
-!!!410 if(jj.eq.nqset(m10))then
-!!!print*,'******jj',jj
-!!
-!!do m19=strset(m10-1)+1,strset(m10)
-!!if(q_fac2(m19).ne.qul(m10))goto 610
-!!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!!i7=i7+1
-!!print*,'new struc',i7,m19
-!!do i3=1,nae
-!!str2(i7,i3)=str3(m19,i3)
-!!enddo
-!!col(i7)=m19
-!!qq(i7)=q_fac2(m19)
-!!qq1(i7)=str_quality_1(m19)
-!!qq2(i7)=str_quality_2(m19)
-!!bondq4(i7)=bondq(m19)
-!!flg=1
-!!count=10
-!!610 enddo
-!!!print*,'i7 10',i7,m10
-!!print*,'i7 7',i7,strn
-!!if(i7.eq.strn) then
-!!!if(nfset.gt.0)then
-!!ttqlty=0
-!!tqlty=0
-!!bqlty=0
-!!sqlty=0
-!!do m119=1,i7
-!!ttqlty=ttqlty+qq(m119)
-!!!tqlty=tqlty+qq1(m119)
-!!!bqlty=bqlty+bondq4(m119)
-!!!sqlty=sqlty+qq2(m119)
-!!enddo
-!!!endif
-!!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!!if(ttqlty.le.ttqlty0)then
-!!set_number=set_number+1
-!!mns=mns+1
-!!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!!if(nfset.eq.1.and.set_number.gt.1)then
-!!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!!write(9,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!endif
-!!
-!!do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.ne.0)then
-!!if(niao.gt.1)then
-!!write(9,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.eq.0)then
-!!if(niao.eq.1)then
-!!write(9,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!endif
-!!enddo
-!!!if(nfset.eq.0.or.nfset.gt.1) then
-!!if(nfset.eq.3)then
-!!Rumwrite=1
-!!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!!endif
-!!if(ovopt.eq.1) then
-!!call MatLDR('str',col,i7,D)
-!!
-!!ovlp=1.0
-!!do i=1,i7
-!!ovlp=ovlp*D(i)
-!!enddo
-!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-!!endif
-!!!write(9,910)'quality value',ttqlty
-!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
-!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!!bqlty=0
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!!endif
-!!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!!'ovval',1.0-ovlp
-!!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!!if(mns.eq.max_set)then
-!!if(u1.eq.mset-1) goto 379
-!!close(9+u1)
-!!mns=0
-!!u1=u1+1
-!!if(u1.le.9)then
-!!write(a,'(I1)')u1
-!!endif
-!!if(u1.gt.9.and.u1.lt.100)then
-!!write(a,'(I2)')u1
-!!endif
-!!if(u1.gt.99.and.u1.lt.1000)then
-!!write(a,'(I3)')u1
-!!endif
-!!if(u1.eq.1000)then
-!!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!!sets. Please increase the limit'
-!!goto 379
-!!endif
-!!outfile='structure_set_'//trim(a)//trim('.dat')
-!!open(unit=9+u1,file=outfile,status='unknown')
-!!endif
-!!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!!write(9,911),tqlty,sqlty,bqlty
-!!!bqlty=0
-!!!!set_number=set_number+1
-!!!write(9,*),'Set_number=',set_number
-!!!write(9,*),'    '
-!!!endif
-!!!endif
-!!!if(nfset.eq.1)goto 379
-!!goto 710
-!!endif
-!!
-!!i5up11=i5
-!!i11i7=i7
-!!m11m21=m21
-!!
-!!do m11=m10+1,nqul
-!!print*,'loop11'
-!!!print*,'m11m11m11',m11
-!!do i=i5up11+1,i5
-!!finalvec(i)=0
-!!enddo
-!!do m19=i11i7+1,i7
-!!strno(m19)=0
-!!do i8=1,15
-!!str2(m19,i8)=0
-!!enddo
-!!enddo
-!!i7=i11i7
-!!totstr=i11i7
-!!!print*,'totstr11',totstr
-!!m21=m11m21
-!!
-!!jj=0
-!!
-!!flg=0
-!!!do m19=strset(m11-1)+1,strset(m11)
-!!
-!!if(nqset(m11).gt.strn)goto 711
-!!
-!!do i=strset(m11-1)+1,strset(m11)
-!!totstr=totstr+1
-!!strno(totstr)=i
-!!enddo
-!!
-!!if(totstr.gt.strn)goto 711
-!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!!write(9,*),'ifail',ifail,det_inv
-!!print*,'Ifail',Ifail,i7
-!!if(Ifail.eq.1)goto 711
-!!!!do i8=1,nae
-!!!!str4(totstr,i8)=0
-!!!!enddo
-!!!strno(totstr)=0
-!!!totstr=totstr-1
-!!!goto 311
-!!!endif
-!!!endif
-!!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!!print*,'MatLDR_write_xmi',totstr
-!!call MatLDR('str',strno,totstr,D)
-!!
-!!!print*,'DDD',(D(i),i=1,totstr)
-!!ovlp=1.0
-!!do i=1,totstr
-!!ovlp=ovlp*D(i)
-!!enddo
-!!!print*,'ovval',1.0-ovlp,ovlp
-!!if(1.0-ovlp.gt.ovval)goto 711
-!!endif
-!!
-!!
-!!m21=m21+nqset(m11)
-!!if(m21.gt.strn) goto 711
-!!!print*,'sourav_xmi_sym'
-!!
-!!!311 enddo
-!!
-!!!print*,'jj',jj,m11,nqul
-!!!411 if(jj.eq.nqset(m11))then
-!!!print*,'******jj',jj
-!!
-!!do m19=strset(m11-1)+1,strset(m11)
-!!if(q_fac2(m19).ne.qul(m11))goto 611
-!!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!!i7=i7+1
-!!print*,'new struc',i7,m19
-!!do i3=1,nae
-!!str2(i7,i3)=str3(m19,i3)
-!!enddo
-!!col(i7)=m19
-!!qq(i7)=q_fac2(m19)
-!!qq1(i7)=str_quality_1(m19)
-!!qq2(i7)=str_quality_2(m19)
-!!bondq4(i7)=bondq(m19)
-!!flg=1
-!!count=11
-!!611 enddo
-!!!print*,'i7 11',i7,m11
-!!print*,'i7 7',i7,strn
-!!if(i7.eq.strn) then
-!!!if(nfset.gt.0)then
-!!ttqlty=0
-!!tqlty=0
-!!bqlty=0
-!!sqlty=0
-!!do m119=1,i7
-!!ttqlty=ttqlty+qq(m119)
-!!!tqlty=tqlty+qq1(m119)
-!!!bqlty=bqlty+bondq4(m119)
-!!!sqlty=sqlty+qq2(m119)
-!!enddo
-!!!endif
-!!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!!if(ttqlty.le.ttqlty0)then
-!!set_number=set_number+1
-!!mns=mns+1
-!!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!!if(nfset.eq.1.and.set_number.gt.1)then
-!!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!!write(9,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!endif
-!!
-!!do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.ne.0)then
-!!if(niao.gt.1)then
-!!write(9,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.eq.0)then
-!!if(niao.eq.1)then
-!!write(9,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!endif
-!!enddo
-!!!if(nfset.eq.0.or.nfset.gt.1) then
-!!if(nfset.eq.3)then
-!!Rumwrite=1
-!!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!!endif
-!!if(ovopt.eq.1) then
-!!call MatLDR('str',col,i7,D)
-!!
-!!ovlp=1.0
-!!do i=1,i7
-!!ovlp=ovlp*D(i)
-!!enddo
-!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-!!endif
-!!!write(9,910)'quality value',ttqlty
-!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
-!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!!bqlty=0
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!!endif
-!!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!!'ovval',1.0-ovlp
-!!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!!if(mns.eq.max_set)then
-!!if(u1.eq.mset-1) goto 379
-!!close(9+u1)
-!!mns=0
-!!u1=u1+1
-!!if(u1.le.9)then
-!!write(a,'(I1)')u1
-!!endif
-!!if(u1.gt.9.and.u1.lt.100)then
-!!write(a,'(I2)')u1
-!!endif
-!!if(u1.gt.99.and.u1.lt.1000)then
-!!write(a,'(I3)')u1
-!!endif
-!!if(u1.eq.1000)then
-!!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!!sets. Please increase the limit'
-!!goto 379
-!!endif
-!!outfile='structure_set_'//trim(a)//trim('.dat')
-!!open(unit=9+u1,file=outfile,status='unknown')
-!!endif
-!!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!!write(9,911),tqlty,sqlty,bqlty
-!!!bqlty=0
-!!!!set_number=set_number+1
-!!!write(9,*),'Set_number=',set_number
-!!!write(9,*),'    '
-!!!endif
-!!!endif
-!!!if(nfset.eq.1)goto 379
-!!goto 711
-!!endif
-!!
-!!i5up12=i5
-!!i12i7=i7
-!!m12m21=m21
-!!
-!!do m12=m11+1,nqul
-!!print*,'loop12'
-!!!print*,'m12m12m12',m12
-!!do i=i5up12+1,i5
-!!finalvec(i)=0
-!!enddo
-!!do m19=i12i7+1,i7
-!!strno(m19)=0
-!!do i8=1,15
-!!str2(m19,i8)=0
-!!enddo
-!!enddo
-!!i7=i12i7
-!!totstr=i12i7
-!!!print*,'totstr12',totstr
-!!m21=m12m21
-!!
-!!jj=0
-!!
-!!flg=0
-!!!do m19=strset(m12-1)+1,strset(m12)
-!!
-!!if(nqset(m12).gt.strn)goto 712
-!!
-!!do i=strset(m12-1)+1,strset(m12)
-!!totstr=totstr+1
-!!strno(totstr)=i
-!!enddo
-!!
-!!if(totstr.gt.strn)goto 712
-!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!!write(9,*),'ifail',ifail,det_inv
-!!print*,'Ifail',Ifail,i7
-!!if(Ifail.eq.1)goto 712
-!!!!do i8=1,nae
-!!!!str4(totstr,i8)=0
-!!!!enddo
-!!!strno(totstr)=0
-!!!totstr=totstr-1
-!!!goto 312
-!!!endif
-!!!endif
-!!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!!print*,'MatLDR_write_xmi',totstr
-!!call MatLDR('str',strno,totstr,D)
-!!
-!!!print*,'DDD',(D(i),i=1,totstr)
-!!ovlp=1.0
-!!do i=1,totstr
-!!ovlp=ovlp*D(i)
-!!enddo
-!!!print*,'ovval',1.0-ovlp,ovlp
-!!if(1.0-ovlp.gt.ovval)goto 712
-!!endif
-!!
-!!
-!!m21=m21+nqset(m12)
-!!if(m21.gt.strn) goto 712
-!!!print*,'sourav_xmi_sym'
-!!
-!!
-!!!312 enddo
-!!
-!!!print*,'jj',jj,m12,nqul
-!!!412 if(jj.eq.nqset(m12))then
-!!!print*,'******jj',jj
-!!
-!!do m19=strset(m12-1)+1,strset(m12)
-!!if(q_fac2(m19).ne.qul(m12))goto 612
-!!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!!i7=i7+1
-!!print*,'new struc',i7,m19
-!!do i3=1,nae
-!!str2(i7,i3)=str3(m19,i3)
-!!enddo
-!!col(i7)=m19
-!!qq(i7)=q_fac2(m19)
-!!qq1(i7)=str_quality_1(m19)
-!!qq2(i7)=str_quality_2(m19)
-!!bondq4(i7)=bondq(m19)
-!!flg=1
-!!count=12
-!!612 enddo
-!!!print*,'i7 12',i7,m12
-!!print*,'i7 7',i7,strn
-!!if(i7.eq.strn) then
-!!!if(nfset.gt.0)then
-!!ttqlty=0
-!!tqlty=0
-!!bqlty=0
-!!sqlty=0
-!!do m119=1,i7
-!!ttqlty=ttqlty+qq(m119)
-!!!tqlty=tqlty+qq1(m119)
-!!!bqlty=bqlty+bondq4(m119)
-!!!sqlty=sqlty+qq2(m119)
-!!enddo
-!!!endif
-!!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!!if(ttqlty.le.ttqlty0)then
-!!set_number=set_number+1
-!!mns=mns+1
-!!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!!if(nfset.eq.1.and.set_number.gt.1)then
-!!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!!write(9,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!endif
-!!
-!!do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.ne.0)then
-!!if(niao.gt.1)then
-!!write(9,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.eq.0)then
-!!if(niao.eq.1)then
-!!write(9,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!endif
-!!enddo
-!!!if(nfset.eq.0.or.nfset.gt.1) then
-!!if(nfset.eq.3)then
-!!Rumwrite=1
-!!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!!endif
-!!if(ovopt.eq.1) then
-!!call MatLDR('str',col,i7,D)
-!!
-!!ovlp=1.0
-!!do i=1,i7
-!!ovlp=ovlp*D(i)
-!!enddo
-!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-!!endif
-!!!write(9,910)'quality value',ttqlty
-!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
-!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!!bqlty=0
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!!endif
-!!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!!'ovval',1.0-ovlp
-!!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!!if(mns.eq.max_set)then
-!!if(u1.eq.mset-1) goto 379
-!!close(9+u1)
-!!mns=0
-!!u1=u1+1
-!!if(u1.le.9)then
-!!write(a,'(I1)')u1
-!!endif
-!!if(u1.gt.9.and.u1.lt.100)then
-!!write(a,'(I2)')u1
-!!endif
-!!if(u1.gt.99.and.u1.lt.1000)then
-!!write(a,'(I3)')u1
-!!endif
-!!if(u1.eq.1000)then
-!!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!!sets. Please increase the limit'
-!!goto 379
-!!endif
-!!outfile='structure_set_'//trim(a)//trim('.dat')
-!!open(unit=9+u1,file=outfile,status='unknown')
-!!endif
-!!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!!write(9,911),tqlty,sqlty,bqlty
-!!!bqlty=0
-!!!!set_number=set_number+1
-!!!write(9,*),'Set_number=',set_number
-!!!write(9,*),'    '
-!!!endif
-!!!endif
-!!!if(nfset.eq.1)goto 379
-!!goto 712
-!!endif
-!!
-!!i5up13=i5
-!!i13i7=i7
-!!m13m21=m21
-!!
-!!do m13=m12+1,nqul
-!!print*,'loop13'
-!!
-!!!print*,'m13m13m13',m13
-!!do i=i5up13+1,i5
-!!finalvec(i)=0
-!!enddo
-!!do m19=i13i7+1,i7
-!!strno(m19)=0
-!!do i8=1,15
-!!str2(m19,i8)=0
-!!enddo
-!!enddo
-!!i7=i13i7
-!!totstr=i13i7
-!!!print*,'totstr13',totstr
-!!m21=m13m21
-!!
-!!jj=0
-!!
-!!flg=0
-!!!do m19=strset(m13-1)+1,strset(m13)
-!!
-!!if(nqset(m13).gt.strn)goto 713
-!!
-!!do i=strset(m13-1)+1,strset(m13)
-!!totstr=totstr+1
-!!strno(totstr)=i
-!!enddo
-!!
-!!if(totstr.gt.strn)goto 713
-!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!!write(9,*),'ifail',ifail,det_inv
-!!!print*,'ifail13',ifail
-!!print*,'Ifail',Ifail,i7
-!!if(Ifail.eq.1)goto 713
-!!!!do i8=1,nae
-!!!!str4(totstr,i8)=0
-!!!!enddo
-!!!strno(totstr)=0
-!!!totstr=totstr-1
-!!!goto 313
-!!!endif
-!!!endif
-!!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!!print*,'MatLDR_write_xmi',totstr
-!!call MatLDR('str',strno,totstr,D)
-!!
-!!!print*,'DDD',(D(i),i=1,totstr)
-!!ovlp=1.0
-!!do i=1,totstr
-!!ovlp=ovlp*D(i)
-!!enddo
-!!!print*,'ovval',1.0-ovlp,ovlp
-!!if(1.0-ovlp.gt.ovval)goto 713
-!!endif
-!!
-!!m21=m21+nqset(m13)
-!!if(m21.gt.strn) goto 713
-!!!print*,'sourav_xmi_sym'
-!!
-!!!313 enddo
-!!
-!!!print*,'jj',jj,m13,nqul
-!!!413 if(jj.eq.nqset(m13))then
-!!!print*,'******jj',jj
-!!
-!!do m19=strset(m13-1)+1,strset(m13)
-!!if(q_fac2(m19).ne.qul(m13))goto 613
-!!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!!i7=i7+1
-!!print*,'new struc',i7,m19
-!!do i3=1,nae
-!!str2(i7,i3)=str3(m19,i3)
-!!enddo
-!!col(i7)=m19
-!!qq(i7)=q_fac2(m19)
-!!qq1(i7)=str_quality_1(m19)
-!!qq2(i7)=str_quality_2(m19)
-!!bondq4(i7)=bondq(m19)
-!!flg=1
-!!count=13
-!!613 enddo
-!!!print*,'i7 13',i7,m13
-!!if(i7.eq.strn) then
-!!!if(nfset.gt.0)then
-!!ttqlty=0
-!!tqlty=0
-!!bqlty=0
-!!sqlty=0
-!!do m119=1,i7
-!!ttqlty=ttqlty+qq(m119)
-!!!tqlty=tqlty+qq1(m119)
-!!!bqlty=bqlty+bondq4(m119)
-!!!sqlty=sqlty+qq2(m119)
-!!enddo
-!!!endif
-!!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!!if(ttqlty.le.ttqlty0)then
-!!set_number=set_number+1
-!!mns=mns+1
-!!
-!!do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.ne.0)then
-!!if(niao.gt.1)then
-!!write(9,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.eq.0)then
-!!if(niao.eq.1)then
-!!write(9,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!endif
-!!enddo
-!!!if(nfset.eq.0.or.nfset.gt.1) then
-!!if(nfset.eq.3)then
-!!Rumwrite=1
-!!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!!endif
-!!if(ovopt.eq.1) then
-!!call MatLDR('str',col,i7,D)
-!!
-!!ovlp=1.0
-!!do i=1,i7
-!!ovlp=ovlp*D(i)
-!!enddo
-!!
-!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-!!endif
-!!!write(9,910)'quality value',ttqlty
-!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
-!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!!bqlty=0
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!!endif
-!!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!!'ovval',1.0-ovlp
-!!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!!if(mns.eq.max_set)then
-!!if(u1.eq.mset-1) goto 379
-!!close(9+u1)
-!!mns=0
-!!u1=u1+1
-!!if(u1.le.9)then
-!!write(a,'(I1)')u1
-!!endif
-!!if(u1.gt.9.and.u1.lt.100)then
-!!write(a,'(I2)')u1
-!!endif
-!!if(u1.gt.99.and.u1.lt.1000)then
-!!write(a,'(I3)')u1
-!!endif
-!!if(u1.eq.1000)then
-!!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!!sets. Please increase the limit'
-!!goto 379
-!!endif
-!!outfile='structure_set_'//trim(a)//trim('.dat')
-!!open(unit=9+u1,file=outfile,status='unknown')
-!!endif
-!!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!!write(9,911),tqlty,sqlty,bqlty
-!!!bqlty=0
-!!!!set_number=set_number+1
-!!!write(9,*),'Set_number=',set_number
-!!!write(9,*),'    '
-!!!endif
-!!!endif
-!!!if(nfset.eq.1)goto 379
-!!goto 713
-!!endif
-!!
-!!i5up14=i5
-!!i14i7=i7
-!!m14m21=m21
-!!
-!!do m14=m13+1,nqul
-!!print*,'loop14'
-!!!print*,'m14m14m14',m14
-!!do i=i5up14+1,i5
-!!finalvec(i)=0
-!!enddo
-!!do m19=i14i7+1,i7
-!!strno(m19)=0
-!!do i8=1,15
-!!str2(m19,i8)=0
-!!enddo
-!!enddo
-!!i7=i14i7
-!!totstr=i14i7
-!!!print*,'totstr14',totstr
-!!m21=m14m21
-!!
-!!jj=0
-!!
-!!flg=0
-!!!do m19=strset(m14-1)+1,strset(m14)
-!!
-!!if(nqset(m14).gt.strn)goto 714
-!!
-!!do i=strset(m14-1)+1,strset(m14)
-!!totstr=totstr+1
-!!strno(totstr)=i
-!!enddo
-!!
-!!if(totstr.gt.strn)goto 714
-!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!!write(9,*),'ifail',ifail,det_inv
-!!print*,'Ifail',Ifail,i7
-!!if(Ifail.eq.1)goto 714
-!!!!do i8=1,nae
-!!!!str4(totstr,i8)=0
-!!!!enddo
-!!!strno(totstr)=0
-!!!totstr=totstr-1
-!!!goto 314
-!!!endif
-!!!endif
-!!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!!print*,'MatLDR_write_xmi',totstr
-!!call MatLDR('str',strno,totstr,D)
-!!
-!!!print*,'DDD',(D(i),i=1,totstr)
-!!ovlp=1.0
-!!do i=1,totstr
-!!ovlp=ovlp*D(i)
-!!enddo
-!!!print*,'ovval',1.0-ovlp,ovlp
-!!if(1.0-ovlp.gt.ovval)goto 714
-!!endif
-!!
-!!
-!!m21=m21+nqset(m14)
-!!if(m21.gt.strn) goto 714
-!!!print*,'sourav_xmi_sym'
-!!
-!!!314 enddo
-!!
-!!!print*,'jj',jj,m14,nqul
-!!!414 if(jj.eq.nqset(m14))then
-!!!print*,'******jj',jj
-!!
-!!do m19=strset(m14-1)+1,strset(m14)
-!!if(q_fac2(m19).ne.qul(m14))goto 614
-!!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!!i7=i7+1
-!!print*,'new struc',i7,m19
-!!do i3=1,nae
-!!str2(i7,i3)=str3(m19,i3)
-!!enddo
-!!col(i7)=m19
-!!qq(i7)=q_fac2(m19)
-!!qq1(i7)=str_quality_1(m19)
-!!qq2(i7)=str_quality_2(m19)
-!!bondq4(i7)=bondq(m19)
-!!flg=1
-!!count=14
-!!614 enddo
-!!!print*,'i7 14',i7,m14
-!!if(i7.eq.strn) then
-!!!if(nfset.gt.0)then
-!!ttqlty=0
-!!tqlty=0
-!!bqlty=0
-!!sqlty=0
-!!do m119=1,i7
-!!ttqlty=ttqlty+qq(m119)
-!!!tqlty=tqlty+qq1(m119)
-!!!bqlty=bqlty+bondq4(m119)
-!!!sqlty=sqlty+qq2(m119)
-!!enddo
-!!!endif
-!!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!!if(ttqlty.le.ttqlty0)then
-!!set_number=set_number+1
-!!mns=mns+1
-!!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!!if(nfset.eq.1.and.set_number.gt.1)then
-!!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!!write(9,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!endif
-!!
-!!do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.ne.0)then
-!!if(niao.gt.1)then
-!!write(9,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.eq.0)then
-!!if(niao.eq.1)then
-!!write(9,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!endif
-!!enddo
-!!!if(nfset.eq.0.or.nfset.gt.1) then
-!!if(nfset.eq.3)then
-!!Rumwrite=1
-!!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!!endif
-!!if(ovopt.eq.1) then
-!!call MatLDR('str',col,i7,D)
-!!
-!!ovlp=1.0
-!!do i=1,i7
-!!ovlp=ovlp*D(i)
-!!enddo
-!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-!!endif
-!!!write(9,910)'quality value',ttqlty
-!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
-!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!!bqlty=0
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!!endif
-!!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!!'ovval',1.0-ovlp
-!!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!!if(mns.eq.max_set)then
-!!if(u1.eq.mset-1) goto 379
-!!close(9+u1)
-!!mns=0
-!!u1=u1+1
-!!if(u1.le.9)then
-!!write(a,'(I1)')u1
-!!endif
-!!if(u1.gt.9.and.u1.lt.100)then
-!!write(a,'(I2)')u1
-!!endif
-!!if(u1.gt.99.and.u1.lt.1000)then
-!!write(a,'(I3)')u1
-!!endif
-!!if(u1.eq.1000)then
-!!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!!sets. Please increase the limit'
-!!goto 379
-!!endif
-!!outfile='structure_set_'//trim(a)//trim('.dat')
-!!open(unit=9+u1,file=outfile,status='unknown')
-!!endif
-!!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!!write(9,911),tqlty,sqlty,bqlty
-!!!bqlty=0
-!!!!set_number=set_number+1
-!!!write(9,*),'Set_number=',set_number
-!!!write(9,*),'    '
-!!!endif
-!!!endif
-!!!if(nfset.eq.1)goto 379
-!!goto 714
-!!endif
-!!
-!!i5up15=i5
-!!i15i7=i7
-!!m15m21=m21
-!!
-!!do m15=m14+1,nqul
-!!print*,'loop15'
-!!!print*,'m15m15m15',m15
-!!do i=i5up15+1,i5
-!!finalvec(i)=0
-!!enddo
-!!do m19=i15i7+1,i7
-!!strno(m19)=0
-!!do i8=1,15
-!!str2(m19,i8)=0
-!!enddo
-!!enddo
-!!i7=i15i7
-!!totstr=i15i7
-!!!print*,'totstr15',totstr
-!!m21=m15m21
-!!
-!!jj=0
-!!
-!!flg=0
-!!!do m19=strset(m15-1)+1,strset(m15)
-!!
-!!if(nqset(m15).gt.strn)goto 715
-!!
-!!do i=strset(m15-1)+1,strset(m15)
-!!totstr=totstr+1
-!!strno(totstr)=i
-!!enddo
-!!
-!!if(totstr.gt.strn)goto 715
-!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!!write(9,*),'ifail',ifail,det_inv
-!!print*,'Ifail',Ifail,i7
-!!if(Ifail.eq.1)goto 715
-!!!!do i8=1,nae
-!!!!str4(totstr,i8)=0
-!!!!enddo
-!!!strno(totstr)=0
-!!!totstr=totstr-1
-!!!goto 315
-!!!endif
-!!!endif
-!!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!!print*,'MatLDR_write_xmi',totstr
-!!call MatLDR('str',strno,totstr,D)
-!!
-!!!print*,'DDD',(D(i),i=1,totstr)
-!!ovlp=1.0
-!!do i=1,totstr
-!!ovlp=ovlp*D(i)
-!!enddo
-!!!print*,'ovval',1.0-ovlp,ovlp
-!!if(1.0-ovlp.gt.ovval)goto 715
-!!endif
-!!
-!!
-!!m21=m21+nqset(m15)
-!!if(m21.gt.strn) goto 715
-!!!print*,'sourav_xmi_sym'
-!!
-!!!315 enddo
-!!
-!!!print*,'jj',jj,m15,nqul
-!!!415 if(jj.eq.nqset(m15))then
-!!!print*,'******jj',jj
-!!
-!!do m19=strset(m15-1)+1,strset(m15)
-!!if(q_fac2(m19).ne.qul(m15))goto 615
-!!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!!i7=i7+1
-!!print*,'new struc',i7,m19
-!!do i3=1,nae
-!!str2(i7,i3)=str3(m19,i3)
-!!enddo
-!!col(i7)=m19
-!!qq(i7)=q_fac2(m19)
-!!qq1(i7)=str_quality_1(m19)
-!!qq2(i7)=str_quality_2(m19)
-!!bondq4(i7)=bondq(m19)
-!!flg=1
-!!count=15
-!!615 enddo
-!!!print*,'i7 15',i7,m15
-!!if(i7.eq.strn) then
-!!!if(nfset.gt.0)then
-!!ttqlty=0
-!!tqlty=0
-!!bqlty=0
-!!sqlty=0
-!!do m119=1,i7
-!!ttqlty=ttqlty+qq(m119)
-!!!tqlty=tqlty+qq1(m119)
-!!!bqlty=bqlty+bondq4(m119)
-!!!sqlty=sqlty+qq2(m119)
-!!enddo
-!!!endif
-!!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!!if(ttqlty.le.ttqlty0)then
-!!set_number=set_number+1
-!!mns=mns+1
-!!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!!if(nfset.eq.1.and.set_number.gt.1)then
-!!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!!write(9,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!endif
-!!
-!!do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.ne.0)then
-!!if(niao.gt.1)then
-!!write(9,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.eq.0)then
-!!if(niao.eq.1)then
-!!write(9,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!endif
-!!enddo
-!!!if(nfset.eq.0.or.nfset.gt.1) then
-!!if(nfset.eq.3)then
-!!Rumwrite=1
-!!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!!endif
-!!if(ovopt.eq.1) then
-!!call MatLDR('str',col,i7,D)
-!!
-!!ovlp=1.0
-!!do i=1,i7
-!!ovlp=ovlp*D(i)
-!!enddo
-!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-!!endif
-!!!write(9,910)'quality value',ttqlty
-!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
-!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!!bqlty=0
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!!endif
-!!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!!'ovval',1.0-ovlp
-!!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!!if(mns.eq.max_set)then
-!!if(u1.eq.mset-1) goto 379
-!!close(9+u1)
-!!mns=0
-!!u1=u1+1
-!!if(u1.le.9)then
-!!write(a,'(I1)')u1
-!!endif
-!!if(u1.gt.9.and.u1.lt.100)then
-!!write(a,'(I2)')u1
-!!endif
-!!if(u1.gt.99.and.u1.lt.1000)then
-!!write(a,'(I3)')u1
-!!endif
-!!if(u1.eq.1000)then
-!!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!!sets. Please increase the limit'
-!!goto 379
-!!endif
-!!outfile='structure_set_'//trim(a)//trim('.dat')
-!!open(unit=9+u1,file=outfile,status='unknown')
-!!endif
-!!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!!write(9,911),tqlty,sqlty,bqlty
-!!!bqlty=0
-!!!!set_number=set_number+1
-!!!write(9,*),'Set_number=',set_number
-!!!write(9,*),'    '
-!!!endif
-!!!endif
-!!!if(nfset.eq.1)goto 379
-!!goto 715
-!!endif
-!!
-!!i5up16=i5
-!!i16i7=i7
-!!m16m21=m21
-!!
-!!do m16=m15+1,nqul
-!!print*,'loop16'
-!!!print*,'m16m16m16',m16
-!!do i=i5up16+1,i5
-!!finalvec(i)=0
-!!enddo
-!!do m19=i16i7+1,i7
-!!strno(m19)=0
-!!do i8=1,15
-!!str2(m19,i8)=0
-!!enddo
-!!enddo
-!!i7=i16i7
-!!totstr=i16i7
-!!!print*,'totstr16',totstr
-!!m21=m16m21
-!!
-!!jj=0
-!!
-!!flg=0
-!!!do m19=strset(m16-1)+1,strset(m16)
-!!
-!!if(nqset(m16).gt.strn)goto 716
-!!
-!!do i=strset(m16-1)+1,strset(m16)
-!!totstr=totstr+1
-!!strno(totstr)=i
-!!enddo
-!!if(totstr.gt.strn)goto 716
-!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!!write(9,*),'ifail',ifail,det_inv
-!!print*,'Ifail',Ifail,i7
-!!if(Ifail.eq.1)goto 716
-!!!!do i8=1,nae
-!!!!str4(totstr,i8)=0
-!!!!enddo
-!!!strno(totstr)=0
-!!!totstr=totstr-1
-!!!goto 316
-!!!endif
-!!!endif
-!!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!!print*,'MatLDR_write_xmi',totstr
-!!call MatLDR('str',strno,totstr,D)
-!!
-!!!print*,'DDD',(D(i),i=1,totstr)
-!!ovlp=1.0
-!!do i=1,totstr
-!!ovlp=ovlp*D(i)
-!!enddo
-!!!print*,'ovval',1.0-ovlp,ovlp
-!!if(1.0-ovlp.gt.ovval)goto 716
-!!endif
-!!
-!!
-!!m21=m21+nqset(m16)
-!!if(m21.gt.strn) goto 716
-!!!print*,'sourav_xmi_sym'
-!!
-!!!316 enddo
-!!
-!!!print*,'jj',jj,m16,nqul
-!!!416 if(jj.eq.nqset(m16))then
-!!!print*,'******jj',jj
-!!
-!!do m19=strset(m16-1)+1,strset(m16)
-!!if(q_fac2(m19).ne.qul(m16))goto 616
-!!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!!i7=i7+1
-!!print*,'new struc',i7,m19
-!!do i3=1,nae
-!!str2(i7,i3)=str3(m19,i3)
-!!enddo
-!!col(i7)=m19
-!!qq(i7)=q_fac2(m19)
-!!qq1(i7)=str_quality_1(m19)
-!!qq2(i7)=str_quality_2(m19)
-!!bondq4(i7)=bondq(m19)
-!!flg=1
-!!count=16
-!!616 enddo
-!!!print*,'i7 16',i7,m16
-!!if(i7.eq.strn) then
-!!!if(nfset.gt.0)then
-!!ttqlty=0
-!!tqlty=0
-!!bqlty=0
-!!sqlty=0
-!!do m119=1,i7
-!!ttqlty=ttqlty+qq(m119)
-!!!tqlty=tqlty+qq1(m119)
-!!!bqlty=bqlty+bondq4(m119)
-!!!sqlty=sqlty+qq2(m119)
-!!enddo
-!!!endif
-!!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!!if(ttqlty.le.ttqlty0)then
-!!set_number=set_number+1
-!!mns=mns+1
-!!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!!if(nfset.eq.1.and.set_number.gt.1)then
-!!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!!write(9,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!endif
-!!
-!!do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.ne.0)then
-!!if(niao.gt.1)then
-!!write(9,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.eq.0)then
-!!if(niao.eq.1)then
-!!write(9,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!endif
-!!enddo
-!!!if(nfset.eq.0.or.nfset.gt.1) then
-!!if(nfset.eq.3)then
-!!Rumwrite=1
-!!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!!endif
-!!if(ovopt.eq.1) then
-!!call MatLDR('str',col,i7,D)
-!!
-!!ovlp=1.0
-!!do i=1,i7
-!!ovlp=ovlp*D(i)
-!!enddo
-!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-!!endif
-!!!write(9,910)'quality value',ttqlty
-!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
-!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!!bqlty=0
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!!endif
-!!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!!'ovval',1.0-ovlp
-!!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!!if(mns.eq.max_set)then
-!!if(u1.eq.mset-1) goto 379
-!!close(9+u1)
-!!mns=0
-!!u1=u1+1
-!!if(u1.le.9)then
-!!write(a,'(I1)')u1
-!!endif
-!!if(u1.gt.9.and.u1.lt.100)then
-!!write(a,'(I2)')u1
-!!endif
-!!if(u1.gt.99.and.u1.lt.1000)then
-!!write(a,'(I3)')u1
-!!endif
-!!if(u1.eq.1000)then
-!!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!!sets. Please increase the limit'
-!!goto 379
-!!endif
-!!outfile='structure_set_'//trim(a)//trim('.dat')
-!!open(unit=9+u1,file=outfile,status='unknown')
-!!endif
-!!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!!write(9,911),tqlty,sqlty,bqlty
-!!!bqlty=0
-!!!!set_number=set_number+1
-!!!write(9,*),'Set_number=',set_number
-!!!write(9,*),'    '
-!!!endif
-!!!endif
-!!!if(nfset.eq.1)goto 379
-!!goto 716
-!!endif
-!!
-!!
-!!i5up17=i5
-!!i17i7=i7
-!!m17m21=m21
-!!
-!!do m17=m16+1,nqul
-!!print*,'loop17'
-!!!print*,'m17m17m17',m17
-!!do i=i5up17+1,i5
-!!finalvec(i)=0
-!!enddo
-!!do m19=i17i7+1,i7
-!!strno(m19)=0
-!!do i8=1,15
-!!str2(m19,i8)=0
-!!enddo
-!!enddo
-!!i7=i17i7
-!!totstr=i17i7
-!!!print*,'totstr17',totstr
-!!m21=m17m21
-!!
-!!jj=0
-!!
-!!flg=0
-!!!do m19=strset(m17-1)+1,strset(m17)
-!!
-!!if(nqset(m17).gt.strn)goto 717
-!!
-!!do i=strset(m17-1)+1,strset(m17)
-!!totstr=totstr+1
-!!strno(totstr)=i
-!!enddo
-!!
-!!if(totstr.gt.strn)goto 717
-!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!!write(9,*),'ifail',ifail,det_inv
-!!print*,'Ifail',Ifail,i7
-!!if(Ifail.eq.1)goto 717
-!!!strno(totstr)=0
-!!!totstr=totstr-1
-!!!goto 317
-!!!endif
-!!!endif
-!!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!!print*,'MatLDR_write_xmi',totstr
-!!call MatLDR('str',strno,totstr,D)
-!!
-!!!print*,'DDD',(D(i),i=1,totstr)
-!!ovlp=1.0
-!!do i=1,totstr
-!!ovlp=ovlp*D(i)
-!!enddo
-!!!print*,'ovval',1.0-ovlp,ovlp
-!!if(1.0-ovlp.gt.ovval)goto 717
-!!endif
-!!
-!!
-!!m21=m21+nqset(m17)
-!!if(m21.gt.strn) goto 717
-!!!print*,'sourav_xmi_sym'
-!!
-!!!317 enddo
-!!
-!!!417 if(jj.eq.nqset(m17))then
-!!
-!!do m19=strset(m17-1)+1,strset(m17)
-!!if(q_fac2(m19).ne.qul(m17))goto 617
-!!i7=i7+1
-!!print*,'new struc',i7,m19
-!!do i3=1,nae
-!!str2(i7,i3)=str3(m19,i3)
-!!enddo
-!!col(i7)=m19
-!!qq(i7)=q_fac2(m19)
-!!qq1(i7)=str_quality_1(m19)
-!!qq2(i7)=str_quality_2(m19)
-!!bondq4(i7)=bondq(m19)
-!!flg=1
-!!617 enddo
-!!!print*,'i7 16',i7,m17
-!!if(i7.eq.strn) then
-!!!if(nfset.gt.0)then
-!!ttqlty=0
-!!tqlty=0
-!!bqlty=0
-!!sqlty=0
-!!do m119=1,i7
-!!ttqlty=ttqlty+qq(m119)
-!!!tqlty=tqlty+qq1(m119)
-!!!bqlty=bqlty+bondq4(m119)
-!!!sqlty=sqlty+qq2(m119)
-!!enddo
-!!!endif
-!!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!!if(ttqlty.le.ttqlty0)then
-!!set_number=set_number+1
-!!mns=mns+1
-!!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!!if(nfset.eq.1.and.set_number.gt.1)then
-!!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!!write(9,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!!endif
-!!
-!!do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.ne.0)then
-!!if(niao.gt.1)then
-!!write(9,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.eq.0)then
-!!if(niao.eq.1)then
-!!write(9,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!endif
-!!enddo
-!!!if(nfset.eq.0.or.nfset.gt.1) then
-!!if(nfset.eq.3)then
-!!Rumwrite=1
-!!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!!endif
-!!if(ovopt.eq.1) then
-!!call MatLDR('str',col,i7,D)
-!!
-!!ovlp=1.0
-!!do i=1,i7
-!!ovlp=ovlp*D(i)
-!!enddo
-!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-!!endif
-!!!write(9,910)'quality value',ttqlty
-!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
-!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!!bqlty=0
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!!endif
-!!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!!'ovval',1.0-ovlp
-!!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!!if(mns.eq.max_set)then
-!!if(u1.eq.mset-1) goto 379
-!!close(9+u1)
-!!mns=0
-!!u1=u1+1
-!!if(u1.le.9)then
-!!write(a,'(I1)')u1
-!!endif
-!!if(u1.gt.9.and.u1.lt.100)then
-!!write(a,'(I2)')u1
-!!endif
-!!if(u1.gt.99.and.u1.lt.1000)then
-!!write(a,'(I3)')u1
-!!endif
-!!if(u1.eq.1000)then
-!!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!!sets. Please increase the limit'
-!!goto 379
-!!endif
-!!outfile='structure_set_'//trim(a)//trim('.dat')
-!!open(unit=9+u1,file=outfile,status='unknown')
-!!endif
-!!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!!write(9,911),tqlty,sqlty,bqlty
-!!!bqlty=0
-!!!!set_number=set_number+1
-!!!write(9,*),'Set_number=',set_number
-!!!write(9,*),'    '
-!!!endif
-!!!endif
-!!!if(nfset.eq.1)goto 379
-!!endif
-!!
-!!717 enddo
-!!!print*,'count',count
-!!if(indpnt.eq.2)then
-!!if (count.eq.1)goto 702
-!!if (count.eq.2)goto 703
-!!if (count.eq.3)goto 704
-!!if (count.eq.4)goto 705
-!!if (count.eq.5)goto 706
-!!if (count.eq.6)goto 707
-!!if (count.eq.7)goto 708
-!!if (count.eq.8)goto 709
-!!if (count.eq.9)goto 710
-!!if (count.eq.10)goto 711
-!!if (count.eq.11)goto 712
-!!if (count.eq.12)goto 713
-!!if (count.eq.13)goto 714
-!!if (count.eq.14)goto 715
-!!if (count.eq.15)goto 716
-!!endif
-!!!if (count.eq.16)goto 717
-!!
-!!if(indpnt.eq.1)then
-!!if (count.eq.1)goto 701
-!!if (count.eq.2)goto 702
-!!if (count.eq.3)goto 703
-!!if (count.eq.4)goto 704
-!!if (count.eq.5)goto 705
-!!if (count.eq.6)goto 706
-!!if (count.eq.7)goto 707
-!!if (count.eq.8)goto 708
-!!if (count.eq.9)goto 709
-!!if (count.eq.10)goto 710
-!!if (count.eq.11)goto 711
-!!if (count.eq.12)goto 712
-!!if (count.eq.13)goto 713
-!!if (count.eq.14)goto 714
-!!if (count.eq.15)goto 715
-!!if (count.eq.16)goto 716
-!!endif
-!!
-!!716 enddo
-!!
-!!715 enddo
-!!
-!!714 enddo
-!!
-!!713 enddo
-!!
-!!712 enddo
-!!
-!!711 enddo
-!!
-!!710 enddo
-!!
-!!709 enddo
-!!
-!!708 enddo
-!!
-!!707 enddo
-!!
-!!706 enddo
-!!
-!!705 enddo
-!!
-!!704 enddo
-!!
-!!703 enddo
-!!
-!!702 enddo
-!!
-!!701 enddo
-!!!enddo
-!!
-!!
-!!!379 do m19=1,i7
-!!!if(niao.eq.0)then
-!!!write(9,900),qq(m19),(str2(m19,m20),m20=1,nae)
-!!!endif
-!!!if(niao.ne.0.and.nnnatom.ne.0)then
-!!!write(9,901),qq(m19),bondq4(m19),1,':',niao,(str2(m19,m20),m20=1,nae)
-!!!!write(9,901),m19,1,':',niao,(str2(m19,m20),m20=1,nae)
-!!!!write(*,900),m19,niao,(str2(m19,m20),m20=1,nae)
-!!!!write(9,*)qq(m19)
-!!!endif
-!!!if(niao.ne.0.and.nnnatom.eq.0)then
-!!!write(9,909),qq(m19),1,':',niao,(str2(m19,m20),m20=1,nae)
-!!!endif
-!!
-!!
-!!!do m19=1,i7
-!!!if(niao.eq.0)then
-!!!write(9,900),qq1(m19),qq2(m19),bondq4(m19),'|',(str2(m19,m20),m20=1,nae)
-!!!endif
-!!!!if(niao.ne.0.and.nnnatom.ne.0)then
-!!!if(niao.gt.1)then
-!!!write(9,901),qq1(m19),qq2(m19),bondq4(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!!endif
-!!!!if(niao.ne.0.and.nnnatom.eq.0)then
-!!!if(niao.eq.1)then
-!!!write(9,909),qq1(m19),qq2(m19),bondq4(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!!endif
-!!!tqlty=tqlty+qq1(m19)
-!!!bqlty=bqlty+bondq4(m19)
-!!!sqlty=sqlty+qq2(m19)
-!!!enddo
-!!
-!!!900 format(25I4)
-!!!901 format(I3,x,I3,x,I1,a,I1,x,25I4)
-!!!909 format(I3,x,I1,a,I1,x,25I4)
-!!
-!!900 format(I3,x,I3,x,I3,x,I3,x,a,x,25I4)
-!!901 format(I3,x,I3,x,I3,x,I3,x,a,x,I1,a,I3,x,25I4)
-!!909 format(I3,x,I3,x,I3,x,I3,x,a,x,I3,I3,x,25I4)
-!!!910 format(a,x,a,x,a,x,a)
-!!!911 format(15x,I3,7x,I3,7x,I3)
-!!910 format(a,I3)
-!!920 format(a,2x,I5,2x,a,2x,100I5)
-!!911 format(15x,I3,7x,I3,7x,I3)
-!!912 format(a,3x,F10.3)
-!!
-!!close(21)
-!!
-!!open(unit=121,file='script10',status='unknown')
-!!write(121,111)'rm -rf','Rumer_Sets.dat'
-!!close(121)
-!!CALL SYSTEM ("chmod +x script10 ")
-!!CALL SYSTEM ("./script10 ")
-!!CALL SYSTEM ("rm script10 ")
-!!111 format(a,x,a)
-!!
-!!231 format(50I3)
-!!!deallocate(str2)
-!!!deallocate(qq)
-!!!deallocate(qq1)
-!!!deallocate(qq2)
-!!print*,'exit write_symm_xmi'
-!!
-!!379 return
-!!end subroutine w_s_x
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 subroutine check_str_bond(nl,strn,str3,ncqs)
@@ -15048,4179 +8059,4031 @@ print*,'exit check_str_bond'
 return
 end subroutine check_str_bond
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine write_xmi_new_2(nl,strn,str3,ncqs,q_fac2,quality_fac,ffvec2)
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-use commondat
-implicit none
-
-common/quality/str_quality_1,str_quality_2,bondq,tqlty,bqlty,sqlty,tnqs,nssym,qulsym,symq,&
-sigsym,tnqs_sig
-common/str/str5,nstr7
-common/qfacRumid/qq1,bondq4,qq2,qq,rumset
-
-integer::nl,strn,ncqs,tostr,initstr,s,i,i1,i2,i3,i4,i5,i6,i7,i8,i9,m119,tqlty,set_number,&
-mn1,mn2,&
-m16,m15,m14,m13,m12,m11,m10,m9,m8,m7,m6,m5,m4,m3,m2,m1,m17,m18,m19,mm19,m20,m21,m23,m24,Ifailn&
-,qul(100),nqul,j,jj,fg,flg,olp,qsn,countm19,i5up1,i5up2,i5up3,i5up4,i5up5,i5up6,i5up7,i5up8,i5up9 &
-,i5up10,i5up11,i5up12,i5up13,i5up14,i5up15,i5up16,i5up17,i5up18,i5up19,i5up20,&
-i1i7,i2i7,i3i7,i4i7,i5i7,i6i7,i7i7,i8i7,i9i7,i10i7,i11i7,i12i7,i13i7,i14i7,i15i7,i16i7,i17i7,i18i7,i19i7,i20i7&
-,m1m21,m2m21,m3m21,m4m21,m5m21,m6m21,m7m21,m8m21,m9m21,m10m21,m11m21,m12m21,m13m21,m14m21,m15m21,m16m21&
-,m17m21,m18m21,m19m21,m20m21,totstr,ifail,bqlty,sqlty,ttqlty1,ttqlty0,ttqlty2,ttqlty3,ttqlty,hqlty
-integer::n19,l19,o19,j17,j27,j37,j47,m,mm121,mm221,mm321,mm421,x,y,det_inv,detc(100),detc1(100),set_num(100),u1,max_set,mns
-integer::str3(15000,20),q_fac2(15000),finalvec(15000),strno(15000),sigsym(15000),tnqs_sig&
-,ffvec2(15000,1000),bondq(15000),overlap(15000),qstrn(50),qqstrn(50),vec(15000,1000)&
-,tndet,quality_fac(15000),str_quality_1(15000),str_quality_2(15000),tnqs,nssym,qulsym(15000)&
-,symq(15000),col(1000),str2(2000,20),fvec(15000,1000),avg,bondc(100,50),numb,ct,bdpstr(100),sum1&
-,bdset,str5(2000,20),nstr7,Rid,rumer(15000),rumer_rad(15000),iter_counter,nnn,nbd,bdet(50)&
-,pref_radical(15000),mbondq(15000)
-real*8::ovlp,std,var
-real::bnd_std
-Double Precision::D(1000),bond_det
-character(len=10)::inact
-character(len=6)::a
-character(len=100)::outfile
-
-integer::qq1(5000),qq2(5000),qq(5000),bondq4(5000),rumset
-print*,'enter write_xmi_new_2',niao
-
-mns=0
-u1=1
-max_set=75000
-
-write(35,'(a)')'********** All the structures arranged serialy according to their qualities ********'
-write(35,'(a)')'************************************************************************************'
-if(nl.ne.0)write(35,122)'Structures in lone pair set ',nl,'is given below'
-122 format(a,1x,I3,1x,a)
-write(35,123)'sl no.','srtuctures','IAB','NN','SB','UDB','UDR','Tot'
-if(radical.ne.1.and.prad.ne.0.and.nlast.ne.0.or.flg1.eq.1) call prio_rad_str(nl,str3,ncqs,pref_radical)
-if(mnbond.ne.1.and.imbd.ne.0.or.flg1.eq.1) call main_bond_cal(nl,str3,ncqs,mbondq)
-if(niao.eq.0)inact=''
-if(niao.eq.1)inact='1  1'
-if(niao.gt.1)write (inact, "(A2,I2)") "1:", niao
-do i=1,ncqs
-123 format(a,6x,a,8x,a,2x,a,2x,a,2x,a,2x,a,2x,a)
-write(35,124),i,')',trim(inact),(str3(i,j),j=1,nae),str_quality_1(i),bondq(i),str_quality_2(i),mbondq(i),pref_radical(i),q_fac2(i)
-enddo
-124 format(I2,1x,a,2x,a,1x,30I3)
-nbd=0
-do i=1,50
-bdet(i)=0
-enddo
-
-!!! 'check_str_bond' is necessary if we are checking independency with the bond
-!!! slabe
- if(flg_ion.eq.0.and.vacorb.le.0)call check_str_bond(nl,strn,str3,ncqs)
-
-iter_counter=0
-if(nfset.eq.3.or.nfset.eq.5)then
-rumset=0
-call rumer_structures(nl,str3,ncqs,rumer,rumer_rad)
-call write_rumer_xmi(nl,str3,ncqs,rumer,rumer_rad,quality_fac)
-endif
-ct=0
-numb=0
-std=0.0
-do i=1,100
-detc(i)=0
-detc1(i)=0
-enddo
-avg=0
-var=0.0
-
-!do i=1,ncqs
-!print*,'q_fac2:write_xmi_new_2',q_fac2(i)
-!enddo
-
-if(noq0.gt.strn)then
-ttqlty0=noq0
-else
-ttqlty0=strn+noq0
-endif
-ttqlty1=strn+noq1
-ttqlty2=strn+noq2
-ttqlty3=strn+noq3
-
-!print*,'nfset',nfset,ovopt
-write(*,*)'ttqlty1,ttqlty2,ttqlty3',ttqlty1,ttqlty2,ttqlty3,ttqlty0,noq1,noq2,noq3,noq0,nfset
+!subroutine write_xmi_new_2(nl,strn,str3,ncqs,q_fac2,quality_fac,ffvec2)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!use commondat
+!implicit none
 !
-!print*,'ttqlty.le.ttqlty0',ttqlty,ttqlty0
-
-!ovlpval=0.985
-
-set_number=0
-ttqlty=0
-bqlty=0
-tqlty=0
-sqlty=0
-
-jj=1
-do m19=1,ncqs
-if(m19.eq.1)qul(1)=q_fac2(1)
-j=jj
-do i=1,j
-if(qul(i).eq.q_fac2(m19))goto 373
-enddo
-jj=jj+1
-qul(i)=q_fac2(m19)
-!print*,qul(i)
-373 enddo
-nqul=jj
-
-do i=1,nqul
-qsn=0
-do m19=1,ncqs
-if(qul(i).ne.q_fac2(m19))goto 374
-qsn=qsn+1
-374 enddo
-qqstrn(i)=qsn
-enddo
-qstrn(1)=0
-j=1
-do i=1,nqul
-j=j+1
-s=qqstrn(i)
-qstrn(j)=qstrn(j-1)+s
-enddo
-
-
-!print*,'nqul',nqul
-!print*,'last_sourav'
-do m19=1,ncqs
-!!!!print*,m19
-write(*,231)(str3(m19,i4),i4=1,nae)
-!print*,'q_fac2',q_fac2(m19)
-!print*,'bondq',bondq(m19)
-!print*,'qul',qul(m19)
-!!print*,'niao',niao,strn
-!!write(*,231)(ffvec2(m19,i4),i4=1,ndet)
-!!write(*,231)(bond_count(m19,i4),i4=1,nmbond)
-!!!!write(*,231)(ffvec2(m19,i4),i4=1,ndet)
-enddo
-!uosn=uoptstr
+!common/quality/str_quality_1,str_quality_2,bondq,tqlty,bqlty,sqlty,tnqs,nssym,qulsym,symq,&
+!sigsym,tnqs_sig
+!common/str/str5,nstr7
+!common/qfacRumid/qq1,bondq4,qq2,qq,rumset
+!
+!integer::nl,strn,ncqs,tostr,initstr,s,i,i1,i2,i3,i4,i5,i6,i7,i8,i9,m119,tqlty,set_number,&
+!mn1,mn2,&
+!m16,m15,m14,m13,m12,m11,m10,m9,m8,m7,m6,m5,m4,m3,m2,m1,m17,m18,m19,mm19,m20,m21,m23,m24,Ifailn&
+!,qul(100),nqul,j,jj,fg,flg,olp,qsn,countm19,i5up1,i5up2,i5up3,i5up4,i5up5,i5up6,i5up7,i5up8,i5up9 &
+!,i5up10,i5up11,i5up12,i5up13,i5up14,i5up15,i5up16,i5up17,i5up18,i5up19,i5up20,&
+!i1i7,i2i7,i3i7,i4i7,i5i7,i6i7,i7i7,i8i7,i9i7,i10i7,i11i7,i12i7,i13i7,i14i7,i15i7,i16i7,i17i7,i18i7,i19i7,i20i7&
+!,m1m21,m2m21,m3m21,m4m21,m5m21,m6m21,m7m21,m8m21,m9m21,m10m21,m11m21,m12m21,m13m21,m14m21,m15m21,m16m21&
+!,m17m21,m18m21,m19m21,m20m21,totstr,ifail,bqlty,sqlty,ttqlty1,ttqlty0,ttqlty2,ttqlty3,ttqlty,hqlty
+!integer::n19,l19,o19,j17,j27,j37,j47,m,mm121,mm221,mm321,mm421,x,y,det_inv,detc(100),detc1(100),set_num(100),u1,max_set,mns
+!integer::str3(15000,20),q_fac2(15000),finalvec(15000),strno(15000),sigsym(15000),tnqs_sig&
+!,ffvec2(15000,1000),bondq(15000),overlap(15000),qstrn(50),qqstrn(50),vec(15000,1000)&
+!,tndet,quality_fac(15000),str_quality_1(15000),str_quality_2(15000),tnqs,nssym,qulsym(15000)&
+!,symq(15000),col(1000),str2(2000,20),fvec(15000,1000),avg,bondc(100,50),numb,ct,bdpstr(100),sum1&
+!,bdset,str5(2000,20),nstr7,Rid,rumer(15000),rumer_rad(15000),iter_counter,nnn,nbd,bdet(50)&
+!,pref_radical(15000),mbondq(15000)
+!real*8::ovlp,std,var
+!real::bnd_std
+!Double Precision::D(1000),bond_det
+!character(len=10)::inact
+!character(len=6)::a
+!character(len=100)::outfile
+!
+!integer::qq1(5000),qq2(5000),qq(5000),bondq4(5000),rumset
+!print*,'enter write_xmi_new_2',niao
+!
+!mns=0
+!u1=1
+!max_set=75000
+!
+!write(35,'(a)')'********** All the structures arranged serialy according to their qualities ********'
+!write(35,'(a)')'************************************************************************************'
+!if(nl.ne.0)write(35,122)'Structures in lone pair set ',nl,'is given below'
+!122 format(a,1x,I3,1x,a)
+!write(35,123)'sl no.','srtuctures','IAB','NN','SB','UDB','UDR','Tot'
+!if(radical.ne.1.and.prad.ne.0.and.nlast.ne.0.or.flg1.eq.1) call prio_rad_str(nl,str3,ncqs,pref_radical)
+!if(mnbond.ne.1.and.imbd.ne.0.or.flg1.eq.1) call main_bond_cal(nl,str3,ncqs,mbondq)
+!if(niao.eq.0)inact=''
+!if(niao.eq.1)inact='1  1'
+!if(niao.gt.1)write (inact, "(A2,I2)") "1:", niao
+!do i=1,ncqs
+!123 format(a,6x,a,8x,a,2x,a,2x,a,2x,a,2x,a,2x,a)
+!write(35,124),i,')',trim(inact),(str3(i,j),j=1,nae),str_quality_1(i),bondq(i),str_quality_2(i),mbondq(i),pref_radical(i),q_fac2(i)
+!enddo
+!124 format(I2,1x,a,2x,a,1x,30I3)
+!nbd=0
+!do i=1,50
+!bdet(i)=0
+!enddo
+!
+!!!! 'check_str_bond' is necessary if we are checking independency with the bond
+!!!! slabe
+! if(flg_ion.eq.0.and.vacorb.le.0)call check_str_bond(nl,strn,str3,ncqs)
+!
+!iter_counter=0
+!if(nfset.eq.3.or.nfset.eq.5)then
+!rumset=0
+!call rumer_structures(nl,str3,ncqs,rumer,rumer_rad)
+!call write_rumer_xmi(nl,str3,ncqs,rumer,rumer_rad,quality_fac)
 !endif
-
-
-434 format (40I3)
-
-do m19=1,ncqs
-
-!if(max_set.eq.mns)then
-!print*,'mns',mns
-!u1=u1+1
-!write(a,'(I4)')u1
-!outfile=trim('structure_set_')//trim(a)//trim('.dat')
-!open(unit=9+u1,file=outfile,status='unknown')
-!endif
-
-!!!! quality 1 structures !!!!!!!
-!write(*,*)'111111111111111111111',m19,ncqs
-totstr=0
-i7=0
-m21=0
-
-do m20=1,10000
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-
-
-
-totstr=totstr+1
-strno(totstr)=m19
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!print*,'Ifail_test_check_ind',Ifail
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifail)
-if(Ifail.eq.1)then
-!iter_counter=iter_counter+1
-!print*,'iter_counter',iter_counter,Ifail
-goto 200
-endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-call MatLDR('str',strno,totstr,D)
-
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-if(1.0-ovlp.gt.ovval)goto 200
-endif
-m21=m21+1
-if(m21.gt.strn) goto 316
-i7=i7+1
-do i3=1,nae
-str2(i7,i3)=str3(m19,i3)
-enddo
-col(i7)=m19
-!print*,'i7',i7,m19
-!print*,'sourav1',q_fac2(m19)
-qq(i7)=q_fac2(m19)
-!print*,'sourav2'
-qq1(i7)=str_quality_1(m19)
-qq2(i7)=str_quality_2(m19)
-bondq4(i7)=bondq(m19)
-
-!print*,'nmbond',nmbond
-!do i3=1,nmbond
-!bondc(i7,i3)=bond_count(m19,i3)
-!enddo
-!print*,'bondq4(i7)',bondq4(i7),m19
-
-if(i7.eq.strn) then
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-set_number=set_number+1
-mns=mns+1
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-endif
-
-do m119=1,i7
-if(niao.eq.0)then
-write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-if(niao.gt.1)then
-write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-if(niao.eq.1)then
-write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-!write(9,231)(bondc(m119,i4),i4=1,nmbond)
-!do i4=1,nmbond
-!detc(i4)=detc(i4)+bondc(m119,i4)
-!enddo
-!do i4=1,nmbond
-!bdpstr(m119)=bdpstr(m119)+bondc(m119,i4)
-!enddo
-
-enddo
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-if(ovopt.eq.1) then
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-if(Rid.eq.0)write(9,910)'quality value',ttqlty
-if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-bqlty=0
-write(9,*),'Set_number=',set_number
-write(9,*),'    '
-endif
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-goto 200
-endif
-
-
-i1i7=i7
-m1m21=m21
-
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!loop 2 start
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-do m18=m19+1,ncqs
-!write(*,*)'222222222222222222222222222',m18,ncqs
-
-do m20=i1i7+1,i7
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-i7=i1i7
-totstr=i1i7
-m21=m1m21
-
-totstr=totstr+1
-strno(totstr)=m18
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!print*,'Ifail_test_check_ind',Ifail
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifail)
-if(Ifail.eq.1)then
-goto 201
-endif
-!!!!!!!!!!!!!!!!!!
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-call MatLDR('str',strno,totstr,D)
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-if(1.0-ovlp.gt.ovval)goto 201
-endif
-m21=m21+1
-if(m21.gt.strn) goto 316
-
-i7=i7+1
-do i3=1,nae
-str2(i7,i3)=str3(m18,i3)
-enddo
-col(i7)=m18
-!print*,'i7',i7,m18
-qq(i7)=q_fac2(m18)
-qq1(i7)=str_quality_1(m18)
-qq2(i7)=str_quality_2(m18)
-bondq4(i7)=bondq(m18)
-
-!do i3=1,nmbond
-!bondc(i7,i3)=bond_count(m18,i3)
-!enddo
-
-if(i7.eq.strn) then
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-set_number=set_number+1
-mns=mns+1
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-endif
-
-do i4=1,100
-detc(i4)=0
-detc1(i4)=0
-bdpstr(i4)=0
-enddo
-do m119=1,i7
-
-if(niao.eq.0)then
-write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-if(niao.gt.1)then
-write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-if(niao.eq.1)then
-write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-!write(9,231)(bondc(m119,i4),i4=1,nmbond)
-!do i4=1,nmbond
-!detc(i4)=detc(i4)+bondc(m119,i4)
-!enddo
-!do i4=1,nmbond
-!bdpstr(m119)=bdpstr(m119)+bondc(m119,i4)
-!enddo
-
-
-enddo
-
-
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-if(ovopt.eq.1) then
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-if(Rid.eq.0)write(9,910)'quality value',ttqlty
-if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-
-!bdset=0
-!do i=1,i7
-!if(bdpstr(i).ne.0)then
-!bdset=bdset+1
-!endif
-!enddo
-!numb=nmbond
-!write(9,232)'bond',(detc(i),i=1,numb)
 !ct=0
-!do i=1,numb
-!ct=ct+1
-!detc1(ct)=detc(i)
-!enddo
-!numb=ct
-!sum1=0
-!do i=1,numb
-!avg=avg+detc1(i)
-!sum1=sum1+detc1(i)
-!enddo
-!avg=avg/(numb)
-!do i=1,numb
-!var=var+(detc1(i)-avg)**2
-!enddo
-!var=var/(numb)
-!std=sqrt(var)
-!write(9,233)'STD_BOND',',',set_number,',',std,',',(detc(i),i=1,numb),',',sum1,',',(bdpstr(i),i=1,i7)&
-!,',',bdset
-!233 format(a,a,I5,a,F10.3,a,6I3,a,I3,a,2I3,a,I3)
-!avg=0
-!var=0.0
-
-bqlty=0
-write(9,*),'Set_number=',set_number
-write(9,*),'    '
-endif
-
-!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-if(mns.eq.max_set)then
-if(u1.eq.mset-1) goto 316
-close(9+u1)
-mns=0
-u1=u1+1
-if(u1.le.9)then
-write(a,'(I1)')u1
-endif
-if(u1.gt.9.and.u1.lt.100)then
-write(a,'(I2)')u1
-endif
-if(u1.gt.99.and.u1.lt.1000)then
-write(a,'(I3)')u1
-endif
-if(u1.eq.1000)then
-write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-sets. Please increase the limit'
-goto 316
-endif
-outfile='structure_set_'//trim(a)//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-
-
-!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
-!if(nfset.eq.1) goto 316
-!if(m18.eq.ncqs)goto 200
-
-goto 201
-endif
-
-
-
-i5up2=i5
-i2i7=i7
-m2m21=m21
-
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!! loop 3 start
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-do m17=m18+1,ncqs
-
-!!!! quality 3 structures !!!!!!!
-!write(*,*)'333333333333333333333333333',m17,ncqs
-
-do m20=i2i7+1,i7
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-i7=i2i7
-totstr=i2i7
-m21=m2m21
-
-totstr=totstr+1
-strno(totstr)=m17
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
-!print*,'Ifail_test_check_ind',Ifail,Ifailn
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifail)
-
-if(Ifail.eq.1)then
-
-!iter_counter=iter_counter+1
-!print*,'iter_counter',iter_counter,Ifail
-!call bond_det_vec(strno,totstr,bond_det)
-
-goto 202
-endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-call MatLDR('str',strno,totstr,D)
-
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-
-!print*,'ovval',1.0-ovlp,ovlp
-
-if(1.0-ovlp.gt.ovval)goto 202
-endif
-m21=m21+1
-if(m21.gt.strn) goto 316
-
-i7=i7+1
-do i3=1,nae
-str2(i7,i3)=str3(m17,i3)
-enddo
-col(i7)=m17
-!print*,'i7',i7,m17
-qq(i7)=q_fac2(m17)
-qq1(i7)=str_quality_1(m17)
-qq2(i7)=str_quality_2(m17)
-bondq4(i7)=bondq(m17)
-
-!do i3=1,nmbond
-!fvec(i7,i3)=ffvec2(m17,i3)
-!bondc(i7,i3)=bond_count(m17,i3)
-!enddo
-
-if(i7.eq.strn) then
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-mns=mns+1
-set_number=set_number+1
-mns=mns+1
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-endif
-
-do m119=1,i7
-
-
-if(niao.eq.0)then
-write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.ne.0)then
-if(niao.gt.1)then
-write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.eq.0)then
-if(niao.eq.1)then
-write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-enddo
-
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-
-!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.gt.0.and.ovopt.eq.1) then
-!print*,'ovopt',ovopt
-
-if(ovopt.eq.1) then
-
-!print*,'MatLDR3'
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-
-!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
-
-if(Rid.eq.0)write(9,910)'quality value',ttqlty
-if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-bqlty=0
-write(9,*),'Set_number=',set_number
-write(9,*),'    '
-endif
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-if(mns.eq.max_set)then
-if(u1.eq.mset-1) goto 316
-close(9+u1)
-mns=0
-u1=u1+1
-if(u1.le.9)then
-write(a,'(I1)')u1
-endif
-if(u1.gt.9.and.u1.lt.100)then
-write(a,'(I2)')u1
-endif
-if(u1.gt.99.and.u1.lt.1000)then
-write(a,'(I3)')u1
-endif
-if(u1.eq.1000)then
-write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-sets. Please increase the limit'
-goto 316
-endif
-outfile='structure_set_'//trim(a)//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-
-!if(m17.eq.ncqs)goto 201
-
-goto 202
-endif
-
-
-i5up3=i5
-i3i7=i7
-m3m21=m21
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!! loop 4 start
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-do m16=m17+1,ncqs
-
-!!!! quality 4 structures !!!!!!!
-!write(*,*)'4444444444444444444444444',m16,ncqs
-
-
-do m20=i3i7+1,i7
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-
-i7=i3i7
-totstr=i3i7
-m21=m3m21
-
-
-
-totstr=totstr+1
-strno(totstr)=m16
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-
-!print*,'Ifail_test_check_ind',Ifail
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
-!print*,'Ifail_test_check_ind',Ifail,Ifailn
-
-if(Ifail.eq.1)then
-
-!iter_counter=iter_counter+1
-!print*,'iter_counter',iter_counter,Ifail
-!call bond_det_vec(strno,totstr,bond_det)
-
-goto 203
-endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-call MatLDR('str',strno,totstr,D)
-
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-if(1.0-ovlp.gt.ovval)goto 203
-endif
-m21=m21+1
-if(m21.gt.strn) goto 316
-
-i7=i7+1
-
-do i3=1,nae
-str2(i7,i3)=str3(m16,i3)
-enddo
-col(i7)=m16
-
-!print*,'i7',i7,m16
-
-qq(i7)=q_fac2(m16)
-qq1(i7)=str_quality_1(m16)
-qq2(i7)=str_quality_2(m16)
-bondq4(i7)=bondq(m16)
-
-!do i3=1,nmbond
-!!fvec(i7,i3)=ffvec2(m16,i3)
-!bondc(i7,i3)=bond_count(m16,i3)
-!enddo
-
-if(i7.eq.strn)then
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-mns=mns+1
-set_number=set_number+1
-mns=mns+1
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-endif
-
-do m119=1,i7
-
-if(niao.eq.0)then
-write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.ne.0)then
-if(niao.gt.1)then
-write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.eq.0)then
-if(niao.eq.1)then
-write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-!write(9,231)(fvec(m119,i4),i4=1,ndet)
-!do i4=1,ndet
-!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
-!enddo
-
-
-
-enddo
-
-if(flgst.eq.1.or.flgst.eq.3) then
-call ion_struc
-endif
-!if(nfset.eq.3)call Rumer_set_id(str2,i7,nl,Rid,set_num)
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-
-!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.gt.0.and.ovopt.eq.1) then
-!print*,'ovopt',ovopt
-
-if(ovopt.eq.1) then
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-
-!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
-
-if(Rid.eq.0)write(9,910)'quality value',ttqlty
-if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-
-!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
-!do i=1,tot_ndet-1
-!avg=avg+detc(i)
-!enddo
-!avg=avg/(tot_ndet-1)
-!do i=1,tot_ndet-1
-!var=var+(detc(i)-avg)**2
-!enddo
-!var=var/(tot_ndet-1)
-!std=sqrt(var)
-!write(9,233)'STD_DET',std
-!do i=1,1000
+!numb=0
+!std=0.0
+!do i=1,100
 !detc(i)=0
+!detc1(i)=0
 !enddo
 !avg=0
 !var=0.0
-!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
-!write(9,911),tqlty,sqlty,bqlty
-!write(9,*),'Total Quality = ',tqlty,bqlty
-
-bqlty=0
-
-write(9,*),'Set_number=',set_number
-write(9,*),'    '
-endif
-
-!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-if(mns.eq.max_set)then
-if(u1.eq.mset-1) goto 316
-close(9+u1)
-mns=0
-u1=u1+1
-if(u1.le.9)then
-write(a,'(I1)')u1
-endif
-if(u1.gt.9.and.u1.lt.100)then
-write(a,'(I2)')u1
-endif
-if(u1.gt.99.and.u1.lt.1000)then
-write(a,'(I3)')u1
-endif
-if(u1.eq.1000)then
-write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-sets. Please increase the limit'
-goto 316
-endif
-outfile='structure_set_'//trim(a)//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-
-!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
-!if(nfset.eq.1) goto 316
-!if(m16.eq.ncqs)goto 202
-
-goto 203
-endif
-
-
-!152 enddo
-
-!if(noq.eq.4)goto 203
-
-i4i7=i7
-m4m21=m21
-
-do m15=m16+1,ncqs
-
-!!! quality 5 structures !!!!!!!
-!write(*,*)'55555555555555555555555555',m15,ncqs
-!iter_counter=iter_counter+1
-!print*,'iter_counter',iter_counter
-!if(max_set.eq.mns)then
-!print*,'mns',mns
+!
+!!do i=1,ncqs
+!!print*,'q_fac2:write_xmi_new_2',q_fac2(i)
+!!enddo
+!
+!if(noq0.gt.strn)then
+!ttqlty0=noq0
+!else
+!ttqlty0=strn+noq0
+!endif
+!ttqlty1=strn+noq1
+!ttqlty2=strn+noq2
+!ttqlty3=strn+noq3
+!
+!!print*,'nfset',nfset,ovopt
+!write(*,*)'ttqlty1,ttqlty2,ttqlty3',ttqlty1,ttqlty2,ttqlty3,ttqlty0,noq1,noq2,noq3,noq0,nfset
+!!
+!!print*,'ttqlty.le.ttqlty0',ttqlty,ttqlty0
+!
+!!ovlpval=0.985
+!
+!set_number=0
+!ttqlty=0
+!bqlty=0
+!tqlty=0
+!sqlty=0
+!
+!jj=1
+!do m19=1,ncqs
+!if(m19.eq.1)qul(1)=q_fac2(1)
+!j=jj
+!do i=1,j
+!if(qul(i).eq.q_fac2(m19))goto 373
+!enddo
+!jj=jj+1
+!qul(i)=q_fac2(m19)
+!!print*,qul(i)
+!373 enddo
+!nqul=jj
+!
+!do i=1,nqul
+!qsn=0
+!do m19=1,ncqs
+!if(qul(i).ne.q_fac2(m19))goto 374
+!qsn=qsn+1
+!374 enddo
+!qqstrn(i)=qsn
+!enddo
+!qstrn(1)=0
+!j=1
+!do i=1,nqul
+!j=j+1
+!s=qqstrn(i)
+!qstrn(j)=qstrn(j-1)+s
+!enddo
+!
+!
+!!print*,'nqul',nqul
+!!print*,'last_sourav'
+!do m19=1,ncqs
+!!!!!print*,m19
+!write(*,231)(str3(m19,i4),i4=1,nae)
+!!print*,'q_fac2',q_fac2(m19)
+!!print*,'bondq',bondq(m19)
+!!print*,'qul',qul(m19)
+!!!print*,'niao',niao,strn
+!!!write(*,231)(ffvec2(m19,i4),i4=1,ndet)
+!!!write(*,231)(bond_count(m19,i4),i4=1,nmbond)
+!!!!!write(*,231)(ffvec2(m19,i4),i4=1,ndet)
+!enddo
+!!uosn=uoptstr
+!!endif
+!
+!
+!434 format (40I3)
+!
+!do m19=1,ncqs
+!
+!!if(max_set.eq.mns)then
+!!print*,'mns',mns
+!!u1=u1+1
+!!write(a,'(I4)')u1
+!!outfile=trim('structure_set_')//trim(a)//trim('.dat')
+!!open(unit=9+u1,file=outfile,status='unknown')
+!!endif
+!
+!!!!! quality 1 structures !!!!!!!
+!!write(*,*)'111111111111111111111',m19,ncqs
+!totstr=0
+!i7=0
+!m21=0
+!
+!do m20=1,10000
+!strno(m20)=0
+!do i8=1,15
+!str2(m20,i8)=0
+!enddo
+!enddo
+!
+!
+!
+!totstr=totstr+1
+!strno(totstr)=m19
+!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!!print*,'Ifail_test_check_ind',Ifail
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifail)
+!if(Ifail.eq.1)then
+!!iter_counter=iter_counter+1
+!!print*,'iter_counter',iter_counter,Ifail
+!goto 200
+!endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!call MatLDR('str',strno,totstr,D)
+!
+!ovlp=1.0
+!do i=1,totstr
+!ovlp=ovlp*D(i)
+!enddo
+!if(1.0-ovlp.gt.ovval)goto 200
+!endif
+!m21=m21+1
+!if(m21.gt.strn) goto 316
+!i7=i7+1
+!do i3=1,nae
+!str2(i7,i3)=str3(m19,i3)
+!enddo
+!col(i7)=m19
+!!print*,'i7',i7,m19
+!!print*,'sourav1',q_fac2(m19)
+!qq(i7)=q_fac2(m19)
+!!print*,'sourav2'
+!qq1(i7)=str_quality_1(m19)
+!qq2(i7)=str_quality_2(m19)
+!bondq4(i7)=bondq(m19)
+!
+!!print*,'nmbond',nmbond
+!!do i3=1,nmbond
+!!bondc(i7,i3)=bond_count(m19,i3)
+!!enddo
+!!print*,'bondq4(i7)',bondq4(i7),m19
+!
+!if(i7.eq.strn) then
+!ttqlty=0
+!tqlty=0
+!bqlty=0
+!sqlty=0
+!do m119=1,i7
+!ttqlty=ttqlty+qq(m119)
+!tqlty=tqlty+qq1(m119)
+!bqlty=bqlty+bondq4(m119)
+!sqlty=sqlty+qq2(m119)
+!enddo
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
+!set_number=set_number+1
+!mns=mns+1
+!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!if(nfset.eq.1.and.set_number.gt.1)then
+!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!endif
+!
+!do m119=1,i7
+!if(niao.eq.0)then
+!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!endif
+!if(niao.gt.1)then
+!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!endif
+!if(niao.eq.1)then
+!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!endif
+!
+!!write(9,231)(bondc(m119,i4),i4=1,nmbond)
+!!do i4=1,nmbond
+!!detc(i4)=detc(i4)+bondc(m119,i4)
+!!enddo
+!!do i4=1,nmbond
+!!bdpstr(m119)=bdpstr(m119)+bondc(m119,i4)
+!!enddo
+!
+!enddo
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
+!if(ovopt.eq.1) then
+!call MatLDR('str',col,i7,D)
+!
+!ovlp=1.0
+!do i=1,i7
+!ovlp=ovlp*D(i)
+!enddo
+!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
+!endif
+!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!bqlty=0
+!write(9,*),'Set_number=',set_number
+!write(9,*),'    '
+!endif
+!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!goto 200
+!endif
+!
+!
+!i1i7=i7
+!m1m21=m21
+!
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!loop 2 start
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!do m18=m19+1,ncqs
+!!write(*,*)'222222222222222222222222222',m18,ncqs
+!
+!do m20=i1i7+1,i7
+!strno(m20)=0
+!do i8=1,15
+!str2(m20,i8)=0
+!enddo
+!enddo
+!i7=i1i7
+!totstr=i1i7
+!m21=m1m21
+!
+!totstr=totstr+1
+!strno(totstr)=m18
+!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!!print*,'Ifail_test_check_ind',Ifail
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifail)
+!if(Ifail.eq.1)then
+!goto 201
+!endif
+!!!!!!!!!!!!!!!!!!!
+!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!call MatLDR('str',strno,totstr,D)
+!ovlp=1.0
+!do i=1,totstr
+!ovlp=ovlp*D(i)
+!enddo
+!if(1.0-ovlp.gt.ovval)goto 201
+!endif
+!m21=m21+1
+!if(m21.gt.strn) goto 316
+!
+!i7=i7+1
+!do i3=1,nae
+!str2(i7,i3)=str3(m18,i3)
+!enddo
+!col(i7)=m18
+!!print*,'i7',i7,m18
+!qq(i7)=q_fac2(m18)
+!qq1(i7)=str_quality_1(m18)
+!qq2(i7)=str_quality_2(m18)
+!bondq4(i7)=bondq(m18)
+!
+!!do i3=1,nmbond
+!!bondc(i7,i3)=bond_count(m18,i3)
+!!enddo
+!
+!if(i7.eq.strn) then
+!ttqlty=0
+!tqlty=0
+!bqlty=0
+!sqlty=0
+!do m119=1,i7
+!ttqlty=ttqlty+qq(m119)
+!tqlty=tqlty+qq1(m119)
+!bqlty=bqlty+bondq4(m119)
+!sqlty=sqlty+qq2(m119)
+!enddo
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
+!set_number=set_number+1
+!mns=mns+1
+!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!if(nfset.eq.1.and.set_number.gt.1)then
+!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!endif
+!
+!do i4=1,100
+!detc(i4)=0
+!detc1(i4)=0
+!bdpstr(i4)=0
+!enddo
+!do m119=1,i7
+!
+!if(niao.eq.0)then
+!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!endif
+!if(niao.gt.1)then
+!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!endif
+!if(niao.eq.1)then
+!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!endif
+!
+!!write(9,231)(bondc(m119,i4),i4=1,nmbond)
+!!do i4=1,nmbond
+!!detc(i4)=detc(i4)+bondc(m119,i4)
+!!enddo
+!!do i4=1,nmbond
+!!bdpstr(m119)=bdpstr(m119)+bondc(m119,i4)
+!!enddo
+!
+!
+!enddo
+!
+!
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
+!if(ovopt.eq.1) then
+!call MatLDR('str',col,i7,D)
+!
+!ovlp=1.0
+!do i=1,i7
+!ovlp=ovlp*D(i)
+!enddo
+!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
+!endif
+!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!
+!!bdset=0
+!!do i=1,i7
+!!if(bdpstr(i).ne.0)then
+!!bdset=bdset+1
+!!endif
+!!enddo
+!!numb=nmbond
+!!write(9,232)'bond',(detc(i),i=1,numb)
+!!ct=0
+!!do i=1,numb
+!!ct=ct+1
+!!detc1(ct)=detc(i)
+!!enddo
+!!numb=ct
+!!sum1=0
+!!do i=1,numb
+!!avg=avg+detc1(i)
+!!sum1=sum1+detc1(i)
+!!enddo
+!!avg=avg/(numb)
+!!do i=1,numb
+!!var=var+(detc1(i)-avg)**2
+!!enddo
+!!var=var/(numb)
+!!std=sqrt(var)
+!!write(9,233)'STD_BOND',',',set_number,',',std,',',(detc(i),i=1,numb),',',sum1,',',(bdpstr(i),i=1,i7)&
+!!,',',bdset
+!!233 format(a,a,I5,a,F10.3,a,6I3,a,I3,a,2I3,a,I3)
+!!avg=0
+!!var=0.0
+!
+!bqlty=0
+!write(9,*),'Set_number=',set_number
+!write(9,*),'    '
+!endif
+!
+!!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!
+!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!if(mns.eq.max_set)then
+!if(u1.eq.mset-1) goto 316
+!close(9+u1)
+!mns=0
 !u1=u1+1
-!write(a,'(I4)')u1
-!outfile=trim('structure_set_')//trim(a)//trim('.dat')
+!if(u1.le.9)then
+!write(a,'(I1)')u1
+!endif
+!if(u1.gt.9.and.u1.lt.100)then
+!write(a,'(I2)')u1
+!endif
+!if(u1.gt.99.and.u1.lt.1000)then
+!write(a,'(I3)')u1
+!endif
+!if(u1.eq.1000)then
+!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
+!sets. Please increase the limit'
+!goto 316
+!endif
+!outfile='structure_set_'//trim(a)//trim('.dat')
 !open(unit=9+u1,file=outfile,status='unknown')
 !endif
-
-do m20=i4i7+1,i7
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-
-i7=i4i7
-totstr=i4i7
-m21=m4m21
-
-
-
-!do m19=m14,ncqs
-
-
-!if(q_fac2(m19).ne.q_fac2(m14))goto 142
-
-totstr=totstr+1
-strno(totstr)=m15
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-
-!print*,'Ifail_test_check_ind',Ifail
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
-!print*,'Ifail_test_check_ind',Ifail,Ifailn
-
-if(Ifail.eq.1)then
-!!iter_counter=iter_counter+1
-goto 204
-endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!if(nfset.eq.1.and.totstr.gt.1) then
-
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-
-!print*,'MatLDR_write_xmi',totstr
-!print*,'MatLDR1'
-
-call MatLDR('str',strno,totstr,D)
-
-!print*,'DDD',(D(i),i=1,totstr)
-
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-if(1.0-ovlp.gt.ovval)goto 204
-endif
-m21=m21+1
-if(m21.gt.strn) goto 316
-
-i7=i7+1
-
-do i3=1,nae
-str2(i7,i3)=str3(m15,i3)
-enddo
-col(i7)=m15
-!print*,'i7',i7,m15
-
-qq(i7)=q_fac2(m15)
-qq1(i7)=str_quality_1(m15)
-qq2(i7)=str_quality_2(m15)
-bondq4(i7)=bondq(m15)
-
-!do i3=1,nmbond
-!bondc(i7,i3)=bond_count(m15,i3)
-!!fvec(i7,i3)=ffvec2(m15,i3)
-!enddo
-
-if(i7.eq.strn)then
-
-!write(9,*),'srt',(strno(m119),m119=1,i7)
-!ttqlty=0
-!if(nfset.gt.0)then
-
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-
+!
+!
+!!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
+!!if(nfset.eq.1) goto 316
+!!if(m18.eq.ncqs)goto 200
+!
+!goto 201
 !endif
-!if(set_number.eq.1)hqlty=ttqlty
-!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
-!write(*,*)'hqlty,ttqlty',hqlty,ttqlty
-!if(ttqlty.le.hqlty)then
-!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
-!print*,'tqlty,bqlty,sqlty,ttqlty',tqlty,bqlty,sqlty,ttqlty
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-mns=mns+1
-set_number=set_number+1
-mns=mns+1
-iter_counter=iter_counter+1
-print*,'iter_counter',iter_counter,Ifail
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-endif
-
-do i4=1,100
-detc(i4)=0
-detc1(i4)=0
-bdpstr(i4)=0
-enddo
-
-
-do m119=1,i7
-
-if(niao.eq.0)then
-write(9+u1,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.ne.0)then
-if(niao.gt.1)then
-write(9+u1,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-!write(*,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.eq.0)then
-if(niao.eq.1)then
-write(9+u1,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-!write(9,231)(bondc(m119,i4),i4=1,nmbond)
-!do i4=1,nmbond
-!detc(i4)=detc(i4)+bondc(m119,i4)
+!
+!
+!
+!i5up2=i5
+!i2i7=i7
+!m2m21=m21
+!
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!! loop 3 start
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!do m17=m18+1,ncqs
+!
+!!!!! quality 3 structures !!!!!!!
+!!write(*,*)'333333333333333333333333333',m17,ncqs
+!
+!do m20=i2i7+1,i7
+!strno(m20)=0
+!do i8=1,15
+!str2(m20,i8)=0
 !enddo
-!do i4=1,nmbond
-!bdpstr(m119)=bdpstr(m119)+bondc(m119,i4)
 !enddo
-!print*,'bond',(detc(i4),i4=1,nmbond)
-
-enddo
-!stop
-
-
-call bond_det_vec(nl,i7,str2,bnd_std)
-
+!i7=i2i7
+!totstr=i2i7
+!m21=m2m21
+!
+!totstr=totstr+1
+!strno(totstr)=m17
+!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!print*,'Ifail_test_check_ind',Ifail,Ifailn
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifail)
+!
+!if(Ifail.eq.1)then
+!
+!!iter_counter=iter_counter+1
+!!print*,'iter_counter',iter_counter,Ifail
+!!call bond_det_vec(strno,totstr,bond_det)
+!
+!goto 202
+!endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!call MatLDR('str',strno,totstr,D)
+!
+!ovlp=1.0
+!do i=1,totstr
+!ovlp=ovlp*D(i)
+!enddo
+!
+!!print*,'ovval',1.0-ovlp,ovlp
+!
+!if(1.0-ovlp.gt.ovval)goto 202
+!endif
+!m21=m21+1
+!if(m21.gt.strn) goto 316
+!
+!i7=i7+1
+!do i3=1,nae
+!str2(i7,i3)=str3(m17,i3)
+!enddo
+!col(i7)=m17
+!!print*,'i7',i7,m17
+!qq(i7)=q_fac2(m17)
+!qq1(i7)=str_quality_1(m17)
+!qq2(i7)=str_quality_2(m17)
+!bondq4(i7)=bondq(m17)
+!
+!!do i3=1,nmbond
+!!fvec(i7,i3)=ffvec2(m17,i3)
+!!bondc(i7,i3)=bond_count(m17,i3)
+!!enddo
+!
+!if(i7.eq.strn) then
+!ttqlty=0
+!tqlty=0
+!bqlty=0
+!sqlty=0
+!do m119=1,i7
+!ttqlty=ttqlty+qq(m119)
+!tqlty=tqlty+qq1(m119)
+!bqlty=bqlty+bondq4(m119)
+!sqlty=sqlty+qq2(m119)
+!enddo
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
+!mns=mns+1
+!set_number=set_number+1
+!mns=mns+1
+!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!if(nfset.eq.1.and.set_number.gt.1)then
+!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!endif
+!
+!do m119=1,i7
+!
+!
+!if(niao.eq.0)then
+!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.ne.0)then
+!if(niao.gt.1)then
+!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.eq.0)then
+!if(niao.eq.1)then
+!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!endif
+!
+!enddo
+!
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
+!
+!!if(nfset.eq.0.or.nfset.gt.1) then
+!!if(nfset.gt.0.and.ovopt.eq.1) then
+!!print*,'ovopt',ovopt
+!
+!if(ovopt.eq.1) then
+!
+!!print*,'MatLDR3'
+!call MatLDR('str',col,i7,D)
+!
+!ovlp=1.0
+!do i=1,i7
+!ovlp=ovlp*D(i)
+!enddo
+!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
+!endif
+!
+!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
+!!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
+!
+!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!bqlty=0
+!write(9,*),'Set_number=',set_number
+!write(9,*),'    '
+!endif
+!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!if(mns.eq.max_set)then
+!if(u1.eq.mset-1) goto 316
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!if(u1.le.9)then
+!write(a,'(I1)')u1
+!endif
+!if(u1.gt.9.and.u1.lt.100)then
+!write(a,'(I2)')u1
+!endif
+!if(u1.gt.99.and.u1.lt.1000)then
+!write(a,'(I3)')u1
+!endif
+!if(u1.eq.1000)then
+!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
+!sets. Please increase the limit'
+!goto 316
+!endif
+!outfile='structure_set_'//trim(a)//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
+!endif
+!
+!!if(m17.eq.ncqs)goto 201
+!
+!goto 202
+!endif
+!
+!
+!i5up3=i5
+!i3i7=i7
+!m3m21=m21
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!! loop 4 start
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!do m16=m17+1,ncqs
+!
+!!!!! quality 4 structures !!!!!!!
+!!write(*,*)'4444444444444444444444444',m16,ncqs
+!
+!
+!do m20=i3i7+1,i7
+!strno(m20)=0
+!do i8=1,15
+!str2(m20,i8)=0
+!enddo
+!enddo
+!
+!i7=i3i7
+!totstr=i3i7
+!m21=m3m21
+!
+!
+!
+!totstr=totstr+1
+!strno(totstr)=m16
+!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!
+!!print*,'Ifail_test_check_ind',Ifail
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!print*,'Ifail_test_check_ind',Ifail,Ifailn
+!
+!if(Ifail.eq.1)then
+!
+!!iter_counter=iter_counter+1
+!!print*,'iter_counter',iter_counter,Ifail
+!!call bond_det_vec(strno,totstr,bond_det)
+!
+!goto 203
+!endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!call MatLDR('str',strno,totstr,D)
+!
+!ovlp=1.0
+!do i=1,totstr
+!ovlp=ovlp*D(i)
+!enddo
+!if(1.0-ovlp.gt.ovval)goto 203
+!endif
+!m21=m21+1
+!if(m21.gt.strn) goto 316
+!
+!i7=i7+1
+!
+!do i3=1,nae
+!str2(i7,i3)=str3(m16,i3)
+!enddo
+!col(i7)=m16
+!
+!!print*,'i7',i7,m16
+!
+!qq(i7)=q_fac2(m16)
+!qq1(i7)=str_quality_1(m16)
+!qq2(i7)=str_quality_2(m16)
+!bondq4(i7)=bondq(m16)
+!
+!!do i3=1,nmbond
+!!!fvec(i7,i3)=ffvec2(m16,i3)
+!!bondc(i7,i3)=bond_count(m16,i3)
+!!enddo
+!
+!if(i7.eq.strn)then
+!ttqlty=0
+!tqlty=0
+!bqlty=0
+!sqlty=0
+!do m119=1,i7
+!ttqlty=ttqlty+qq(m119)
+!tqlty=tqlty+qq1(m119)
+!bqlty=bqlty+bondq4(m119)
+!sqlty=sqlty+qq2(m119)
+!enddo
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
+!mns=mns+1
+!set_number=set_number+1
+!mns=mns+1
+!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!if(nfset.eq.1.and.set_number.gt.1)then
+!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!endif
+!
+!do m119=1,i7
+!
+!if(niao.eq.0)then
+!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.ne.0)then
+!if(niao.gt.1)then
+!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.eq.0)then
+!if(niao.eq.1)then
+!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!endif
+!
+!!write(9,231)(fvec(m119,i4),i4=1,ndet)
+!!do i4=1,ndet
+!!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
+!!enddo
+!
+!
+!
+!enddo
+!
+!if(flgst.eq.1.or.flgst.eq.3) then
+!call ion_struc
+!endif
+!!if(nfset.eq.3)call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
+!
+!!if(nfset.eq.0.or.nfset.gt.1) then
+!!if(nfset.gt.0.and.ovopt.eq.1) then
+!!print*,'ovopt',ovopt
+!
+!if(ovopt.eq.1) then
+!call MatLDR('str',col,i7,D)
+!
+!ovlp=1.0
+!do i=1,i7
+!ovlp=ovlp*D(i)
+!enddo
+!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
+!endif
+!
+!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
+!!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
+!
+!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!
+!!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!avg=avg+detc(i)
+!!enddo
+!!avg=avg/(tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!var=var+(detc(i)-avg)**2
+!!enddo
+!!var=var/(tot_ndet-1)
+!!std=sqrt(var)
+!!write(9,233)'STD_DET',std
+!!do i=1,1000
+!!detc(i)=0
+!!enddo
+!!avg=0
+!!var=0.0
+!!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
+!!write(9,911),tqlty,sqlty,bqlty
+!!write(9,*),'Total Quality = ',tqlty,bqlty
+!
+!bqlty=0
+!
+!write(9,*),'Set_number=',set_number
+!write(9,*),'    '
+!endif
+!
+!!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!
+!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!if(mns.eq.max_set)then
+!if(u1.eq.mset-1) goto 316
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!if(u1.le.9)then
+!write(a,'(I1)')u1
+!endif
+!if(u1.gt.9.and.u1.lt.100)then
+!write(a,'(I2)')u1
+!endif
+!if(u1.gt.99.and.u1.lt.1000)then
+!write(a,'(I3)')u1
+!endif
+!if(u1.eq.1000)then
+!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
+!sets. Please increase the limit'
+!goto 316
+!endif
+!outfile='structure_set_'//trim(a)//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
+!endif
+!
+!!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
+!!if(nfset.eq.1) goto 316
+!!if(m16.eq.ncqs)goto 202
+!
+!goto 203
+!endif
+!
+!
+!!152 enddo
+!
+!!if(noq.eq.4)goto 203
+!
+!i4i7=i7
+!m4m21=m21
+!
+!do m15=m16+1,ncqs
+!
+!!!! quality 5 structures !!!!!!!
+!!write(*,*)'55555555555555555555555555',m15,ncqs
+!!iter_counter=iter_counter+1
+!!print*,'iter_counter',iter_counter
+!!if(max_set.eq.mns)then
+!!print*,'mns',mns
+!!u1=u1+1
+!!write(a,'(I4)')u1
+!!outfile=trim('structure_set_')//trim(a)//trim('.dat')
+!!open(unit=9+u1,file=outfile,status='unknown')
+!!endif
+!
+!do m20=i4i7+1,i7
+!strno(m20)=0
+!do i8=1,15
+!str2(m20,i8)=0
+!enddo
+!enddo
+!
+!i7=i4i7
+!totstr=i4i7
+!m21=m4m21
+!
+!
+!
+!!do m19=m14,ncqs
+!
+!
+!!if(q_fac2(m19).ne.q_fac2(m14))goto 142
+!
+!totstr=totstr+1
+!strno(totstr)=m15
+!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!
+!!print*,'Ifail_test_check_ind',Ifail
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!print*,'Ifail_test_check_ind',Ifail,Ifailn
+!
+!if(Ifail.eq.1)then
+!!!iter_counter=iter_counter+1
+!goto 204
+!endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!if(nfset.eq.1.and.totstr.gt.1) then
+!
+!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!
+!!print*,'MatLDR_write_xmi',totstr
+!!print*,'MatLDR1'
+!
+!call MatLDR('str',strno,totstr,D)
+!
+!!print*,'DDD',(D(i),i=1,totstr)
+!
+!ovlp=1.0
+!do i=1,totstr
+!ovlp=ovlp*D(i)
+!enddo
+!if(1.0-ovlp.gt.ovval)goto 204
+!endif
+!m21=m21+1
+!if(m21.gt.strn) goto 316
+!
+!i7=i7+1
+!
+!do i3=1,nae
+!str2(i7,i3)=str3(m15,i3)
+!enddo
+!col(i7)=m15
+!!print*,'i7',i7,m15
+!
+!qq(i7)=q_fac2(m15)
+!qq1(i7)=str_quality_1(m15)
+!qq2(i7)=str_quality_2(m15)
+!bondq4(i7)=bondq(m15)
+!
+!!do i3=1,nmbond
+!!bondc(i7,i3)=bond_count(m15,i3)
+!!!fvec(i7,i3)=ffvec2(m15,i3)
+!!enddo
+!
+!if(i7.eq.strn)then
+!
+!!write(9,*),'srt',(strno(m119),m119=1,i7)
+!!ttqlty=0
+!!if(nfset.gt.0)then
+!
+!ttqlty=0
+!tqlty=0
+!bqlty=0
+!sqlty=0
+!do m119=1,i7
+!ttqlty=ttqlty+qq(m119)
+!tqlty=tqlty+qq1(m119)
+!bqlty=bqlty+bondq4(m119)
+!sqlty=sqlty+qq2(m119)
+!enddo
+!
+!!endif
+!!if(set_number.eq.1)hqlty=ttqlty
+!!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
+!!write(*,*)'hqlty,ttqlty',hqlty,ttqlty
+!!if(ttqlty.le.hqlty)then
+!!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
+!!print*,'tqlty,bqlty,sqlty,ttqlty',tqlty,bqlty,sqlty,ttqlty
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
+!mns=mns+1
+!set_number=set_number+1
+!mns=mns+1
+!iter_counter=iter_counter+1
+!print*,'iter_counter',iter_counter,Ifail
+!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!if(nfset.eq.1.and.set_number.gt.1)then
+!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!endif
+!
+!do i4=1,100
+!detc(i4)=0
+!detc1(i4)=0
+!bdpstr(i4)=0
+!enddo
+!
+!
+!do m119=1,i7
+!
+!if(niao.eq.0)then
+!write(9+u1,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.ne.0)then
+!if(niao.gt.1)then
+!write(9+u1,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!!write(*,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.eq.0)then
+!if(niao.eq.1)then
+!write(9+u1,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!endif
+!
+!!write(9,231)(bondc(m119,i4),i4=1,nmbond)
+!!do i4=1,nmbond
+!!detc(i4)=detc(i4)+bondc(m119,i4)
+!!enddo
+!!do i4=1,nmbond
+!!bdpstr(m119)=bdpstr(m119)+bondc(m119,i4)
+!!enddo
+!!print*,'bond',(detc(i4),i4=1,nmbond)
+!
+!enddo
+!!stop
+!
+!
+!call bond_det_vec(nl,i7,str2,bnd_std)
+!
+!!!do i=1,nbd
+!!!if(bdet(i).eq.int(bond_det))goto 777
+!!!enddo
+!!!nbd=nbd+1
+!!!bdet(nbd)=int(bond_det)
+!!!777 write(9,913)'bond_vec_det =',bond_det,Ifail,Ifailn
+!!write(9,*),'Ifail_test_check_ind',Ifail,Ifailn
+!!if(nfset.eq.3)call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
+!
+!!if(nfset.eq.0.or.nfset.gt.1) then
+!!if(nfset.gt.0.and.ovopt.eq.1) then
+!
+!if(ovopt.eq.1) then
+!call MatLDR('str',col,i7,D)
+!
+!ovlp=1.0
+!do i=1,i7
+!ovlp=ovlp*D(i)
+!enddo
+!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
+!endif
+!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
+!!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
+!
+!if(Rid.eq.0)write(9+u1,921)'quality value',ttqlty,'bnd_std',bnd_std
+!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!
+!!numb=tot_ndet-1
+!!bdset=0
+!!do i=1,i7
+!!if(bdpstr(i).ne.0)then
+!!bdset=bdset+1
+!!endif
+!!enddo
+!!!numb=nmbond
+!!!write(9,232)'bond',(detc(i),i=1,numb)
+!!ct=0
+!!do i=1,numb
+!!!if(detc(i).eq.0)goto 333
+!!ct=ct+1
+!!detc1(ct)=detc(i)
+!!!endif
+!!333 enddo
+!!numb=ct
+!!!print*,'ct',ct,(detc1(i),i=1,ct)
+!!sum1=0
+!!do i=1,numb
+!!avg=avg+detc1(i)
+!!sum1=sum1+detc1(i)
+!!enddo
+!!avg=avg/(numb)
+!!do i=1,numb
+!!var=var+(detc1(i)-avg)**2
+!!enddo
+!!var=var/(numb)
+!!std=sqrt(var)
+!!!write(9,233)'STD_BOND',',',set_number,',',std,',',(detc(i),i=1,numb),',',sum1,',',(bdpstr(i),i=1,i7)&
+!!!,',',bdset
+!!avg=0
+!!var=0.0
+!!stop
+!!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
+!!write(9,911),tqlty,sqlty,bqlty
+!!write(9,*),'Total Quality = ',tqlty,bqlty
+!
+!bqlty=0
+!
+!!set_number=set_number+1
+!!write(9,*),'Set_number=',set_number,iter_counter,Ifail
+!
+!write(9+u1,*),'Set_number=',set_number
+!write(9+u1,*),'    '
+!endif
+!
+!!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!
+!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!if(mns.eq.max_set)then
+!if(u1.eq.mset-1) goto 316
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!if(u1.le.9)then
+!write(a,'(I1)')u1
+!endif
+!if(u1.gt.9.and.u1.lt.100)then
+!write(a,'(I2)')u1
+!endif
+!if(u1.gt.99.and.u1.lt.1000)then
+!write(a,'(I3)')u1
+!endif
+!if(u1.eq.1000)then
+!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
+!sets. Please increase the limit'
+!goto 316
+!endif
+!outfile='structure_set_'//trim(a)//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
+!endif
+!
+!!if(nfset.eq.1) write(9,*),'ovlpval',1.0-ovlp
+!!if(nfset.eq.1) goto 316
+!!if(m15.eq.ncqs)goto 203
+!
+!if(mns.eq.max_set)then
+!!print*,'mns',mns
+!!print*,'u1',u1
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!!write(a,'(I1)')u1
+!!a=trim(a)
+!!print*,'a',a
+!outfile='structure_set_'//trim(int_num(u1))//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
+!endif
+!
+!goto 204
+!endif
+!
+!!142 enddo
+!!if(noq.eq.5)goto 204
+!
+!i5i7=i7
+!m5m21=m21
+!
+!!do m13=1+qstrn(6),qstrn(7)
+!do m14=m15+1,ncqs
+!
+!!!!! quality 6 structures !!!!!!!
+!!write(*,*)'66666666666666666666666666'
+!
+!
+!do m20=i5i7+1,i7
+!strno(m20)=0
+!do i8=1,15
+!str2(m20,i8)=0
+!enddo
+!enddo
+!
+!i7=i5i7
+!totstr=i5i7
+!m21=m5m21
+!
+!
+!
+!!do m19=m13,ncqs
+!!if(q_fac2(m19).ne.q_fac2(m13))goto 132
+!
+!totstr=totstr+1
+!strno(totstr)=m14
+!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!
+!!print*,'Ifail_test_check_ind',Ifail
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!print*,'Ifail_test_check_ind',Ifail,Ifailn
+!!write(9,*),'ifail',ifail,det_inv
+!!print*,'ifail6',ifail
+!
+!if(Ifail.eq.1)then
+!!strno(totstr)=0
+!!totstr=totstr-1
+!goto 205
+!endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!if(nfset.eq.1.and.totstr.gt.1) then
+!
+!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!
+!!print*,'MatLDR_write_xmi',totstr
+!!print*,'MatLDR1'
+!
+!call MatLDR('str',strno,totstr,D)
+!!print*,'DDD',(D(i),i=1,totstr)
+!
+!ovlp=1.0
+!do i=1,totstr
+!ovlp=ovlp*D(i)
+!enddo
+!if(1.0-ovlp.gt.ovval)goto 205
+!endif
+!m21=m21+1
+!
+!if(m21.gt.strn) goto 316
+!
+!i7=i7+1
+!
+!do i3=1,nae
+!str2(i7,i3)=str3(m14,i3)
+!enddo
+!col(i7)=m14
+!
+!!print*,'i7',i7,m14
+!
+!qq(i7)=q_fac2(m14)
+!qq1(i7)=str_quality_1(m14)
+!qq2(i7)=str_quality_2(m14)
+!bondq4(i7)=bondq(m14)
+!
+!!do i3=1,nmbond
+!!bondc(i7,i3)=bond_count(m14,i3)
+!!enddo
+!!do i3=1,ndet
+!!fvec(i7,i3)=ffvec2(m14,i3)
+!!enddo
+!
+!if(i7.eq.strn)then
+!
+!!write(9,*),'srt',(strno(m119),m119=1,i7)
+!!ttqlty=0
+!!if(nfset.gt.0)then
+!
+!ttqlty=0
+!tqlty=0
+!bqlty=0
+!sqlty=0
+!do m119=1,i7
+!ttqlty=ttqlty+qq(m119)
+!tqlty=tqlty+qq1(m119)
+!bqlty=bqlty+bondq4(m119)
+!sqlty=sqlty+qq2(m119)
+!enddo
+!
+!!endif
+!!if(set_number.eq.1)hqlty=ttqlty
+!!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
+!!write(*,*)'hqlty,ttqlty',hqlty,ttqlty
+!!if(ttqlty.le.hqlty)then
+!!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
+!!print*,'tqlty,bqlty,sqlty,ttqlty',tqlty,bqlty,sqlty,ttqlty
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
+!set_number=set_number+1
+!mns=mns+1
+!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!
+!if(nfset.eq.1.and.set_number.gt.1)then
+!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!
+!endif
+!
+!do m119=1,i7
+!
+!if(niao.eq.0)then
+!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.ne.0)then
+!if(niao.gt.1)then
+!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.eq.0)then
+!if(niao.eq.1)then
+!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!endif
+!
+!!write(9,231)(fvec(m119,i4),i4=1,ndet)
+!!do i4=1,ndet
+!!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
+!!enddo
+!
+!
+!enddo
+!
+!!if(nfset.eq.3)call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
+!
+!!if(nfset.eq.0.or.nfset.gt.1) then
+!!if(nfset.gt.0.and.ovopt.eq.1) then
+!
+!if(ovopt.eq.1) then
+!call MatLDR('str',col,i7,D)
+!
+!ovlp=1.0
+!do i=1,i7
+!ovlp=ovlp*D(i)
+!enddo
+!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
+!endif
+!
+!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
+!!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
+!
+!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!
+!!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!avg=avg+detc(i)
+!!enddo
+!!avg=avg/(tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!var=var+(detc(i)-avg)**2
+!!enddo
+!!var=var/(tot_ndet-1)
+!!std=sqrt(var)
+!!write(9,233)'STD_DET',std
+!!do i=1,1000
+!!detc(i)=0
+!!enddo
+!!avg=0
+!!var=0.0
+!!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
+!!write(9,911),tqlty,sqlty,bqlty
+!!write(9,*),'Total Quality = ',tqlty,bqlty
+!
+!bqlty=0
+!write(9,*),'Set_number=',set_number
+!write(9,*),'    '
+!endif
+!
+!!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!
+!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!if(mns.eq.max_set)then
+!if(u1.eq.mset-1) goto 316
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!if(u1.le.9)then
+!write(a,'(I1)')u1
+!endif
+!if(u1.gt.9.and.u1.lt.100)then
+!write(a,'(I2)')u1
+!endif
+!if(u1.gt.99.and.u1.lt.1000)then
+!write(a,'(I3)')u1
+!endif
+!if(u1.eq.1000)then
+!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
+!sets. Please increase the limit'
+!goto 316
+!endif
+!outfile='structure_set_'//trim(a)//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
+!endif
+!
+!!if(nfset.eq.1) write(9,*),'ovlpval',1.0-ovlp
+!!if(nfset.eq.1) goto 316
+!
+!goto 205
+!endif
+!
+!!132 enddo
+!
+!!if(noq.eq.6)goto 205
+!
+!i6i7=i7
+!m6m21=m21
+!
+!do m13=m14+1,ncqs
+!
+!!!!! quality 7 structures !!!!!!!
+!!write(*,*)'7777777777777777777777777777'
+!
+!
+!do m20=i6i7+1,i7
+!strno(m20)=0
+!do i8=1,15
+!str2(m20,i8)=0
+!enddo
+!enddo
+!
+!i7=i6i7
+!totstr=i6i7
+!m21=m6m21
+!
+!
+!!if(q_fac2(m19).ne.q_fac2(m12))goto 122
+!
+!totstr=totstr+1
+!strno(totstr)=m13
+!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!
+!!print*,'Ifail_test_check_ind',Ifail
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!print*,'Ifail_test_check_ind',Ifail,Ifailn
+!!write(9,*),'ifail',ifail,det_inv
+!!print*,'ifail7',ifail
+!
+!if(Ifail.eq.1)then
+!!strno(totstr)=0
+!!totstr=totstr-1
+!goto 206
+!endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!if(nfset.eq.1.and.totstr.gt.1) then
+!
+!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!
+!!print*,'MatLDR_write_xmi',totstr
+!!print*,'MatLDR1'
+!
+!call MatLDR('str',strno,totstr,D)
+!!print*,'DDD',(D(i),i=1,totstr)
+!
+!ovlp=1.0
+!do i=1,totstr
+!ovlp=ovlp*D(i)
+!enddo
+!if(1.0-ovlp.gt.ovval)goto 206
+!endif
+!m21=m21+1
+!
+!if(m21.gt.strn) goto 316
+!
+!
+!i7=i7+1
+!
+!do i3=1,nae
+!str2(i7,i3)=str3(m13,i3)
+!enddo
+!col(i7)=m13
+!!print*,'i7',i7,m13
+!
+!qq(i7)=q_fac2(m13)
+!qq1(i7)=str_quality_1(m13)
+!qq2(i7)=str_quality_2(m13)
+!bondq4(i7)=bondq(m13)
+!
+!!do i3=1,nmbond
+!!bondc(i7,i3)=bond_count(m13,i3)
+!!enddo
+!!do i3=1,ndet
+!!fvec(i7,i3)=ffvec2(m13,i3)
+!!enddo
+!
+!if(i7.eq.strn)then
+!
+!!write(9,*),'srt',(strno(m119),m119=1,i7)
+!!ttqlty=0
+!!if(nfset.gt.0)then
+!
+!ttqlty=0
+!tqlty=0
+!bqlty=0
+!sqlty=0
+!do m119=1,i7
+!ttqlty=ttqlty+qq(m119)
+!tqlty=tqlty+qq1(m119)
+!bqlty=bqlty+bondq4(m119)
+!sqlty=sqlty+qq2(m119)
+!enddo
+!
+!!endif
+!!if(set_number.eq.1)hqlty=ttqlty
+!!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
+!!write(*,*)'hqlty,ttqlty',hqlty,ttqlty
+!!if(ttqlty.le.hqlty)then
+!!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
+!set_number=set_number+1
+!mns=mns+1
+!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!if(nfset.eq.1.and.set_number.gt.1)then
+!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!endif
+!
+!do m119=1,i7
+!
+!if(niao.eq.0)then
+!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.ne.0)then
+!if(niao.gt.1)then
+!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.eq.0)then
+!if(niao.eq.1)then
+!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!endif
+!
+!!write(9,231)(fvec(m119,i4),i4=1,ndet)
+!!do i4=1,ndet
+!!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
+!!enddo
+!
+!
+!enddo
+!
+!!if(nfset.eq.3)call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
+!
+!!if(nfset.eq.0.or.nfset.gt.1) then
+!!if(nfset.gt.0.and.ovopt.eq.1) then
+!
+!if(ovopt.eq.1) then
+!call MatLDR('str',col,i7,D)
+!
+!ovlp=1.0
+!do i=1,i7
+!ovlp=ovlp*D(i)
+!enddo
+!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
+!endif
+!
+!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
+!!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
+!
+!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!
+!!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!avg=avg+detc(i)
+!!enddo
+!!avg=avg/(tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!var=var+(detc(i)-avg)**2
+!!enddo
+!!var=var/(tot_ndet-1)
+!!std=sqrt(var)
+!!write(9,233)'STD_DET',std
+!!do i=1,1000
+!!detc(i)=0
+!!enddo
+!!avg=0
+!!var=0.0
+!!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
+!!write(9,911),tqlty,sqlty,bqlty
+!!write(9,*),'Total Quality = ',tqlty,bqlty
+!
+!bqlty=0
+!
+!write(9,*),'Set_number=',set_number
+!write(9,*),'    '
+!endif
+!
+!!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!
+!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!if(mns.eq.max_set)then
+!if(u1.eq.mset-1) goto 316
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!if(u1.le.9)then
+!write(a,'(I1)')u1
+!endif
+!if(u1.gt.9.and.u1.lt.100)then
+!write(a,'(I2)')u1
+!endif
+!if(u1.gt.99.and.u1.lt.1000)then
+!write(a,'(I3)')u1
+!endif
+!if(u1.eq.1000)then
+!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
+!sets. Please increase the limit'
+!goto 316
+!endif
+!outfile='structure_set_'//trim(a)//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
+!endif
+!
+!!if(nfset.eq.1) write(9,*),'ovlpval',1.0-ovlp
+!!if(nfset.eq.1) goto 316
+!goto 206
+!endif
+!
+!
+!!if(noq.eq.7)goto 206
+!
+!i7i7=i7
+!m7m21=m21
+!
+!do m12=m13+1,ncqs
+!
+!!!!! quality 8 structures !!!!!!!
+!!write(*,*)'8888888888888888888888888888888'
+!
+!
+!do m20=i7i7+1,i7
+!strno(m20)=0
+!do i8=1,15
+!str2(m20,i8)=0
+!enddo
+!enddo
+!
+!i7=i7i7
+!totstr=i7i7
+!m21=m7m21
+!
+!!if(q_fac2(m19).ne.q_fac2(m11))goto 112
+!
+!totstr=totstr+1
+!strno(totstr)=m12
+!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!
+!!print*,'Ifail_test_check_ind',Ifail
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!print*,'Ifail_test_check_ind',Ifail,Ifailn
+!!write(9,*),'ifail',ifail,det_inv
+!!print*,'ifail8',ifail,(strno(i),i=1,totstr)
+!
+!if(Ifail.eq.1)then
+!!strno(totstr)=0
+!!totstr=totstr-1
+!goto 207
+!endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!if(nfset.eq.1.and.totstr.gt.1) then
+!
+!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!!print*,'MatLDR_write_xmi',totstr
+!!print*,'MatLDR1'
+!call MatLDR('str',strno,totstr,D)
+!
+!ovlp=1.0
+!do i=1,totstr
+!ovlp=ovlp*D(i)
+!enddo
+!if(1.0-ovlp.gt.ovval)goto 207
+!endif
+!m21=m21+1
+!
+!if(m21.gt.strn) goto 316
+!
+!i7=i7+1
+!
+!do i3=1,nae
+!str2(i7,i3)=str3(m12,i3)
+!enddo
+!col(i7)=m12
+!!print*,'i7',i7,m12
+!
+!qq(i7)=q_fac2(m12)
+!qq1(i7)=str_quality_1(m12)
+!qq2(i7)=str_quality_2(m12)
+!bondq4(i7)=bondq(m12)
+!
+!!do i3=1,nmbond
+!!bondc(i7,i3)=bond_count(m12,i3)
+!!enddo
+!!do i3=1,ndet
+!!fvec(i7,i3)=ffvec2(m12,i3)
+!!enddo
+!
+!if(i7.eq.strn)then
+!
+!!write(9,*),'srt',(strno(m119),m119=1,i7)
+!!ttqlty=0
+!!hqlty=0
+!!if(nfset.gt.0)then
+!
+!ttqlty=0
+!tqlty=0
+!bqlty=0
+!sqlty=0
+!do m119=1,i7
+!ttqlty=ttqlty+qq(m119)
+!tqlty=tqlty+qq1(m119)
+!bqlty=bqlty+bondq4(m119)
+!sqlty=sqlty+qq2(m119)
+!enddo
+!
+!!endif
+!!if(set_number.eq.1)hqlty=ttqlty
+!!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
+!!if(ttqlty.le.hqlty)then
+!!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
+!set_number=set_number+1
+!mns=mns+1
+!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!if(nfset.eq.1.and.set_number.gt.1)then
+!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!endif
+!
+!do m119=1,i7
+!
+!if(niao.eq.0)then
+!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.ne.0)then
+!if(niao.gt.1)then
+!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.eq.0)then
+!if(niao.eq.1)then
+!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!endif
+!
+!!write(9,231)(fvec(m119,i4),i4=1,ndet)
+!!do i4=1,ndet
+!!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
+!!enddo
+!
+!
+!
+!enddo
+!
+!!if(nfset.eq.3)call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
+!
+!!if(nfset.eq.0.or.nfset.gt.1) then
+!!if(nfset.gt.0.and.ovopt.eq.1) then
+!
+!if(ovopt.eq.1) then
+!call MatLDR('str',col,i7,D)
+!
+!ovlp=1.0
+!do i=1,i7
+!ovlp=ovlp*D(i)
+!enddo
+!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
+!endif
+!
+!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
+!!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
+!
+!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!
+!!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!avg=avg+detc(i)
+!!enddo
+!!avg=avg/(tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!var=var+(detc(i)-avg)**2
+!!enddo
+!!var=var/(tot_ndet-1)
+!!std=sqrt(var)
+!!write(9,233)'STD_DET',std
+!!do i=1,1000
+!!detc(i)=0
+!!enddo
+!!avg=0
+!!var=0.0
+!!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
+!!write(9,911),tqlty,sqlty,bqlty
+!!write(9,*),'Total Quality = ',tqlty,bqlty
+!
+!bqlty=0
+!write(9,*),'Set_number=',set_number
+!write(9,*),'    '
+!endif
+!
+!!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!
+!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!if(mns.eq.max_set)then
+!if(u1.eq.mset-1) goto 316
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!if(u1.le.9)then
+!write(a,'(I1)')u1
+!endif
+!if(u1.gt.9.and.u1.lt.100)then
+!write(a,'(I2)')u1
+!endif
+!if(u1.gt.99.and.u1.lt.1000)then
+!write(a,'(I3)')u1
+!endif
+!if(u1.eq.1000)then
+!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
+!sets. Please increase the limit'
+!goto 316
+!endif
+!outfile='structure_set_'//trim(a)//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
+!endif
+!
+!!if(nfset.eq.1) write(9,*),'ovlpval',1.0-ovlp
+!!if(nfset.eq.1) goto 316
+!
+!goto 207
+!endif
+!
+!
+!!if(noq.eq.8)goto 207
+!
+!i8i7=i7
+!m8m21=m21
+!
+!do m11=m12+1,ncqs
+!
+!!!!! quality 9 structures !!!!!!!
+!!write(*,*)'99999999999999999999999999'
+!
+!
+!do m20=i8i7+1,i7
+!strno(m20)=0
+!do i8=1,15
+!str2(m20,i8)=0
+!enddo
+!enddo
+!
+!i7=i8i7
+!totstr=i8i7
+!m21=m8m21
+!
+!
+!
+!!do m19=m10,ncqs
+!!if(q_fac2(m19).ne.q_fac2(m10))goto 102
+!
+!totstr=totstr+1
+!strno(totstr)=m11
+!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!
+!!print*,'Ifail_test_check_ind',Ifail
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!print*,'Ifail_test_check_ind',Ifail,Ifailn
+!!write(9,*),'ifail',ifail,det_inv
+!!print*,'ifail9',ifail,(strno(i),i=1,totstr)
+!
+!if(Ifail.eq.1)then
+!!strno(totstr)=0
+!!totstr=totstr-1
+!goto 208
+!endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!
+!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!!print*,'MatLDR_write_xmi',totstr
+!!print*,'MatLDR1'
+!
+!call MatLDR('str',strno,totstr,D)
+!
+!ovlp=1.0
+!do i=1,totstr
+!ovlp=ovlp*D(i)
+!enddo
+!if(1.0-ovlp.gt.ovval)goto 208
+!endif
+!m21=m21+1
+!
+!if(m21.gt.strn) goto 316
+!
+!
+!i7=i7+1
+!
+!do i3=1,nae
+!str2(i7,i3)=str3(m11,i3)
+!enddo
+!col(i7)=m11
+!!print*,'i7',i7,m11
+!
+!qq(i7)=q_fac2(m11)
+!qq1(i7)=str_quality_1(m11)
+!qq2(i7)=str_quality_2(m11)
+!bondq4(i7)=bondq(m11)
+!
+!!do i3=1,nmbond
+!!bondc(i7,i3)=bond_count(m11,i3)
+!!enddo
+!!do i3=1,ndet
+!!fvec(i7,i3)=ffvec2(m11,i3)
+!!enddo
+!
+!if(i7.eq.strn)then
+!
+!!write(9,*),'srt',(strno(m119),m119=1,i7)
+!!ttqlty=0
+!!hqlty=0
+!!if(nfset.gt.0)then
+!
+!ttqlty=0
+!tqlty=0
+!bqlty=0
+!sqlty=0
+!do m119=1,i7
+!ttqlty=ttqlty+qq(m119)
+!tqlty=tqlty+qq1(m119)
+!bqlty=bqlty+bondq4(m119)
+!sqlty=sqlty+qq2(m119)
+!enddo
+!
+!!endif
+!!if(set_number.eq.1)hqlty=ttqlty
+!!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
+!!if(ttqlty.le.hqlty)then
+!!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
+!set_number=set_number+1
+!mns=mns+1
+!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!if(nfset.eq.1.and.set_number.gt.1)then
+!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!endif
+!
+!do m119=1,i7
+!
+!if(niao.eq.0)then
+!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.ne.0)then
+!if(niao.gt.1)then
+!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.eq.0)then
+!if(niao.eq.1)then
+!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!endif
+!
+!!write(9,231)(fvec(m119,i4),i4=1,ndet)
+!!do i4=1,ndet
+!!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
+!!enddo
+!
+!
+!
+!enddo
+!
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
+!
+!!if(nfset.eq.0.or.nfset.gt.1) then
+!!if(nfset.gt.0.and.ovopt.eq.1) then
+!
+!if(ovopt.eq.1) then
+!call MatLDR('str',col,i7,D)
+!
+!ovlp=1.0
+!do i=1,i7
+!ovlp=ovlp*D(i)
+!enddo
+!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
+!endif
+!
+!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
+!!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
+!
+!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!
+!!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!avg=avg+detc(i)
+!!enddo
+!!avg=avg/(tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!var=var+(detc(i)-avg)**2
+!!enddo
+!!var=var/(tot_ndet-1)
+!!std=sqrt(var)
+!!write(9,233)'STD_DET',std
+!!do i=1,1000
+!!detc(i)=0
+!!enddo
+!!avg=0
+!!var=0.0
+!!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
+!!write(9,911),tqlty,sqlty,bqlty
+!!write(9,*),'Total Quality = ',tqlty,bqlty
+!
+!bqlty=0
+!write(9,*),'Set_number=',set_number
+!write(9,*),'    '
+!endif
+!
+!!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!
+!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!if(mns.eq.max_set)then
+!if(u1.eq.mset-1) goto 316
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!if(u1.le.9)then
+!write(a,'(I1)')u1
+!endif
+!if(u1.gt.9.and.u1.lt.100)then
+!write(a,'(I2)')u1
+!endif
+!if(u1.gt.99.and.u1.lt.1000)then
+!write(a,'(I3)')u1
+!endif
+!if(u1.eq.1000)then
+!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
+!sets. Please increase the limit'
+!goto 316
+!endif
+!outfile='structure_set_'//trim(a)//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
+!endif
+!!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
+!!if(nfset.eq.1) goto 316
+!goto 208
+!endif
+!
+!
+!i9i7=i7
+!m9m21=m21
+!
+!do m10=m11+1,ncqs
+!
+!!!!! quality 10 structures !!!!!!!
+!!write(*,*)'1010101010101010101010'
+!
+!
+!do m20=i9i7+1,i7
+!strno(m20)=0
+!do i8=1,15
+!str2(m20,i8)=0
+!enddo
+!enddo
+!
+!i7=i9i7
+!totstr=i9i7
+!m21=m9m21
+!
+!totstr=totstr+1
+!strno(totstr)=m10
+!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!
+!!print*,'Ifail_test_check_ind',Ifail
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!print*,'Ifail_test_check_ind',Ifail,Ifailn
+!!write(9,*),'ifail',ifail,det_inv
+!!print*,'ifail10',ifail,(strno(i),i=1,totstr)
+!
+!if(Ifail.eq.1)then
+!!strno(totstr)=0
+!!totstr=totstr-1
+!goto 209
+!endif
+!
+!!if(nfset.eq.1.and.totstr.gt.1) then
+!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!!print*,'MatLDR_write_xmi',totstr
+!!print*,'MatLDR1'
+!call MatLDR('str',strno,totstr,D)
+!
+!ovlp=1.0
+!do i=1,totstr
+!ovlp=ovlp*D(i)
+!enddo
+!if(1.0-ovlp.gt.ovval)goto 209
+!endif
+!m21=m21+1
+!
+!if(m21.gt.strn) goto 316
+!
+!
+!i7=i7+1
+!
+!do i3=1,nae
+!str2(i7,i3)=str3(m10,i3)
+!enddo
+!col(i7)=m10
+!!print*,'i7',i7,m10
+!
+!qq(i7)=q_fac2(m10)
+!qq1(i7)=str_quality_1(m10)
+!qq2(i7)=str_quality_2(m10)
+!bondq4(i7)=bondq(m10)
+!
+!!do i3=1,nmbond
+!!bondc(i7,i3)=bond_count(m10,i3)
+!!enddo
+!!do i3=1,ndet
+!!fvec(i7,i3)=ffvec2(m10,i3)
+!!enddo
+!
+!if(i7.eq.strn)then
+!
+!!write(9,*),'srt',(strno(m119),m119=1,i7)
+!!ttqlty=0
+!!hqlty=0
+!!if(nfset.gt.0)then
+!
+!ttqlty=0
+!tqlty=0
+!bqlty=0
+!sqlty=0
+!do m119=1,i7
+!ttqlty=ttqlty+qq(m119)
+!tqlty=tqlty+qq1(m119)
+!bqlty=bqlty+bondq4(m119)
+!sqlty=sqlty+qq2(m119)
+!enddo
+!
+!!endif
+!!if(set_number.eq.1)hqlty=ttqlty
+!!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
+!!if(ttqlty.le.hqlty)then
+!!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
+!set_number=set_number+1
+!mns=mns+1
+!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!if(nfset.eq.1.and.set_number.gt.1)then
+!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!endif
+!
+!do m119=1,i7
+!
+!if(niao.eq.0)then
+!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.ne.0)then
+!if(niao.gt.1)then
+!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.eq.0)then
+!if(niao.eq.1)then
+!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!endif
+!
+!!write(9,231)(fvec(m119,i4),i4=1,ndet)
+!!do i4=1,ndet
+!!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
+!!enddo
+!
+!
+!
+!enddo
+!
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
+!
+!!if(nfset.eq.0.or.nfset.gt.1) then
+!!if(nfset.gt.0.and.ovopt.eq.1) then
+!
+!if(ovopt.eq.1) then
+!call MatLDR('str',col,i7,D)
+!
+!ovlp=1.0
+!do i=1,i7
+!ovlp=ovlp*D(i)
+!enddo
+!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
+!endif
+!
+!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
+!!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
+!
+!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!
+!!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!avg=avg+detc(i)
+!!enddo
+!!avg=avg/(tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!var=var+(detc(i)-avg)**2
+!!enddo
+!!var=var/(tot_ndet-1)
+!!std=sqrt(var)
+!!write(9,233)'STD_DET',std
+!!do i=1,1000
+!!detc(i)=0
+!!enddo
+!!avg=0
+!!var=0.0
+!!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
+!!write(9,911),tqlty,sqlty,bqlty
+!!write(9,*),'Total Quality = ',tqlty,bqlty
+!
+!bqlty=0
+!write(9,*),'Set_number=',set_number
+!write(9,*),'    '
+!endif
+!
+!!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!
+!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!if(mns.eq.max_set)then
+!if(u1.eq.mset-1) goto 316
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!if(u1.le.9)then
+!write(a,'(I1)')u1
+!endif
+!if(u1.gt.9.and.u1.lt.100)then
+!write(a,'(I2)')u1
+!endif
+!if(u1.gt.99.and.u1.lt.1000)then
+!write(a,'(I3)')u1
+!endif
+!if(u1.eq.1000)then
+!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
+!sets. Please increase the limit'
+!goto 316
+!endif
+!outfile='structure_set_'//trim(a)//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
+!endif
+!
+!!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
+!!if(nfset.eq.1) goto 316
+!goto 209
+!endif
+!
+!
+!i10i7=i7
+!m10m21=m21
+!
+!do m9=m10+1,ncqs
+!
+!!!!! quality 11 structures !!!!!!!
+!!write(*,*)'11 11 11 11 11 11 11'
+!
+!
+!do m20=i10i7+1,i7
+!strno(m20)=0
+!do i8=1,15
+!str2(m20,i8)=0
+!enddo
+!enddo
+!
+!i7=i10i7
+!totstr=i10i7
+!m21=m10m21
+!
+!totstr=totstr+1
+!strno(totstr)=m9
+!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!
+!!print*,'Ifail_test_check_ind',Ifail
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!print*,'Ifail_test_check_ind',Ifail,Ifailn
+!!write(9,*),'ifail',ifail,det_inv
+!!print*,'ifail11',ifail,(strno(i),i=1,totstr)
+!
+!if(Ifail.eq.1)then
+!!strno(totstr)=0
+!!totstr=totstr-1
+!goto 210
+!endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+!
+!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!!print*,'MatLDR_write_xmi',totstr
+!!print*,'MatLDR1'
+!call MatLDR('str',strno,totstr,D)
+!
+!ovlp=1.0
+!do i=1,totstr
+!ovlp=ovlp*D(i)
+!enddo
+!if(1.0-ovlp.gt.ovval)goto 210
+!endif
+!m21=m21+1
+!
+!if(m21.gt.strn) goto 316
+!
+!i7=i7+1
+!
+!do i3=1,nae
+!str2(i7,i3)=str3(m9,i3)
+!enddo
+!col(i7)=m9
+!
+!!print*,'i7*****',i7,m9
+!
+!qq(i7)=q_fac2(m9)
+!qq1(i7)=quality_fac(m9)
+!qq1(i7)=str_quality_1(m9)
+!qq2(i7)=str_quality_2(m9)
+!bondq4(i7)=bondq(m9)
+!
+!!do i3=1,nmbond
+!!bondc(i7,i3)=bond_count(m9,i3)
+!!enddo
+!!do i3=1,ndet
+!!fvec(i7,i3)=ffvec2(m9,i3)
+!!enddo
+!
+!if(i7.eq.strn)then
+!
+!!write(9,*),'srt',(strno(m119),m119=1,i7)
+!!ttqlty=0
+!!hqlty=0
+!!if(nfset.gt.0)then
+!
+!ttqlty=0
+!tqlty=0
+!bqlty=0
+!sqlty=0
+!do m119=1,i7
+!ttqlty=ttqlty+qq(m119)
+!tqlty=tqlty+qq1(m119)
+!bqlty=bqlty+bondq4(m119)
+!sqlty=sqlty+qq2(m119)
+!enddo
+!
+!!if(set_number.eq.1)hqlty=ttqlty
+!!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
+!!if(ttqlty.le.hqlty)then
+!!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
+!set_number=set_number+1
+!mns=mns+1
+!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!if(nfset.eq.1.and.set_number.gt.1)then
+!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!endif
+!
+!do m119=1,i7
+!
+!if(niao.eq.0)then
+!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.ne.0)then
+!if(niao.gt.1)then
+!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.eq.0)then
+!if(niao.eq.1)then
+!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!endif
+!
+!!write(9,231)(fvec(m119,i4),i4=1,ndet)
+!!do i4=1,ndet
+!!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
+!!enddo
+!
+!enddo
+!
+!!strno(totstr)=0
+!!totstr=totstr-1
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
+!
+!!if(nfset.eq.0.or.nfset.gt.1) then
+!!if(nfset.gt.0.and.ovopt.eq.1) then
+!if(ovopt.eq.1) then
+!call MatLDR('str',col,i7,D)
+!
+!ovlp=1.0
+!do i=1,i7
+!ovlp=ovlp*D(i)
+!enddo
+!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
+!endif
+!
+!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
+!!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
+!
+!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!
+!!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!avg=avg+detc(i)
+!!enddo
+!!avg=avg/(tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!var=var+(detc(i)-avg)**2
+!!enddo
+!!var=var/(tot_ndet-1)
+!!std=sqrt(var)
+!!write(9,233)'STD_DET',std
+!!do i=1,1000
+!!detc(i)=0
+!!enddo
+!!avg=0
+!!var=0.0
+!!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
+!!write(9,911),tqlty,sqlty,bqlty
+!!write(9,*),'Total Quality = ',tqlty,bqlty
+!
+!bqlty=0
+!write(9,*),'Set_number=',set_number
+!write(9,*),'    '
+!endif
+!
+!!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!
+!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!if(mns.eq.max_set)then
+!if(u1.eq.mset-1) goto 316
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!if(u1.le.9)then
+!write(a,'(I1)')u1
+!endif
+!if(u1.gt.9.and.u1.lt.100)then
+!write(a,'(I2)')u1
+!endif
+!if(u1.gt.99.and.u1.lt.1000)then
+!write(a,'(I3)')u1
+!endif
+!if(u1.eq.1000)then
+!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
+!sets. Please increase the limit'
+!goto 316
+!endif
+!outfile='structure_set_'//trim(a)//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
+!endif
+!
+!!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
+!!if(nfset.eq.1) goto 316
+!
+!goto 210
+!endif
+!
+!i11i7=i7
+!m11m21=m21
+!
+!do m8=m9+1,ncqs
+!
+!!!!! quality 10 structures !!!!!!!
+!!write(*,*)'12 12 12 12 12 12'
+!
+!
+!do m20=i11i7+1,i7
+!strno(m20)=0
+!do i8=1,15
+!str2(m20,i8)=0
+!enddo
+!enddo
+!
+!i7=i11i7
+!totstr=i11i7
+!m21=m11m21
+!
+!
+!totstr=totstr+1
+!strno(totstr)=m8
+!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!!print*,'Ifail_test_check_ind',Ifail
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!print*,'Ifail_test_check_ind',Ifail,Ifailn
+!!write(9,*),'ifail',ifail,det_inv
+!!print*,'ifail10',ifail,(strno(i),i=1,totstr)
+!
+!if(Ifail.eq.1)then
+!
+!!strno(totstr)=0
+!!totstr=totstr-1
+!goto 211
+!endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!
+!!print*,'MatLDR_write_xmi',totstr
+!!print*,'MatLDR1'
+!call MatLDR('str',strno,totstr,D)
+!
+!ovlp=1.0
+!do i=1,totstr
+!ovlp=ovlp*D(i)
+!enddo
+!if(1.0-ovlp.gt.ovval)goto 211
+!endif
+!m21=m21+1
+!
+!if(m21.gt.strn) goto 316
+!
+!
+!i7=i7+1
+!
+!do i3=1,nae
+!str2(i7,i3)=str3(m8,i3)
+!enddo
+!col(i7)=m8
+!!print*,'i7',i7,m8
+!
+!qq(i7)=q_fac2(m8)
+!qq1(i7)=str_quality_1(m8)
+!qq2(i7)=str_quality_2(m8)
+!bondq4(i7)=bondq(m8)
+!
+!!do i3=1,nmbond
+!!bondc(i7,i3)=bond_count(m8,i3)
+!!enddo
+!!do i3=1,ndet
+!!fvec(i7,i3)=ffvec2(m8,i3)
+!!enddo
+!
+!if(i7.eq.strn)then
+!
+!!write(9,*),'srt',(strno(m119),m119=1,i7)
+!!ttqlty=0
+!!hqlty=0
+!!if(nfset.gt.0)then
+!
+!ttqlty=0
+!tqlty=0
+!bqlty=0
+!sqlty=0
+!do m119=1,i7
+!ttqlty=ttqlty+qq(m119)
+!tqlty=tqlty+qq1(m119)
+!bqlty=bqlty+bondq4(m119)
+!sqlty=sqlty+qq2(m119)
+!enddo
+!
+!!endif
+!!if(set_number.eq.1)hqlty=ttqlty
+!!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
+!!!if(ttqlty.le.hqlty)then
+!!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
+!set_number=set_number+1
+!mns=mns+1
+!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!if(nfset.eq.1.and.set_number.gt.1)then
+!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!endif
+!
+!do m119=1,i7
+!
+!if(niao.eq.0)then
+!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.ne.0)then
+!if(niao.gt.1)then
+!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.eq.0)then
+!if(niao.eq.1)then
+!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!endif
+!
+!!write(9,231)(fvec(m119,i4),i4=1,ndet)
+!!do i4=1,ndet
+!!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
+!!enddo
+!
+!
+!
+!enddo
+!
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
+!
+!!if(nfset.eq.0.or.nfset.gt.1) then
+!!if(nfset.gt.0.and.ovopt.eq.1) then
+!if(ovopt.eq.1) then
+!call MatLDR('str',col,i7,D)
+!
+!ovlp=1.0
+!do i=1,i7
+!ovlp=ovlp*D(i)
+!enddo
+!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
+!endif
+!
+!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
+!!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
+!
+!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!
+!!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!avg=avg+detc(i)
+!!enddo
+!!avg=avg/(tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!var=var+(detc(i)-avg)**2
+!!enddo
+!!var=var/(tot_ndet-1)
+!!std=sqrt(var)
+!!write(9,233)'STD_DET',std
+!!do i=1,1000
+!!detc(i)=0
+!!enddo
+!!avg=0
+!!var=0.0
+!!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
+!!write(9,911),tqlty,sqlty,bqlty
+!!write(9,*),'Total Quality = ',tqlty,bqlty
+!
+!bqlty=0
+!write(9,*),'Set_number=',set_number
+!write(9,*),'    '
+!endif
+!
+!!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!
+!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!if(mns.eq.max_set)then
+!if(u1.eq.mset-1) goto 316
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!if(u1.le.9)then
+!write(a,'(I1)')u1
+!endif
+!if(u1.gt.9.and.u1.lt.100)then
+!write(a,'(I2)')u1
+!endif
+!if(u1.gt.99.and.u1.lt.1000)then
+!write(a,'(I3)')u1
+!endif
+!if(u1.eq.1000)then
+!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
+!sets. Please increase the limit'
+!goto 316
+!endif
+!outfile='structure_set_'//trim(a)//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
+!endif
+!
+!!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
+!!if(nfset.eq.1) goto 316
+!
+!goto 211
+!endif
+!
+!i12i7=i7
+!m12m21=m21
+!
+!do m7=m8+1,ncqs
+!
+!!!!! quality 10 structures !!!!!!!
+!!write(*,*)'13 13 13 13 13 13'
+!
+!
+!do m20=i12i7+1,i7
+!strno(m20)=0
+!do i8=1,15
+!str2(m20,i8)=0
+!enddo
+!enddo
+!
+!i7=i12i7
+!totstr=i12i7
+!m21=m12m21
+!
+!
+!
+!totstr=totstr+1
+!strno(totstr)=m7
+!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!
+!!print*,'Ifail_test_check_ind',Ifail
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!print*,'Ifail_test_check_ind',Ifail,Ifailn
+!!write(9,*),'ifail',ifail,det_inv
+!!print*,'ifail10',ifail,(strno(i),i=1,totstr)
+!
+!if(Ifail.eq.1)then
+!!strno(totstr)=0
+!!totstr=totstr-1
+!goto 212
+!endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!!print*,'MatLDR_write_xmi',totstr
+!!print*,'MatLDR1'
+!call MatLDR('str',strno,totstr,D)
+!
+!ovlp=1.0
+!do i=1,totstr
+!ovlp=ovlp*D(i)
+!enddo
+!if(1.0-ovlp.gt.ovval)goto 212
+!endif
+!m21=m21+1
+!
+!if(m21.gt.strn) goto 316
+!
+!
+!i7=i7+1
+!
+!do i3=1,nae
+!str2(i7,i3)=str3(m7,i3)
+!enddo
+!col(i7)=m7
+!!print*,'i7',i7,m7
+!
+!qq(i7)=q_fac2(m7)
+!qq1(i7)=str_quality_1(m7)
+!qq2(i7)=str_quality_2(m7)
+!bondq4(i7)=bondq(m7)
+!
+!!do i3=1,nmbond
+!!bondc(i7,i3)=bond_count(m7,i3)
+!!enddo
+!!do i3=1,ndet
+!!fvec(i7,i3)=ffvec2(m7,i3)
+!!enddo
+!
+!if(i7.eq.strn)then
+!
+!!write(9,*),'srt',(strno(m119),m119=1,i7)
+!!ttqlty=0
+!!hqlty=0
+!
+!ttqlty=0
+!tqlty=0
+!bqlty=0
+!sqlty=0
+!do m119=1,i7
+!ttqlty=ttqlty+qq(m119)
+!tqlty=tqlty+qq1(m119)
+!bqlty=bqlty+bondq4(m119)
+!sqlty=sqlty+qq2(m119)
+!enddo
+!
+!!if(set_number.eq.1)hqlty=ttqlty
+!!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
+!!if(ttqlty.le.hqlty)then
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
+!
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
+!set_number=set_number+1
+!mns=mns+1
+!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!if(nfset.eq.1.and.set_number.gt.1)then
+!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!endif
+!
+!do m119=1,i7
+!
+!if(niao.eq.0)then
+!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.ne.0)then
+!if(niao.gt.1)then
+!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.eq.0)then
+!if(niao.eq.1)then
+!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!endif
+!
+!!write(9,231)(fvec(m119,i4),i4=1,ndet)
+!!do i4=1,ndet
+!!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
+!!enddo
+!
+!
+!
+!enddo
+!
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
+!!if(nfset.eq.0.or.nfset.gt.1) then
+!!if(nfset.gt.0.and.ovopt.eq.1) then
+!if(ovopt.eq.1) then
+!call MatLDR('str',col,i7,D)
+!
+!ovlp=1.0
+!do i=1,i7
+!ovlp=ovlp*D(i)
+!enddo
+!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
+!endif
+!
+!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
+!!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
+!
+!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!
+!!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!avg=avg+detc(i)
+!!enddo
+!!avg=avg/(tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!var=var+(detc(i)-avg)**2
+!!enddo
+!!var=var/(tot_ndet-1)
+!!std=sqrt(var)
+!!write(9,233)'STD_DET',std
+!!do i=1,1000
+!!detc(i)=0
+!!enddo
+!!avg=0
+!!var=0.0
+!!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
+!!write(9,911),tqlty,sqlty,bqlty
+!!write(9,*),'Total Quality = ',tqlty,bqlty
+!
+!bqlty=0
+!write(9,*),'Set_number=',set_number
+!write(9,*),'    '
+!endif
+!
+!!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!
+!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!if(mns.eq.max_set)then
+!if(u1.eq.mset-1) goto 316
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!if(u1.le.9)then
+!write(a,'(I1)')u1
+!endif
+!if(u1.gt.9.and.u1.lt.100)then
+!write(a,'(I2)')u1
+!endif
+!if(u1.gt.99.and.u1.lt.1000)then
+!write(a,'(I3)')u1
+!endif
+!if(u1.eq.1000)then
+!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
+!sets. Please increase the limit'
+!goto 316
+!endif
+!outfile='structure_set_'//trim(a)//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
+!endif
+!!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
+!!if(nfset.eq.1) goto 316
+!goto 212
+!endif
+!
+!i13i7=i7
+!m13m21=m21
+!
+!do m6=m7+1,ncqs
+!
+!!!!! quality 10 structures !!!!!!!
+!!write(*,*)'14 14 14 14 14 14'
+!
+!
+!do m20=i13i7+1,i7
+!strno(m20)=0
+!do i8=1,15
+!str2(m20,i8)=0
+!enddo
+!enddo
+!
+!i7=i13i7
+!totstr=i13i7
+!m21=m13m21
+!
+!totstr=totstr+1
+!strno(totstr)=m6
+!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!
+!!print*,'Ifail_test_check_ind',Ifail
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!print*,'Ifail_test_check_ind',Ifail,Ifailn
+!!write(9,*),'ifail',ifail,det_inv
+!!print*,'ifail10',ifail,(strno(i),i=1,totstr)
+!
+!if(Ifail.eq.1)then
+!!strno(totstr)=0
+!!totstr=totstr-1
+!goto 213
+!endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!!print*,'MatLDR_write_xmi',totstr
+!!print*,'MatLDR1'
+!call MatLDR('str',strno,totstr,D)
+!
+!ovlp=1.0
+!do i=1,totstr
+!ovlp=ovlp*D(i)
+!enddo
+!if(1.0-ovlp.gt.ovval)goto 213
+!endif
+!m21=m21+1
+!
+!if(m21.gt.strn) goto 316
+!
+!
+!i7=i7+1
+!
+!do i3=1,nae
+!str2(i7,i3)=str3(m6,i3)
+!enddo
+!col(i7)=m6
+!!print*,'i7',i7,m6
+!
+!qq(i7)=q_fac2(m6)
+!qq1(i7)=str_quality_1(m6)
+!qq2(i7)=str_quality_2(m6)
+!bondq4(i7)=bondq(m6)
+!
+!!do i3=1,nmbond
+!!bondc(i7,i3)=bond_count(m6,i3)
+!!enddo
+!!do i3=1,ndet
+!!fvec(i7,i3)=ffvec2(m6,i3)
+!!enddo
+!
+!if(i7.eq.strn)then
+!
+!!write(9,*),'srt',(strno(m119),m119=1,i7)
+!!ttqlty=0
+!!hqlty=0
+!!if(nfset.gt.0)then
+!
+!ttqlty=0
+!tqlty=0
+!bqlty=0
+!sqlty=0
+!do m119=1,i7
+!ttqlty=ttqlty+qq(m119)
+!tqlty=tqlty+qq1(m119)
+!bqlty=bqlty+bondq4(m119)
+!sqlty=sqlty+qq2(m119)
+!enddo
+!
+!!if(set_number.eq.1)hqlty=ttqlty
+!!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
+!!print*,'hqlty=ttqlty',hqlty,ttqlty
+!!if(ttqlty.le.hqlty)then
+!!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
+!mns=mns+1
+!set_number=set_number+1
+!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!if(nfset.eq.1.and.set_number.gt.1)then
+!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!endif
+!
+!do i4=1,100
+!detc(i4)=0
+!detc1(i4)=0
+!bdpstr(i4)=0
+!enddo
+!
+!!do m119=1,i7
+!!do i4=1,nmbond
+!!detc(i4)=detc(i4)+bondc(m119,i4)
+!!enddo
+!!do i4=1,nmbond
+!!bdpstr(m119)=bdpstr(m119)+bondc(m119,i4)
+!!enddo
+!!enddo
+!!
+!!do i=1,nmbond
+!!if(detc(i).lt.6)then
+!!nnn=nnn+1
+!!endif
+!!enddo
+!!if(Ifail.eq.1.and.nnn.eq.nmbond)goto 5117
+!!goto 213
+!
+!5117 do m119=1,i7
+!
+!if(niao.eq.0)then
+!write(9+u1,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.ne.0)then
+!if(niao.gt.1)then
+!write(9+u1,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.eq.0)then
+!if(niao.eq.1)then
+!write(9+u1,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!endif
+!
+!!write(9,231)(bondc(m119,i4),i4=1,nmbond)
+!!write(9,231)(fvec(m119,i4),i4=1,ndet)
+!!do i4=1,ndet
+!!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
+!!enddo
+!
+!!do i4=1,nmbond
+!!detc(i4)=detc(i4)+bondc(m119,i4)
+!!enddo
+!!do i4=1,nmbond
+!!bdpstr(m119)=bdpstr(m119)+bondc(m119,i4)
+!!enddo
+!
+!
+!enddo
+!
+!!stop
+!!call check_ind(detc,str2,i7,nlp,nmbond,bondc)
+!!stop
+!
+!!print*,'sourav1'
+!!call bond_det_vec(strno,totstr,bond_det)
+!
+!call bond_det_vec(nl,i7,str2,bnd_std)
+!
+!!print*,'sourav2'
 !!do i=1,nbd
-!!if(bdet(i).eq.int(bond_det))goto 777
+!!if(bdet(i).eq.int(bond_det))goto 778
 !!enddo
 !!nbd=nbd+1
 !!bdet(nbd)=int(bond_det)
-!!777 write(9,913)'bond_vec_det =',bond_det,Ifail,Ifailn
-!write(9,*),'Ifail_test_check_ind',Ifail,Ifailn
-!if(nfset.eq.3)call Rumer_set_id(str2,i7,nl,Rid,set_num)
-
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-
-!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.gt.0.and.ovopt.eq.1) then
-
-if(ovopt.eq.1) then
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
-
-if(Rid.eq.0)write(9+u1,921)'quality value',ttqlty,'bnd_std',bnd_std
-if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-
-!numb=tot_ndet-1
-!bdset=0
+!!778 write(9,913)'bond_vec_det =',bond_det,Ifail,Ifailn
+!
+!!if(nfset.eq.3)call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
+!
+!!if(nfset.eq.0.or.nfset.gt.1) then
+!!if(nfset.gt.0.and.ovopt.eq.1) then
+!if(ovopt.eq.1) then
+!call MatLDR('str',col,i7,D)
+!
+!ovlp=1.0
 !do i=1,i7
-!if(bdpstr(i).ne.0)then
-!bdset=bdset+1
-!endif
+!ovlp=ovlp*D(i)
 !enddo
-!!numb=nmbond
+!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
+!endif
+!
+!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
+!!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
+!!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
+!!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!
+!if(Rid.eq.0)write(9+u1,921)'quality value',ttqlty,'bnd_std',bnd_std
+!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!numb=nmbond
+!
 !!write(9,232)'bond',(detc(i),i=1,numb)
-!ct=0
-!do i=1,numb
-!!if(detc(i).eq.0)goto 333
-!ct=ct+1
-!detc1(ct)=detc(i)
-!!endif
-!333 enddo
-!numb=ct
-!!print*,'ct',ct,(detc1(i),i=1,ct)
-!sum1=0
-!do i=1,numb
-!avg=avg+detc1(i)
-!sum1=sum1+detc1(i)
-!enddo
-!avg=avg/(numb)
-!do i=1,numb
-!var=var+(detc1(i)-avg)**2
-!enddo
-!var=var/(numb)
-!std=sqrt(var)
-!!write(9,233)'STD_BOND',',',set_number,',',std,',',(detc(i),i=1,numb),',',sum1,',',(bdpstr(i),i=1,i7)&
-!!,',',bdset
-!avg=0
-!var=0.0
-!stop
-!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
-!write(9,911),tqlty,sqlty,bqlty
-!write(9,*),'Total Quality = ',tqlty,bqlty
-
-bqlty=0
-
-!set_number=set_number+1
-!write(9,*),'Set_number=',set_number,iter_counter,Ifail
-
-write(9+u1,*),'Set_number=',set_number
-write(9+u1,*),'    '
-endif
-
-!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-if(mns.eq.max_set)then
-if(u1.eq.mset-1) goto 316
-close(9+u1)
-mns=0
-u1=u1+1
-if(u1.le.9)then
-write(a,'(I1)')u1
-endif
-if(u1.gt.9.and.u1.lt.100)then
-write(a,'(I2)')u1
-endif
-if(u1.gt.99.and.u1.lt.1000)then
-write(a,'(I3)')u1
-endif
-if(u1.eq.1000)then
-write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-sets. Please increase the limit'
-goto 316
-endif
-outfile='structure_set_'//trim(a)//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-
-!if(nfset.eq.1) write(9,*),'ovlpval',1.0-ovlp
-!if(nfset.eq.1) goto 316
-!if(m15.eq.ncqs)goto 203
-
-if(mns.eq.max_set)then
-!print*,'mns',mns
-!print*,'u1',u1
-close(9+u1)
-mns=0
-u1=u1+1
+!!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!avg=avg+detc(i)
+!!enddo
+!!avg=avg/(tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!var=var+(detc(i)-avg)**2
+!!enddo
+!!var=var/(tot_ndet-1)
+!!std=sqrt(var)
+!!write(9,233)'STD_DET',std
+!!do i=1,1000
+!!detc(i)=0
+!!enddo
+!!avg=0
+!!var=0.0
+!!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
+!!write(9,911),tqlty,sqlty,bqlty
+!!write(9,*),'Total Quality = ',tqlty,bqlty
+!
+!bqlty=0
+!write(9+u1,*),'Set_number=',set_number
+!write(9+u1,*),'    '
+!endif
+!
+!!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!
+!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!if(mns.eq.max_set)then
+!if(u1.eq.mset-1) goto 316
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!if(u1.le.9)then
 !write(a,'(I1)')u1
-!a=trim(a)
-!print*,'a',a
-outfile='structure_set_'//trim(int_num(u1))//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-
-goto 204
-endif
-
-!142 enddo
-!if(noq.eq.5)goto 204
-
-i5i7=i7
-m5m21=m21
-
-!do m13=1+qstrn(6),qstrn(7)
-do m14=m15+1,ncqs
-
-!!!! quality 6 structures !!!!!!!
-!write(*,*)'66666666666666666666666666'
-
-
-do m20=i5i7+1,i7
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-
-i7=i5i7
-totstr=i5i7
-m21=m5m21
-
-
-
-!do m19=m13,ncqs
-!if(q_fac2(m19).ne.q_fac2(m13))goto 132
-
-totstr=totstr+1
-strno(totstr)=m14
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-
-!print*,'Ifail_test_check_ind',Ifail
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
-!print*,'Ifail_test_check_ind',Ifail,Ifailn
-!write(9,*),'ifail',ifail,det_inv
-!print*,'ifail6',ifail
-
-if(Ifail.eq.1)then
-!strno(totstr)=0
-!totstr=totstr-1
-goto 205
-endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!if(nfset.eq.1.and.totstr.gt.1) then
-
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-
-!print*,'MatLDR_write_xmi',totstr
-!print*,'MatLDR1'
-
-call MatLDR('str',strno,totstr,D)
-!print*,'DDD',(D(i),i=1,totstr)
-
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-if(1.0-ovlp.gt.ovval)goto 205
-endif
-m21=m21+1
-
-if(m21.gt.strn) goto 316
-
-i7=i7+1
-
-do i3=1,nae
-str2(i7,i3)=str3(m14,i3)
-enddo
-col(i7)=m14
-
-!print*,'i7',i7,m14
-
-qq(i7)=q_fac2(m14)
-qq1(i7)=str_quality_1(m14)
-qq2(i7)=str_quality_2(m14)
-bondq4(i7)=bondq(m14)
-
-!do i3=1,nmbond
-!bondc(i7,i3)=bond_count(m14,i3)
-!enddo
-!do i3=1,ndet
-!fvec(i7,i3)=ffvec2(m14,i3)
-!enddo
-
-if(i7.eq.strn)then
-
-!write(9,*),'srt',(strno(m119),m119=1,i7)
-!ttqlty=0
-!if(nfset.gt.0)then
-
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-
 !endif
-!if(set_number.eq.1)hqlty=ttqlty
-!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
-!write(*,*)'hqlty,ttqlty',hqlty,ttqlty
-!if(ttqlty.le.hqlty)then
-!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
-!print*,'tqlty,bqlty,sqlty,ttqlty',tqlty,bqlty,sqlty,ttqlty
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-set_number=set_number+1
-mns=mns+1
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-
-endif
-
-do m119=1,i7
-
-if(niao.eq.0)then
-write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.ne.0)then
-if(niao.gt.1)then
-write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.eq.0)then
-if(niao.eq.1)then
-write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-!write(9,231)(fvec(m119,i4),i4=1,ndet)
-!do i4=1,ndet
-!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
-!enddo
-
-
-enddo
-
-!if(nfset.eq.3)call Rumer_set_id(str2,i7,nl,Rid,set_num)
-
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-
-!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.gt.0.and.ovopt.eq.1) then
-
-if(ovopt.eq.1) then
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-
-!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
-
-if(Rid.eq.0)write(9,910)'quality value',ttqlty
-if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-
-!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
-!do i=1,tot_ndet-1
-!avg=avg+detc(i)
-!enddo
-!avg=avg/(tot_ndet-1)
-!do i=1,tot_ndet-1
-!var=var+(detc(i)-avg)**2
-!enddo
-!var=var/(tot_ndet-1)
-!std=sqrt(var)
-!write(9,233)'STD_DET',std
-!do i=1,1000
-!detc(i)=0
-!enddo
-!avg=0
-!var=0.0
-!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
-!write(9,911),tqlty,sqlty,bqlty
-!write(9,*),'Total Quality = ',tqlty,bqlty
-
-bqlty=0
-write(9,*),'Set_number=',set_number
-write(9,*),'    '
-endif
-
-!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-if(mns.eq.max_set)then
-if(u1.eq.mset-1) goto 316
-close(9+u1)
-mns=0
-u1=u1+1
-if(u1.le.9)then
-write(a,'(I1)')u1
-endif
-if(u1.gt.9.and.u1.lt.100)then
-write(a,'(I2)')u1
-endif
-if(u1.gt.99.and.u1.lt.1000)then
-write(a,'(I3)')u1
-endif
-if(u1.eq.1000)then
-write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-sets. Please increase the limit'
-goto 316
-endif
-outfile='structure_set_'//trim(a)//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-
-!if(nfset.eq.1) write(9,*),'ovlpval',1.0-ovlp
-!if(nfset.eq.1) goto 316
-
-goto 205
-endif
-
-!132 enddo
-
-!if(noq.eq.6)goto 205
-
-i6i7=i7
-m6m21=m21
-
-do m13=m14+1,ncqs
-
-!!!! quality 7 structures !!!!!!!
-!write(*,*)'7777777777777777777777777777'
-
-
-do m20=i6i7+1,i7
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-
-i7=i6i7
-totstr=i6i7
-m21=m6m21
-
-
-!if(q_fac2(m19).ne.q_fac2(m12))goto 122
-
-totstr=totstr+1
-strno(totstr)=m13
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-
-!print*,'Ifail_test_check_ind',Ifail
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
-!print*,'Ifail_test_check_ind',Ifail,Ifailn
-!write(9,*),'ifail',ifail,det_inv
-!print*,'ifail7',ifail
-
-if(Ifail.eq.1)then
-!strno(totstr)=0
-!totstr=totstr-1
-goto 206
-endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!if(nfset.eq.1.and.totstr.gt.1) then
-
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-
-!print*,'MatLDR_write_xmi',totstr
-!print*,'MatLDR1'
-
-call MatLDR('str',strno,totstr,D)
-!print*,'DDD',(D(i),i=1,totstr)
-
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-if(1.0-ovlp.gt.ovval)goto 206
-endif
-m21=m21+1
-
-if(m21.gt.strn) goto 316
-
-
-i7=i7+1
-
-do i3=1,nae
-str2(i7,i3)=str3(m13,i3)
-enddo
-col(i7)=m13
-!print*,'i7',i7,m13
-
-qq(i7)=q_fac2(m13)
-qq1(i7)=str_quality_1(m13)
-qq2(i7)=str_quality_2(m13)
-bondq4(i7)=bondq(m13)
-
-!do i3=1,nmbond
-!bondc(i7,i3)=bond_count(m13,i3)
-!enddo
-!do i3=1,ndet
-!fvec(i7,i3)=ffvec2(m13,i3)
-!enddo
-
-if(i7.eq.strn)then
-
-!write(9,*),'srt',(strno(m119),m119=1,i7)
-!ttqlty=0
-!if(nfset.gt.0)then
-
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-
+!if(u1.gt.9.and.u1.lt.100)then
+!write(a,'(I2)')u1
 !endif
-!if(set_number.eq.1)hqlty=ttqlty
-!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
-!write(*,*)'hqlty,ttqlty',hqlty,ttqlty
-!if(ttqlty.le.hqlty)then
-!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-set_number=set_number+1
-mns=mns+1
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-endif
-
-do m119=1,i7
-
-if(niao.eq.0)then
-write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.ne.0)then
-if(niao.gt.1)then
-write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.eq.0)then
-if(niao.eq.1)then
-write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-!write(9,231)(fvec(m119,i4),i4=1,ndet)
-!do i4=1,ndet
-!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
-!enddo
-
-
-enddo
-
-!if(nfset.eq.3)call Rumer_set_id(str2,i7,nl,Rid,set_num)
-
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-
-!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.gt.0.and.ovopt.eq.1) then
-
-if(ovopt.eq.1) then
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-
-!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
-
-if(Rid.eq.0)write(9,910)'quality value',ttqlty
-if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-
-!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
-!do i=1,tot_ndet-1
-!avg=avg+detc(i)
-!enddo
-!avg=avg/(tot_ndet-1)
-!do i=1,tot_ndet-1
-!var=var+(detc(i)-avg)**2
-!enddo
-!var=var/(tot_ndet-1)
-!std=sqrt(var)
-!write(9,233)'STD_DET',std
-!do i=1,1000
-!detc(i)=0
-!enddo
-!avg=0
-!var=0.0
-!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
-!write(9,911),tqlty,sqlty,bqlty
-!write(9,*),'Total Quality = ',tqlty,bqlty
-
-bqlty=0
-
-write(9,*),'Set_number=',set_number
-write(9,*),'    '
-endif
-
-!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-if(mns.eq.max_set)then
-if(u1.eq.mset-1) goto 316
-close(9+u1)
-mns=0
-u1=u1+1
-if(u1.le.9)then
-write(a,'(I1)')u1
-endif
-if(u1.gt.9.and.u1.lt.100)then
-write(a,'(I2)')u1
-endif
-if(u1.gt.99.and.u1.lt.1000)then
-write(a,'(I3)')u1
-endif
-if(u1.eq.1000)then
-write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-sets. Please increase the limit'
-goto 316
-endif
-outfile='structure_set_'//trim(a)//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-
-!if(nfset.eq.1) write(9,*),'ovlpval',1.0-ovlp
-!if(nfset.eq.1) goto 316
-goto 206
-endif
-
-
-!if(noq.eq.7)goto 206
-
-i7i7=i7
-m7m21=m21
-
-do m12=m13+1,ncqs
-
-!!!! quality 8 structures !!!!!!!
-!write(*,*)'8888888888888888888888888888888'
-
-
-do m20=i7i7+1,i7
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-
-i7=i7i7
-totstr=i7i7
-m21=m7m21
-
-!if(q_fac2(m19).ne.q_fac2(m11))goto 112
-
-totstr=totstr+1
-strno(totstr)=m12
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-
-!print*,'Ifail_test_check_ind',Ifail
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
-!print*,'Ifail_test_check_ind',Ifail,Ifailn
-!write(9,*),'ifail',ifail,det_inv
-!print*,'ifail8',ifail,(strno(i),i=1,totstr)
-
-if(Ifail.eq.1)then
-!strno(totstr)=0
-!totstr=totstr-1
-goto 207
-endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!if(nfset.eq.1.and.totstr.gt.1) then
-
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-!print*,'MatLDR_write_xmi',totstr
-!print*,'MatLDR1'
-call MatLDR('str',strno,totstr,D)
-
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-if(1.0-ovlp.gt.ovval)goto 207
-endif
-m21=m21+1
-
-if(m21.gt.strn) goto 316
-
-i7=i7+1
-
-do i3=1,nae
-str2(i7,i3)=str3(m12,i3)
-enddo
-col(i7)=m12
-!print*,'i7',i7,m12
-
-qq(i7)=q_fac2(m12)
-qq1(i7)=str_quality_1(m12)
-qq2(i7)=str_quality_2(m12)
-bondq4(i7)=bondq(m12)
-
-!do i3=1,nmbond
-!bondc(i7,i3)=bond_count(m12,i3)
-!enddo
-!do i3=1,ndet
-!fvec(i7,i3)=ffvec2(m12,i3)
-!enddo
-
-if(i7.eq.strn)then
-
-!write(9,*),'srt',(strno(m119),m119=1,i7)
-!ttqlty=0
-!hqlty=0
-!if(nfset.gt.0)then
-
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-
+!if(u1.gt.99.and.u1.lt.1000)then
+!write(a,'(I3)')u1
 !endif
-!if(set_number.eq.1)hqlty=ttqlty
-!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
-!if(ttqlty.le.hqlty)then
-!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-set_number=set_number+1
-mns=mns+1
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-endif
-
-do m119=1,i7
-
-if(niao.eq.0)then
-write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.ne.0)then
-if(niao.gt.1)then
-write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.eq.0)then
-if(niao.eq.1)then
-write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-!write(9,231)(fvec(m119,i4),i4=1,ndet)
-!do i4=1,ndet
-!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
-!enddo
-
-
-
-enddo
-
-!if(nfset.eq.3)call Rumer_set_id(str2,i7,nl,Rid,set_num)
-
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-
-!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.gt.0.and.ovopt.eq.1) then
-
-if(ovopt.eq.1) then
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-
-!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
-
-if(Rid.eq.0)write(9,910)'quality value',ttqlty
-if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-
-!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
-!do i=1,tot_ndet-1
-!avg=avg+detc(i)
-!enddo
-!avg=avg/(tot_ndet-1)
-!do i=1,tot_ndet-1
-!var=var+(detc(i)-avg)**2
-!enddo
-!var=var/(tot_ndet-1)
-!std=sqrt(var)
-!write(9,233)'STD_DET',std
-!do i=1,1000
-!detc(i)=0
-!enddo
-!avg=0
-!var=0.0
-!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
-!write(9,911),tqlty,sqlty,bqlty
-!write(9,*),'Total Quality = ',tqlty,bqlty
-
-bqlty=0
-write(9,*),'Set_number=',set_number
-write(9,*),'    '
-endif
-
-!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-if(mns.eq.max_set)then
-if(u1.eq.mset-1) goto 316
-close(9+u1)
-mns=0
-u1=u1+1
-if(u1.le.9)then
-write(a,'(I1)')u1
-endif
-if(u1.gt.9.and.u1.lt.100)then
-write(a,'(I2)')u1
-endif
-if(u1.gt.99.and.u1.lt.1000)then
-write(a,'(I3)')u1
-endif
-if(u1.eq.1000)then
-write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-sets. Please increase the limit'
-goto 316
-endif
-outfile='structure_set_'//trim(a)//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-
-!if(nfset.eq.1) write(9,*),'ovlpval',1.0-ovlp
-!if(nfset.eq.1) goto 316
-
-goto 207
-endif
-
-
-!if(noq.eq.8)goto 207
-
-i8i7=i7
-m8m21=m21
-
-do m11=m12+1,ncqs
-
-!!!! quality 9 structures !!!!!!!
-!write(*,*)'99999999999999999999999999'
-
-
-do m20=i8i7+1,i7
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-
-i7=i8i7
-totstr=i8i7
-m21=m8m21
-
-
-
-!do m19=m10,ncqs
-!if(q_fac2(m19).ne.q_fac2(m10))goto 102
-
-totstr=totstr+1
-strno(totstr)=m11
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-
-!print*,'Ifail_test_check_ind',Ifail
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
-!print*,'Ifail_test_check_ind',Ifail,Ifailn
-!write(9,*),'ifail',ifail,det_inv
-!print*,'ifail9',ifail,(strno(i),i=1,totstr)
-
-if(Ifail.eq.1)then
-!strno(totstr)=0
-!totstr=totstr-1
-goto 208
-endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-!print*,'MatLDR_write_xmi',totstr
-!print*,'MatLDR1'
-
-call MatLDR('str',strno,totstr,D)
-
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-if(1.0-ovlp.gt.ovval)goto 208
-endif
-m21=m21+1
-
-if(m21.gt.strn) goto 316
-
-
-i7=i7+1
-
-do i3=1,nae
-str2(i7,i3)=str3(m11,i3)
-enddo
-col(i7)=m11
-!print*,'i7',i7,m11
-
-qq(i7)=q_fac2(m11)
-qq1(i7)=str_quality_1(m11)
-qq2(i7)=str_quality_2(m11)
-bondq4(i7)=bondq(m11)
-
-!do i3=1,nmbond
-!bondc(i7,i3)=bond_count(m11,i3)
-!enddo
-!do i3=1,ndet
-!fvec(i7,i3)=ffvec2(m11,i3)
-!enddo
-
-if(i7.eq.strn)then
-
-!write(9,*),'srt',(strno(m119),m119=1,i7)
-!ttqlty=0
-!hqlty=0
-!if(nfset.gt.0)then
-
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-
+!if(u1.eq.1000)then
+!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
+!sets. Please increase the limit'
+!goto 316
 !endif
-!if(set_number.eq.1)hqlty=ttqlty
-!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
-!if(ttqlty.le.hqlty)then
-!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-set_number=set_number+1
-mns=mns+1
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-endif
-
-do m119=1,i7
-
-if(niao.eq.0)then
-write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.ne.0)then
-if(niao.gt.1)then
-write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.eq.0)then
-if(niao.eq.1)then
-write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-!write(9,231)(fvec(m119,i4),i4=1,ndet)
-!do i4=1,ndet
-!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
-!enddo
-
-
-
-enddo
-
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-
-!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.gt.0.and.ovopt.eq.1) then
-
-if(ovopt.eq.1) then
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-
-!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
-
-if(Rid.eq.0)write(9,910)'quality value',ttqlty
-if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-
-!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
-!do i=1,tot_ndet-1
-!avg=avg+detc(i)
-!enddo
-!avg=avg/(tot_ndet-1)
-!do i=1,tot_ndet-1
-!var=var+(detc(i)-avg)**2
-!enddo
-!var=var/(tot_ndet-1)
-!std=sqrt(var)
-!write(9,233)'STD_DET',std
-!do i=1,1000
-!detc(i)=0
-!enddo
-!avg=0
-!var=0.0
-!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
-!write(9,911),tqlty,sqlty,bqlty
-!write(9,*),'Total Quality = ',tqlty,bqlty
-
-bqlty=0
-write(9,*),'Set_number=',set_number
-write(9,*),'    '
-endif
-
-!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-if(mns.eq.max_set)then
-if(u1.eq.mset-1) goto 316
-close(9+u1)
-mns=0
-u1=u1+1
-if(u1.le.9)then
-write(a,'(I1)')u1
-endif
-if(u1.gt.9.and.u1.lt.100)then
-write(a,'(I2)')u1
-endif
-if(u1.gt.99.and.u1.lt.1000)then
-write(a,'(I3)')u1
-endif
-if(u1.eq.1000)then
-write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-sets. Please increase the limit'
-goto 316
-endif
-outfile='structure_set_'//trim(a)//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
-!if(nfset.eq.1) goto 316
-goto 208
-endif
-
-
-i9i7=i7
-m9m21=m21
-
-do m10=m11+1,ncqs
-
-!!!! quality 10 structures !!!!!!!
-!write(*,*)'1010101010101010101010'
-
-
-do m20=i9i7+1,i7
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-
-i7=i9i7
-totstr=i9i7
-m21=m9m21
-
-totstr=totstr+1
-strno(totstr)=m10
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-
-!print*,'Ifail_test_check_ind',Ifail
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
-!print*,'Ifail_test_check_ind',Ifail,Ifailn
-!write(9,*),'ifail',ifail,det_inv
-!print*,'ifail10',ifail,(strno(i),i=1,totstr)
-
-if(Ifail.eq.1)then
-!strno(totstr)=0
-!totstr=totstr-1
-goto 209
-endif
-
-!if(nfset.eq.1.and.totstr.gt.1) then
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-!print*,'MatLDR_write_xmi',totstr
-!print*,'MatLDR1'
-call MatLDR('str',strno,totstr,D)
-
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-if(1.0-ovlp.gt.ovval)goto 209
-endif
-m21=m21+1
-
-if(m21.gt.strn) goto 316
-
-
-i7=i7+1
-
-do i3=1,nae
-str2(i7,i3)=str3(m10,i3)
-enddo
-col(i7)=m10
-!print*,'i7',i7,m10
-
-qq(i7)=q_fac2(m10)
-qq1(i7)=str_quality_1(m10)
-qq2(i7)=str_quality_2(m10)
-bondq4(i7)=bondq(m10)
-
-!do i3=1,nmbond
-!bondc(i7,i3)=bond_count(m10,i3)
-!enddo
-!do i3=1,ndet
-!fvec(i7,i3)=ffvec2(m10,i3)
-!enddo
-
-if(i7.eq.strn)then
-
-!write(9,*),'srt',(strno(m119),m119=1,i7)
-!ttqlty=0
-!hqlty=0
-!if(nfset.gt.0)then
-
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-
+!outfile='structure_set_'//trim(a)//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
 !endif
-!if(set_number.eq.1)hqlty=ttqlty
-!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
-!if(ttqlty.le.hqlty)then
-!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-set_number=set_number+1
-mns=mns+1
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-endif
-
-do m119=1,i7
-
-if(niao.eq.0)then
-write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.ne.0)then
-if(niao.gt.1)then
-write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.eq.0)then
-if(niao.eq.1)then
-write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-!write(9,231)(fvec(m119,i4),i4=1,ndet)
-!do i4=1,ndet
-!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
-!enddo
-
-
-
-enddo
-
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-
-!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.gt.0.and.ovopt.eq.1) then
-
-if(ovopt.eq.1) then
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-
-!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
-
-if(Rid.eq.0)write(9,910)'quality value',ttqlty
-if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-
-!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
-!do i=1,tot_ndet-1
-!avg=avg+detc(i)
-!enddo
-!avg=avg/(tot_ndet-1)
-!do i=1,tot_ndet-1
-!var=var+(detc(i)-avg)**2
-!enddo
-!var=var/(tot_ndet-1)
-!std=sqrt(var)
-!write(9,233)'STD_DET',std
-!do i=1,1000
-!detc(i)=0
-!enddo
-!avg=0
-!var=0.0
-!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
-!write(9,911),tqlty,sqlty,bqlty
-!write(9,*),'Total Quality = ',tqlty,bqlty
-
-bqlty=0
-write(9,*),'Set_number=',set_number
-write(9,*),'    '
-endif
-
-!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-if(mns.eq.max_set)then
-if(u1.eq.mset-1) goto 316
-close(9+u1)
-mns=0
-u1=u1+1
-if(u1.le.9)then
-write(a,'(I1)')u1
-endif
-if(u1.gt.9.and.u1.lt.100)then
-write(a,'(I2)')u1
-endif
-if(u1.gt.99.and.u1.lt.1000)then
-write(a,'(I3)')u1
-endif
-if(u1.eq.1000)then
-write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-sets. Please increase the limit'
-goto 316
-endif
-outfile='structure_set_'//trim(a)//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-
-!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
-!if(nfset.eq.1) goto 316
-goto 209
-endif
-
-
-i10i7=i7
-m10m21=m21
-
-do m9=m10+1,ncqs
-
-!!!! quality 11 structures !!!!!!!
-!write(*,*)'11 11 11 11 11 11 11'
-
-
-do m20=i10i7+1,i7
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-
-i7=i10i7
-totstr=i10i7
-m21=m10m21
-
-totstr=totstr+1
-strno(totstr)=m9
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-
-!print*,'Ifail_test_check_ind',Ifail
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
-!print*,'Ifail_test_check_ind',Ifail,Ifailn
-!write(9,*),'ifail',ifail,det_inv
-!print*,'ifail11',ifail,(strno(i),i=1,totstr)
-
-if(Ifail.eq.1)then
-!strno(totstr)=0
-!totstr=totstr-1
-goto 210
-endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
-
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-!print*,'MatLDR_write_xmi',totstr
-!print*,'MatLDR1'
-call MatLDR('str',strno,totstr,D)
-
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-if(1.0-ovlp.gt.ovval)goto 210
-endif
-m21=m21+1
-
-if(m21.gt.strn) goto 316
-
-i7=i7+1
-
-do i3=1,nae
-str2(i7,i3)=str3(m9,i3)
-enddo
-col(i7)=m9
-
-!print*,'i7*****',i7,m9
-
-qq(i7)=q_fac2(m9)
-qq1(i7)=quality_fac(m9)
-qq1(i7)=str_quality_1(m9)
-qq2(i7)=str_quality_2(m9)
-bondq4(i7)=bondq(m9)
-
-!do i3=1,nmbond
-!bondc(i7,i3)=bond_count(m9,i3)
-!enddo
-!do i3=1,ndet
-!fvec(i7,i3)=ffvec2(m9,i3)
-!enddo
-
-if(i7.eq.strn)then
-
-!write(9,*),'srt',(strno(m119),m119=1,i7)
-!ttqlty=0
-!hqlty=0
-!if(nfset.gt.0)then
-
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-
-!if(set_number.eq.1)hqlty=ttqlty
-!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
-!if(ttqlty.le.hqlty)then
-!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-set_number=set_number+1
-mns=mns+1
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-endif
-
-do m119=1,i7
-
-if(niao.eq.0)then
-write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.ne.0)then
-if(niao.gt.1)then
-write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.eq.0)then
-if(niao.eq.1)then
-write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-!write(9,231)(fvec(m119,i4),i4=1,ndet)
-!do i4=1,ndet
-!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
-!enddo
-
-enddo
-
-!strno(totstr)=0
-!totstr=totstr-1
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-
-!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.gt.0.and.ovopt.eq.1) then
-if(ovopt.eq.1) then
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-
-!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
-
-if(Rid.eq.0)write(9,910)'quality value',ttqlty
-if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-
-!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
-!do i=1,tot_ndet-1
-!avg=avg+detc(i)
-!enddo
-!avg=avg/(tot_ndet-1)
-!do i=1,tot_ndet-1
-!var=var+(detc(i)-avg)**2
-!enddo
-!var=var/(tot_ndet-1)
-!std=sqrt(var)
-!write(9,233)'STD_DET',std
-!do i=1,1000
-!detc(i)=0
-!enddo
-!avg=0
-!var=0.0
-!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
-!write(9,911),tqlty,sqlty,bqlty
-!write(9,*),'Total Quality = ',tqlty,bqlty
-
-bqlty=0
-write(9,*),'Set_number=',set_number
-write(9,*),'    '
-endif
-
-!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-if(mns.eq.max_set)then
-if(u1.eq.mset-1) goto 316
-close(9+u1)
-mns=0
-u1=u1+1
-if(u1.le.9)then
-write(a,'(I1)')u1
-endif
-if(u1.gt.9.and.u1.lt.100)then
-write(a,'(I2)')u1
-endif
-if(u1.gt.99.and.u1.lt.1000)then
-write(a,'(I3)')u1
-endif
-if(u1.eq.1000)then
-write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-sets. Please increase the limit'
-goto 316
-endif
-outfile='structure_set_'//trim(a)//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-
-!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
-!if(nfset.eq.1) goto 316
-
-goto 210
-endif
-
-i11i7=i7
-m11m21=m21
-
-do m8=m9+1,ncqs
-
-!!!! quality 10 structures !!!!!!!
-!write(*,*)'12 12 12 12 12 12'
-
-
-do m20=i11i7+1,i7
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-
-i7=i11i7
-totstr=i11i7
-m21=m11m21
-
-
-totstr=totstr+1
-strno(totstr)=m8
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!print*,'Ifail_test_check_ind',Ifail
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
-!print*,'Ifail_test_check_ind',Ifail,Ifailn
-!write(9,*),'ifail',ifail,det_inv
-!print*,'ifail10',ifail,(strno(i),i=1,totstr)
-
-if(Ifail.eq.1)then
-
-!strno(totstr)=0
-!totstr=totstr-1
-goto 211
-endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-
-!print*,'MatLDR_write_xmi',totstr
-!print*,'MatLDR1'
-call MatLDR('str',strno,totstr,D)
-
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-if(1.0-ovlp.gt.ovval)goto 211
-endif
-m21=m21+1
-
-if(m21.gt.strn) goto 316
-
-
-i7=i7+1
-
-do i3=1,nae
-str2(i7,i3)=str3(m8,i3)
-enddo
-col(i7)=m8
-!print*,'i7',i7,m8
-
-qq(i7)=q_fac2(m8)
-qq1(i7)=str_quality_1(m8)
-qq2(i7)=str_quality_2(m8)
-bondq4(i7)=bondq(m8)
-
-!do i3=1,nmbond
-!bondc(i7,i3)=bond_count(m8,i3)
-!enddo
-!do i3=1,ndet
-!fvec(i7,i3)=ffvec2(m8,i3)
-!enddo
-
-if(i7.eq.strn)then
-
-!write(9,*),'srt',(strno(m119),m119=1,i7)
-!ttqlty=0
-!hqlty=0
-!if(nfset.gt.0)then
-
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-
+!
+!!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
+!!if(nfset.eq.1) goto 316
+!!if(set_number.eq.5000) goto 316
+!if(mns.eq.max_set)then
+!!print*,'mns',mns
+!!print*,'u1',u1
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!!write(a,'(I1)')u1
+!!a=trim(a)
+!!print*,'a',a
+!outfile='structure_set_'//trim(int_num(u1))//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
 !endif
-!if(set_number.eq.1)hqlty=ttqlty
-!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
-!!if(ttqlty.le.hqlty)then
-!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-set_number=set_number+1
-mns=mns+1
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-endif
-
-do m119=1,i7
-
-if(niao.eq.0)then
-write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.ne.0)then
-if(niao.gt.1)then
-write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.eq.0)then
-if(niao.eq.1)then
-write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-!write(9,231)(fvec(m119,i4),i4=1,ndet)
-!do i4=1,ndet
-!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
-!enddo
-
-
-
-enddo
-
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-
-!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.gt.0.and.ovopt.eq.1) then
-if(ovopt.eq.1) then
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-
-!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
-
-if(Rid.eq.0)write(9,910)'quality value',ttqlty
-if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-
-!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
-!do i=1,tot_ndet-1
-!avg=avg+detc(i)
-!enddo
-!avg=avg/(tot_ndet-1)
-!do i=1,tot_ndet-1
-!var=var+(detc(i)-avg)**2
-!enddo
-!var=var/(tot_ndet-1)
-!std=sqrt(var)
-!write(9,233)'STD_DET',std
-!do i=1,1000
-!detc(i)=0
-!enddo
-!avg=0
-!var=0.0
-!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
-!write(9,911),tqlty,sqlty,bqlty
-!write(9,*),'Total Quality = ',tqlty,bqlty
-
-bqlty=0
-write(9,*),'Set_number=',set_number
-write(9,*),'    '
-endif
-
-!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-if(mns.eq.max_set)then
-if(u1.eq.mset-1) goto 316
-close(9+u1)
-mns=0
-u1=u1+1
-if(u1.le.9)then
-write(a,'(I1)')u1
-endif
-if(u1.gt.9.and.u1.lt.100)then
-write(a,'(I2)')u1
-endif
-if(u1.gt.99.and.u1.lt.1000)then
-write(a,'(I3)')u1
-endif
-if(u1.eq.1000)then
-write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-sets. Please increase the limit'
-goto 316
-endif
-outfile='structure_set_'//trim(a)//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-
-!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
-!if(nfset.eq.1) goto 316
-
-goto 211
-endif
-
-i12i7=i7
-m12m21=m21
-
-do m7=m8+1,ncqs
-
-!!!! quality 10 structures !!!!!!!
-!write(*,*)'13 13 13 13 13 13'
-
-
-do m20=i12i7+1,i7
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-
-i7=i12i7
-totstr=i12i7
-m21=m12m21
-
-
-
-totstr=totstr+1
-strno(totstr)=m7
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-
-!print*,'Ifail_test_check_ind',Ifail
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
-!print*,'Ifail_test_check_ind',Ifail,Ifailn
-!write(9,*),'ifail',ifail,det_inv
-!print*,'ifail10',ifail,(strno(i),i=1,totstr)
-
-if(Ifail.eq.1)then
-!strno(totstr)=0
-!totstr=totstr-1
-goto 212
-endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-!print*,'MatLDR_write_xmi',totstr
-!print*,'MatLDR1'
-call MatLDR('str',strno,totstr,D)
-
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-if(1.0-ovlp.gt.ovval)goto 212
-endif
-m21=m21+1
-
-if(m21.gt.strn) goto 316
-
-
-i7=i7+1
-
-do i3=1,nae
-str2(i7,i3)=str3(m7,i3)
-enddo
-col(i7)=m7
-!print*,'i7',i7,m7
-
-qq(i7)=q_fac2(m7)
-qq1(i7)=str_quality_1(m7)
-qq2(i7)=str_quality_2(m7)
-bondq4(i7)=bondq(m7)
-
-!do i3=1,nmbond
-!bondc(i7,i3)=bond_count(m7,i3)
-!enddo
-!do i3=1,ndet
-!fvec(i7,i3)=ffvec2(m7,i3)
-!enddo
-
-if(i7.eq.strn)then
-
-!write(9,*),'srt',(strno(m119),m119=1,i7)
-!ttqlty=0
-!hqlty=0
-
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-
-!if(set_number.eq.1)hqlty=ttqlty
-!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
-!if(ttqlty.le.hqlty)then
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
-
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-set_number=set_number+1
-mns=mns+1
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-endif
-
-do m119=1,i7
-
-if(niao.eq.0)then
-write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.ne.0)then
-if(niao.gt.1)then
-write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.eq.0)then
-if(niao.eq.1)then
-write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-!write(9,231)(fvec(m119,i4),i4=1,ndet)
-!do i4=1,ndet
-!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
-!enddo
-
-
-
-enddo
-
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.gt.0.and.ovopt.eq.1) then
-if(ovopt.eq.1) then
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-
-!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
-
-if(Rid.eq.0)write(9,910)'quality value',ttqlty
-if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-
-!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
-!do i=1,tot_ndet-1
-!avg=avg+detc(i)
-!enddo
-!avg=avg/(tot_ndet-1)
-!do i=1,tot_ndet-1
-!var=var+(detc(i)-avg)**2
-!enddo
-!var=var/(tot_ndet-1)
-!std=sqrt(var)
-!write(9,233)'STD_DET',std
-!do i=1,1000
-!detc(i)=0
-!enddo
-!avg=0
-!var=0.0
-!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
-!write(9,911),tqlty,sqlty,bqlty
-!write(9,*),'Total Quality = ',tqlty,bqlty
-
-bqlty=0
-write(9,*),'Set_number=',set_number
-write(9,*),'    '
-endif
-
-!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-if(mns.eq.max_set)then
-if(u1.eq.mset-1) goto 316
-close(9+u1)
-mns=0
-u1=u1+1
-if(u1.le.9)then
-write(a,'(I1)')u1
-endif
-if(u1.gt.9.and.u1.lt.100)then
-write(a,'(I2)')u1
-endif
-if(u1.gt.99.and.u1.lt.1000)then
-write(a,'(I3)')u1
-endif
-if(u1.eq.1000)then
-write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-sets. Please increase the limit'
-goto 316
-endif
-outfile='structure_set_'//trim(a)//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
-!if(nfset.eq.1) goto 316
-goto 212
-endif
-
-i13i7=i7
-m13m21=m21
-
-do m6=m7+1,ncqs
-
-!!!! quality 10 structures !!!!!!!
-!write(*,*)'14 14 14 14 14 14'
-
-
-do m20=i13i7+1,i7
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-
-i7=i13i7
-totstr=i13i7
-m21=m13m21
-
-totstr=totstr+1
-strno(totstr)=m6
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-
-!print*,'Ifail_test_check_ind',Ifail
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
-!print*,'Ifail_test_check_ind',Ifail,Ifailn
-!write(9,*),'ifail',ifail,det_inv
-!print*,'ifail10',ifail,(strno(i),i=1,totstr)
-
-if(Ifail.eq.1)then
-!strno(totstr)=0
-!totstr=totstr-1
-goto 213
-endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-!print*,'MatLDR_write_xmi',totstr
-!print*,'MatLDR1'
-call MatLDR('str',strno,totstr,D)
-
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-if(1.0-ovlp.gt.ovval)goto 213
-endif
-m21=m21+1
-
-if(m21.gt.strn) goto 316
-
-
-i7=i7+1
-
-do i3=1,nae
-str2(i7,i3)=str3(m6,i3)
-enddo
-col(i7)=m6
-!print*,'i7',i7,m6
-
-qq(i7)=q_fac2(m6)
-qq1(i7)=str_quality_1(m6)
-qq2(i7)=str_quality_2(m6)
-bondq4(i7)=bondq(m6)
-
-!do i3=1,nmbond
-!bondc(i7,i3)=bond_count(m6,i3)
-!enddo
-!do i3=1,ndet
-!fvec(i7,i3)=ffvec2(m6,i3)
-!enddo
-
-if(i7.eq.strn)then
-
-!write(9,*),'srt',(strno(m119),m119=1,i7)
-!ttqlty=0
-!hqlty=0
-!if(nfset.gt.0)then
-
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-
-!if(set_number.eq.1)hqlty=ttqlty
-!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
-!print*,'hqlty=ttqlty',hqlty,ttqlty
-!if(ttqlty.le.hqlty)then
-!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-mns=mns+1
-set_number=set_number+1
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-endif
-
-do i4=1,100
-detc(i4)=0
-detc1(i4)=0
-bdpstr(i4)=0
-enddo
-
-!do m119=1,i7
-!do i4=1,nmbond
-!detc(i4)=detc(i4)+bondc(m119,i4)
-!enddo
-!do i4=1,nmbond
-!bdpstr(m119)=bdpstr(m119)+bondc(m119,i4)
+!goto 213
+!endif
+!
+!i14i7=i7
+!m14m21=m21
+!
+!do m5=m6+1,ncqs
+!
+!!!!! quality 10 structures !!!!!!!
+!!write(*,*)'15 15 15 15 15 15'
+!
+!
+!do m20=i14i7+1,i7
+!strno(m20)=0
+!do i8=1,15
+!str2(m20,i8)=0
 !enddo
 !enddo
 !
-!do i=1,nmbond
-!if(detc(i).lt.6)then
-!nnn=nnn+1
-!endif
-!enddo
-!if(Ifail.eq.1.and.nnn.eq.nmbond)goto 5117
-!goto 213
-
-5117 do m119=1,i7
-
-if(niao.eq.0)then
-write(9+u1,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.ne.0)then
-if(niao.gt.1)then
-write(9+u1,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.eq.0)then
-if(niao.eq.1)then
-write(9+u1,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-!write(9,231)(bondc(m119,i4),i4=1,nmbond)
-!write(9,231)(fvec(m119,i4),i4=1,ndet)
-!do i4=1,ndet
-!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
-!enddo
-
-!do i4=1,nmbond
-!detc(i4)=detc(i4)+bondc(m119,i4)
-!enddo
-!do i4=1,nmbond
-!bdpstr(m119)=bdpstr(m119)+bondc(m119,i4)
-!enddo
-
-
-enddo
-
-!stop
-!call check_ind(detc,str2,i7,nlp,nmbond,bondc)
-!stop
-
-!print*,'sourav1'
-!call bond_det_vec(strno,totstr,bond_det)
-
-call bond_det_vec(nl,i7,str2,bnd_std)
-
-!print*,'sourav2'
-!do i=1,nbd
-!if(bdet(i).eq.int(bond_det))goto 778
-!enddo
-!nbd=nbd+1
-!bdet(nbd)=int(bond_det)
-!778 write(9,913)'bond_vec_det =',bond_det,Ifail,Ifailn
-
-!if(nfset.eq.3)call Rumer_set_id(str2,i7,nl,Rid,set_num)
-
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-
-!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.gt.0.and.ovopt.eq.1) then
-if(ovopt.eq.1) then
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-
-!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
-!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-
-if(Rid.eq.0)write(9+u1,921)'quality value',ttqlty,'bnd_std',bnd_std
-if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-numb=nmbond
-
-!write(9,232)'bond',(detc(i),i=1,numb)
-!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
-!do i=1,tot_ndet-1
-!avg=avg+detc(i)
-!enddo
-!avg=avg/(tot_ndet-1)
-!do i=1,tot_ndet-1
-!var=var+(detc(i)-avg)**2
-!enddo
-!var=var/(tot_ndet-1)
-!std=sqrt(var)
-!write(9,233)'STD_DET',std
-!do i=1,1000
-!detc(i)=0
-!enddo
-!avg=0
-!var=0.0
-!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
-!write(9,911),tqlty,sqlty,bqlty
-!write(9,*),'Total Quality = ',tqlty,bqlty
-
-bqlty=0
-write(9+u1,*),'Set_number=',set_number
-write(9+u1,*),'    '
-endif
-
-!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-if(mns.eq.max_set)then
-if(u1.eq.mset-1) goto 316
-close(9+u1)
-mns=0
-u1=u1+1
-if(u1.le.9)then
-write(a,'(I1)')u1
-endif
-if(u1.gt.9.and.u1.lt.100)then
-write(a,'(I2)')u1
-endif
-if(u1.gt.99.and.u1.lt.1000)then
-write(a,'(I3)')u1
-endif
-if(u1.eq.1000)then
-write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-sets. Please increase the limit'
-goto 316
-endif
-outfile='structure_set_'//trim(a)//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-
-!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
-!if(nfset.eq.1) goto 316
-!if(set_number.eq.5000) goto 316
-if(mns.eq.max_set)then
-!print*,'mns',mns
-!print*,'u1',u1
-close(9+u1)
-mns=0
-u1=u1+1
-!write(a,'(I1)')u1
-!a=trim(a)
-!print*,'a',a
-outfile='structure_set_'//trim(int_num(u1))//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-goto 213
-endif
-
-i14i7=i7
-m14m21=m21
-
-do m5=m6+1,ncqs
-
-!!!! quality 10 structures !!!!!!!
-!write(*,*)'15 15 15 15 15 15'
-
-
-do m20=i14i7+1,i7
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-
-i7=i14i7
-totstr=i14i7
-m21=m14m21
-
-totstr=totstr+1
-strno(totstr)=m5
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!print*,'Ifail_test_check_ind',Ifail
-call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
-!print*,'Ifail_test_check_ind',Ifail,Ifailn
-!write(9,*),'ifail',ifail,det_inv
-!print*,'ifail10',ifail,(strno(i),i=1,totstr)
-
-if(Ifail.eq.1)then
-!strno(totstr)=0
-!totstr=totstr-1
-goto 214
-endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
-!if(nfset.eq.1.and.totstr.gt.1) then
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-!print*,'MatLDR_write_xmi',totstr
-!print*,'MatLDR1'
-call MatLDR('str',strno,totstr,D)
-
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-if(1.0-ovlp.gt.ovval)goto 214
-endif
-m21=m21+1
-
-if(m21.gt.strn) goto 316
-
-
-i7=i7+1
-
-do i3=1,nae
-str2(i7,i3)=str3(m5,i3)
-enddo
-col(i7)=m5
-!print*,'i7',i7,m5
-
-qq(i7)=q_fac2(m5)
-qq1(i7)=str_quality_1(m5)
-qq2(i7)=str_quality_2(m5)
-bondq4(i7)=bondq(m5)
-
-!do i3=1,ndet
-!fvec(i7,i3)=ffvec2(m5,i3)
-!enddo
-
-if(i7.eq.strn)then
-
-!write(9,*),'srt',(strno(m119),m119=1,i7)
-!ttqlty=0
-!hqlty=0
-!if(nfset.gt.0)then
-
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-
-!endif
-!if(set_number.eq.1)hqlty=ttqlty
-!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
-!if(ttqlty.le.hqlty)then
-!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.2)then
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-set_number=set_number+1
-mns=mns+1
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-endif
-
-do m119=1,i7
-
-if(niao.eq.0)then
-write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.ne.0)then
-if(niao.gt.1)then
-write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.eq.0)then
-if(niao.eq.1)then
-write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-!write(9,231)(fvec(m119,i4),i4=1,ndet)
-!do i4=1,ndet
-!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
-!enddo
-
-
-
-enddo
-
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.gt.0.and.ovopt.eq.1) then
-if(ovopt.eq.1) then
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-
-!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
-
-if(Rid.eq.0)write(9,910)'quality value',ttqlty
-if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-
-!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
-!do i=1,tot_ndet-1
-!avg=avg+detc(i)
-!enddo
-!avg=avg/(tot_ndet-1)
-!do i=1,tot_ndet-1
-!var=var+(detc(i)-avg)**2
-!enddo
-!var=var/(tot_ndet-1)
-!std=sqrt(var)
-!write(9,233)'STD_DET',std
-!do i=1,1000
-!detc(i)=0
-!enddo
-!avg=0
-!var=0.0
-!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
-!write(9,911),tqlty,sqlty,bqlty
-!write(9,*),'Total Quality = ',tqlty,bqlty
-
-bqlty=0
-write(9,*),'Set_number=',set_number
-write(9,*),'    '
-endif
-
-!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-if(mns.eq.max_set)then
-if(u1.eq.mset-1) goto 316
-close(9+u1)
-mns=0
-u1=u1+1
-if(u1.le.9)then
-write(a,'(I1)')u1
-endif
-if(u1.gt.9.and.u1.lt.100)then
-write(a,'(I2)')u1
-endif
-if(u1.gt.99.and.u1.lt.1000)then
-write(a,'(I3)')u1
-endif
-if(u1.eq.1000)then
-write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-sets. Please increase the limit'
-goto 316
-endif
-outfile='structure_set_'//trim(a)//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
-!if(nfset.eq.1) goto 316
-goto 214
-endif
-i15i7=i7
-m15m21=m21
-
-do m4=m5+1,ncqs
-
-!!!! quality 10 structures !!!!!!!
-!write(*,*)'16 16 16 16 16 16'
-
-
-do m20=i15i7+1,i7
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-
-i7=i15i7
-totstr=i15i7
-m21=m15m21
-
-totstr=totstr+1
-strno(totstr)=m4
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-
+!i7=i14i7
+!totstr=i14i7
+!m21=m14m21
+!
+!totstr=totstr+1
+!strno(totstr)=m5
+!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!!print*,'Ifail_test_check_ind',Ifail
 !call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
-!print*,'Ifail_test_check_ind',Ifail,Ifailn
-!write(9,*),'ifail',ifail,det_inv
-!print*,'ifail10',ifail,(strno(i),i=1,totstr)
-
-if(Ifail.eq.1)then
-!strno(totstr)=0
-!totstr=totstr-1
-goto 215
-endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-!print*,'MatLDR_write_xmi',totstr
-!print*,'MatLDR1'
-call MatLDR('str',strno,totstr,D)
-
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-if(1.0-ovlp.gt.ovval)goto 215
-endif
-m21=m21+1
-
-if(m21.gt.strn) goto 316
-
-
-i7=i7+1
-
-do i3=1,nae
-str2(i7,i3)=str3(m4,i3)
-enddo
-col(i7)=m4
-print*,'i7',i7,m4
-
-qq(i7)=q_fac2(m4)
-qq1(i7)=str_quality_1(m4)
-qq2(i7)=str_quality_2(m4)
-bondq4(i7)=bondq(m4)
-
-!do i3=1,ndet
-!fvec(i7,i3)=ffvec2(m4,i3)
-!enddo
-
-if(i7.eq.strn)then
-
-!write(9,*),'srt',(strno(m119),m119=1,i7)
-!ttqlty=0
-!hqlty=0
-!if(nfset.gt.0)then
-
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-
+!!print*,'Ifail_test_check_ind',Ifail,Ifailn
+!!write(9,*),'ifail',ifail,det_inv
+!!print*,'ifail10',ifail,(strno(i),i=1,totstr)
+!
+!if(Ifail.eq.1)then
+!!strno(totstr)=0
+!!totstr=totstr-1
+!goto 214
 !endif
-!if(set_number.eq.1)hqlty=ttqlty
-!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
-!if(ttqlty.le.hqlty)then
-!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-set_number=set_number+1
-mns=mns+1
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-endif
-
-do m119=1,i7
-
-if(niao.eq.0)then
-write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.ne.0)then
-if(niao.gt.1)then
-write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.eq.0)then
-if(niao.eq.1)then
-write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-!write(9,231)(fvec(m119,i4),i4=1,ndet)
-!do i4=1,ndet
-!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+!!if(nfset.eq.1.and.totstr.gt.1) then
+!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!!print*,'MatLDR_write_xmi',totstr
+!!print*,'MatLDR1'
+!call MatLDR('str',strno,totstr,D)
+!
+!ovlp=1.0
+!do i=1,totstr
+!ovlp=ovlp*D(i)
 !enddo
-
-
-
-enddo
-
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.gt.0.and.ovopt.eq.1) then
-if(ovopt.eq.1) then
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-
-!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
-
-if(Rid.eq.0)write(9,910)'quality value',ttqlty
-if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-
-!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
-!do i=1,tot_ndet-1
-!avg=avg+detc(i)
-!enddo
-!avg=avg/(tot_ndet-1)
-!do i=1,tot_ndet-1
-!var=var+(detc(i)-avg)**2
-!enddo
-!var=var/(tot_ndet-1)
-!std=sqrt(var)
-!write(9,233)'STD_DET',std
-!do i=1,1000
-!detc(i)=0
-!enddo
-!avg=0
-!var=0.0
-!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
-!write(9,911),tqlty,sqlty,bqlty
-!write(9,*),'Total Quality = ',tqlty,bqlty
-
-bqlty=0
-write(9,*),'Set_number=',set_number
-write(9,*),'    '
-endif
-
-!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-if(mns.eq.max_set)then
-if(u1.eq.mset-1) goto 316
-close(9+u1)
-mns=0
-u1=u1+1
-if(u1.le.9)then
-write(a,'(I1)')u1
-endif
-if(u1.gt.9.and.u1.lt.100)then
-write(a,'(I2)')u1
-endif
-if(u1.gt.99.and.u1.lt.1000)then
-write(a,'(I3)')u1
-endif
-if(u1.eq.1000)then
-write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-sets. Please increase the limit'
-goto 316
-endif
-outfile='structure_set_'//trim(a)//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-
-!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
-!if(nfset.eq.1) goto 316
-goto 215
-endif
-i16i7=i7
-m16m21=m21
-
-!do m9=1+qstrn(10),qstrn(11)
-do m3=m4+1,ncqs
-
-!!!! quality 10 structures !!!!!!!
-!write(*,*)'17 17 17 17 17 17'
-
-
-do m20=i16i7+1,i7
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-
-i7=i16i7
-totstr=i16i7
-m21=m16m21
-
-totstr=totstr+1
-strno(totstr)=m3
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-
-!print*,'Ifail_test_check_ind',Ifail
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
-!print*,'Ifail_test_check_ind',Ifail,Ifailn
-!write(9,*),'ifail',ifail,det_inv
-!print*,'ifail10',ifail,(strno(i),i=1,totstr)
-
-if(Ifail.eq.1)then
-!strno(totstr)=0
-!totstr=totstr-1
-goto 216
-endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-!print*,'MatLDR_write_xmi',totstr
-!print*,'MatLDR1'
-call MatLDR('str',strno,totstr,D)
-
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-if(1.0-ovlp.gt.ovval)goto 216
-endif
-m21=m21+1
-
-if(m21.gt.strn) goto 316
-
-
-i7=i7+1
-
-do i3=1,nae
-str2(i7,i3)=str3(m3,i3)
-enddo
-col(i7)=m3
-!print*,'i7',i7,m3
-
-qq(i7)=q_fac2(m3)
-qq1(i7)=str_quality_1(m3)
-qq2(i7)=str_quality_2(m3)
-bondq4(i7)=bondq(m3)
-
-!do i3=1,ndet
-!fvec(i7,i3)=ffvec2(m3,i3)
-!enddo
-
-if(i7.eq.strn)then
-
-!write(9,*),'srt',(strno(m119),m119=1,i7)
-!ttqlty=0
-!hqlty=0
-!if(nfset.gt.0)then
-
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-
+!if(1.0-ovlp.gt.ovval)goto 214
 !endif
-!if(set_number.eq.1)hqlty=ttqlty
-!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
-!if(ttqlty.le.hqlty)then
-!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-set_number=set_number+1
-mns=mns+1
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-endif
-
-do m119=1,i7
-
-if(niao.eq.0)then
-write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.ne.0)then
-if(niao.gt.1)then
-write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.eq.0)then
-if(niao.eq.1)then
-write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-!write(9,231)(fvec(m119,i4),i4=1,ndet)
-!do i4=1,ndet
-!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
+!m21=m21+1
+!
+!if(m21.gt.strn) goto 316
+!
+!
+!i7=i7+1
+!
+!do i3=1,nae
+!str2(i7,i3)=str3(m5,i3)
 !enddo
-
-enddo
-
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-
-!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.gt.0.and.ovopt.eq.1) then
-if(ovopt.eq.1) then
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-
-!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
-
-if(Rid.eq.0)write(9,910)'quality value',ttqlty
-if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-
-!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
-!do i=1,tot_ndet-1
-!avg=avg+detc(i)
-!enddo
-!avg=avg/(tot_ndet-1)
-!do i=1,tot_ndet-1
-!var=var+(detc(i)-avg)**2
-!enddo
-!var=var/(tot_ndet-1)
-!std=sqrt(var)
-!write(9,233)'STD_DET',std
-!do i=1,1000
-!detc(i)=0
-!enddo
-!avg=0
-!var=0.0
-!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
-!write(9,911),tqlty,sqlty,bqlty
-!write(9,*),'Total Quality = ',tqlty,bqlty
-
-bqlty=0
-write(9,*),'Set_number=',set_number
-write(9,*),'    '
-endif
-
-!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-!f(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!ovval',1.0-ovlp
-
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-if(mns.eq.max_set)then
-if(u1.eq.mset-1) goto 316
-close(9+u1)
-mns=0
-u1=u1+1
-if(u1.le.9)then
-write(a,'(I1)')u1
-endif
-if(u1.gt.9.and.u1.lt.100)then
-write(a,'(I2)')u1
-endif
-if(u1.gt.99.and.u1.lt.1000)then
-write(a,'(I3)')u1
-endif
-if(u1.eq.1000)then
-write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-sets. Please increase the limit'
-goto 316
-endif
-outfile='structure_set_'//trim(a)//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
-!if(nfset.eq.1) goto 316
-goto 216
-endif
-i17i7=i7
-m17m21=m21
-
-do m2=m3+1,ncqs
-
-!!!! quality 10 structures !!!!!!!
-!write(*,*)'18 18 18 18 18 18'
-
-
-do m20=i17i7+1,i7
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-
-i7=i17i7
-totstr=i17i7
-m21=m17m21
-
-totstr=totstr+1
-strno(totstr)=m2
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-
-!print*,'Ifail_test_check_ind',Ifail
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
-!print*,'Ifail_test_check_ind',Ifail,Ifailn
-!write(9,*),'ifail',ifail,det_inv
-!print*,'ifail10',ifail,(strno(i),i=1,totstr)
-
-if(Ifail.eq.1)then
-!strno(totstr)=0
-!totstr=totstr-1
-goto 217
-endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-!print*,'MatLDR_write_xmi',totstr
-!print*,'MatLDR1'
-call MatLDR('str',strno,totstr,D)
-
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-if(1.0-ovlp.gt.ovval)goto 217
-endif
-m21=m21+1
-
-if(m21.gt.strn) goto 316
-
-
-i7=i7+1
-
-do i3=1,nae
-str2(i7,i3)=str3(m2,i3)
-enddo
-col(i7)=m2
-!print*,'i7',i7,m2
-
-qq(i7)=q_fac2(m2)
-qq1(i7)=str_quality_1(m2)
-qq2(i7)=str_quality_2(m2)
-bondq4(i7)=bondq(m2)
-
-!do i3=1,ndet
-!fvec(i7,i3)=ffvec2(m2,i3)
-!enddo
-
-if(i7.eq.strn)then
-
-!write(9,*),'srt',(strno(m119),m119=1,i7)
+!col(i7)=m5
+!!print*,'i7',i7,m5
+!
+!qq(i7)=q_fac2(m5)
+!qq1(i7)=str_quality_1(m5)
+!qq2(i7)=str_quality_2(m5)
+!bondq4(i7)=bondq(m5)
+!
+!!do i3=1,ndet
+!!fvec(i7,i3)=ffvec2(m5,i3)
+!!enddo
+!
+!if(i7.eq.strn)then
+!
+!!write(9,*),'srt',(strno(m119),m119=1,i7)
+!!ttqlty=0
+!!hqlty=0
+!!if(nfset.gt.0)then
+!
 !ttqlty=0
-!hqlty=0
-!if(nfset.gt.0)then
-
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-
+!tqlty=0
+!bqlty=0
+!sqlty=0
+!do m119=1,i7
+!ttqlty=ttqlty+qq(m119)
+!tqlty=tqlty+qq1(m119)
+!bqlty=bqlty+bondq4(m119)
+!sqlty=sqlty+qq2(m119)
+!enddo
+!
+!!endif
+!!if(set_number.eq.1)hqlty=ttqlty
+!!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
+!!if(ttqlty.le.hqlty)then
+!!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.2)then
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
+!set_number=set_number+1
+!mns=mns+1
+!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!if(nfset.eq.1.and.set_number.gt.1)then
+!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
 !endif
-!if(set_number.eq.1)hqlty=ttqlty
-!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
-!if(ttqlty.le.hqlty)then
-!if(ttqlty1.le.tqlty.and.ttqlty2.le.bqlty.and.ttqlty3.le.sqlty.or.nfset.eq.0)then
-!if(ttqlty1.le.tqlty.and.ttqlty2.le.bqlty.and.ttqlty3.le.sqlty)then
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-set_number=set_number+1
-mns=mns+1
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-endif
-
-do m119=1,i7
-
-if(niao.eq.0)then
-write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.ne.0)then
-if(niao.gt.1)then
-write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-!if(niao.ne.0.and.nnnatom.eq.0)then
-if(niao.eq.1)then
-write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-!write(9,231)(fvec(m119,i4),i4=1,ndet)
-!do i4=1,ndet
-!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
+!
+!do m119=1,i7
+!
+!if(niao.eq.0)then
+!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.ne.0)then
+!if(niao.gt.1)then
+!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.eq.0)then
+!if(niao.eq.1)then
+!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!endif
+!
+!!write(9,231)(fvec(m119,i4),i4=1,ndet)
+!!do i4=1,ndet
+!!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
+!!enddo
+!
+!
+!
 !enddo
-
-enddo
-
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.gt.0.and.ovopt.eq.1) then
-if(ovopt.eq.1) then
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-
-!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
-
-if(Rid.eq.0)write(9,910)'quality value',ttqlty
-if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-
-!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
-!do i=1,tot_ndet-1
-!avg=avg+detc(i)
+!
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
+!!if(nfset.eq.0.or.nfset.gt.1) then
+!!if(nfset.gt.0.and.ovopt.eq.1) then
+!if(ovopt.eq.1) then
+!call MatLDR('str',col,i7,D)
+!
+!ovlp=1.0
+!do i=1,i7
+!ovlp=ovlp*D(i)
 !enddo
-!avg=avg/(tot_ndet-1)
-!do i=1,tot_ndet-1
-!var=var+(detc(i)-avg)**2
-!enddo
-!var=var/(tot_ndet-1)
-!std=sqrt(var)
-!write(9,233)'STD_DET',std
-!do i=1,1000
-!detc(i)=0
-!enddo
-!avg=0
-!var=0.0
-!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
-!write(9,911),tqlty,sqlty,bqlty
-!write(9,*),'Total Quality = ',tqlty,bqlty
-
-bqlty=0
-write(9,*),'Set_number=',set_number
-write(9,*),'    '
-endif
-
-!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
-!'ovval',1.0-ovlp
-
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-if(mns.eq.max_set)then
-if(u1.eq.mset-1) goto 316
-close(9+u1)
-mns=0
-u1=u1+1
-if(u1.le.9)then
-write(a,'(I1)')u1
-endif
-if(u1.gt.9.and.u1.lt.100)then
-write(a,'(I2)')u1
-endif
-if(u1.gt.99.and.u1.lt.1000)then
-write(a,'(I3)')u1
-endif
-if(u1.eq.1000)then
-write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-sets. Please increase the limit'
-goto 316
-endif
-outfile='structure_set_'//trim(a)//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-
-!if(nfset.eq.1) write(9,*),'ovlpval',1.0-ovlp
-!if(nfset.eq.1) goto 316
-goto 217
-endif
-i18i7=i7
-m18m21=m21
-
-do m1=m2+1,ncqs
-
-!!!! quality 10 structures !!!!!!!
-!write(*,*)'19 19 19 19 19 19',ifail
-
-!print*,'i18i7,i7,m18m21,m21',i18i7,i7,m18m21,m21
-if(ifail.eq.1)then
-!print*,'i18i7,i7,m18m21,m21',i18i7,i7,m18m21,m21
-do m20=i18i7+1,i7
-strno(m20)=0
-do i8=1,15
-str2(m20,i8)=0
-enddo
-enddo
-
-i7=i18i7
-totstr=i18i7
-m21=m18m21
-endif
-
-totstr=totstr+1
-strno(totstr)=m1
-call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!print*,'Ifail_test_check_ind',Ifail
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
-!print*,'Ifail_test_check_ind',Ifail,Ifailn
-if(Ifail.eq.1)then
-goto 218
-endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-if(totstr.gt.1.and.ovopt.eq.vpt) then
-call MatLDR('str',strno,totstr,D)
-
-ovlp=1.0
-do i=1,totstr
-ovlp=ovlp*D(i)
-enddo
-if(1.0-ovlp.gt.ovval)goto 218
-endif
-m21=m21+1
-
-if(m21.gt.strn) goto 316
-
-
-i7=i7+1
-
-do i3=1,nae
-str2(i7,i3)=str3(m1,i3)
-enddo
-col(i7)=m1
-!print*,'i7',i7,m10
-
-qq(i7)=q_fac2(m1)
-qq1(i7)=str_quality_1(m1)
-qq2(i7)=str_quality_2(m1)
-bondq4(i7)=bondq(m1)
-
-
-i18i7=i7
-m18m21=m21
-if(i7.eq.strn)then
-ttqlty=0
-tqlty=0
-bqlty=0
-sqlty=0
-do m119=1,i7
-ttqlty=ttqlty+qq(m119)
-tqlty=tqlty+qq1(m119)
-bqlty=bqlty+bondq4(m119)
-sqlty=sqlty+qq2(m119)
-enddo
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-if(ttqlty.le.ttqlty0)then
-set_number=set_number+1
-mns=mns+1
-if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-if(nfset.eq.1.and.set_number.gt.1)then
-if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-endif
-
-
-
-do m119=1,i7
-
-if(niao.eq.0)then
-write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-endif
-if(niao.gt.1)then
-write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-endif
-if(niao.eq.1)then
-write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-endif
-
-
-
-enddo
-
-call bond_det_vec(nl,i7,str2,bnd_std)
-
-!do i=1,nbd
-!if(bdet(i).eq.int(bond_det))goto 779
-!enddo
-!nbd=nbd+1
-!bdet(nbd)=int(bond_det)
-!779 write(9,913)'bond_vec_det =',bond_det,Ifail,Ifailn
-!if(nfset.eq.3)call Rumer_set_id(str2,i7,nl,Rid,set_num)
-
-if(nfset.eq.3)then
-Rumwrite=1
-call Rumer_set_id(str2,i7,nl,Rid,set_num)
-endif
-if(ovopt.eq.1) then
-call MatLDR('str',col,i7,D)
-
-ovlp=1.0
-do i=1,i7
-ovlp=ovlp*D(i)
-enddo
-write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-endif
-
+!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
+!endif
+!
+!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
+!!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
+!
 !if(Rid.eq.0)write(9,910)'quality value',ttqlty
 !if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-
-if(Rid.eq.0)write(9,921)'quality value',ttqlty,'bnd_std',bnd_std
-if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-bqlty=0
-write(9,*),'Set_number=',set_number
-write(9,*),'    '
-endif
-if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-if(mns.eq.max_set)then
-if(u1.eq.mset-1) goto 316
-close(9+u1)
-mns=0
-u1=u1+1
-if(u1.le.9)then
-write(a,'(I1)')u1
-endif
-if(u1.gt.9.and.u1.lt.100)then
-write(a,'(I2)')u1
-endif
-if(u1.gt.99.and.u1.lt.1000)then
-write(a,'(I3)')u1
-endif
-if(u1.eq.1000)then
-write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-sets. Please increase the limit'
-goto 316
-endif
-outfile='structure_set_'//trim(a)//trim('.dat')
-open(unit=9+u1,file=outfile,status='unknown')
-endif
-
+!
+!!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!avg=avg+detc(i)
+!!enddo
+!!avg=avg/(tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!var=var+(detc(i)-avg)**2
+!!enddo
+!!var=var/(tot_ndet-1)
+!!std=sqrt(var)
+!!write(9,233)'STD_DET',std
+!!do i=1,1000
+!!detc(i)=0
+!!enddo
+!!avg=0
+!!var=0.0
+!!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
+!!write(9,911),tqlty,sqlty,bqlty
+!!write(9,*),'Total Quality = ',tqlty,bqlty
+!
+!bqlty=0
+!write(9,*),'Set_number=',set_number
+!write(9,*),'    '
+!endif
+!
+!!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!
+!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!if(mns.eq.max_set)then
+!if(u1.eq.mset-1) goto 316
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!if(u1.le.9)then
+!write(a,'(I1)')u1
+!endif
+!if(u1.gt.9.and.u1.lt.100)then
+!write(a,'(I2)')u1
+!endif
+!if(u1.gt.99.and.u1.lt.1000)then
+!write(a,'(I3)')u1
+!endif
+!if(u1.eq.1000)then
+!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
+!sets. Please increase the limit'
+!goto 316
+!endif
+!outfile='structure_set_'//trim(a)//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
+!endif
+!!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
+!!if(nfset.eq.1) goto 316
+!goto 214
+!endif
+!i15i7=i7
+!m15m21=m21
+!
+!do m4=m5+1,ncqs
+!
+!!!!! quality 10 structures !!!!!!!
+!!write(*,*)'16 16 16 16 16 16'
+!
+!
+!do m20=i15i7+1,i7
+!strno(m20)=0
+!do i8=1,15
+!str2(m20,i8)=0
+!enddo
+!enddo
+!
+!i7=i15i7
+!totstr=i15i7
+!m21=m15m21
+!
+!totstr=totstr+1
+!strno(totstr)=m4
+!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!print*,'Ifail_test_check_ind',Ifail,Ifailn
+!!write(9,*),'ifail',ifail,det_inv
+!!print*,'ifail10',ifail,(strno(i),i=1,totstr)
+!
+!if(Ifail.eq.1)then
+!!strno(totstr)=0
+!!totstr=totstr-1
+!goto 215
+!endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!!print*,'MatLDR_write_xmi',totstr
+!!print*,'MatLDR1'
+!call MatLDR('str',strno,totstr,D)
+!
+!ovlp=1.0
+!do i=1,totstr
+!ovlp=ovlp*D(i)
+!enddo
+!if(1.0-ovlp.gt.ovval)goto 215
+!endif
+!m21=m21+1
+!
+!if(m21.gt.strn) goto 316
+!
+!
+!i7=i7+1
+!
+!do i3=1,nae
+!str2(i7,i3)=str3(m4,i3)
+!enddo
+!col(i7)=m4
+!print*,'i7',i7,m4
+!
+!qq(i7)=q_fac2(m4)
+!qq1(i7)=str_quality_1(m4)
+!qq2(i7)=str_quality_2(m4)
+!bondq4(i7)=bondq(m4)
+!
+!!do i3=1,ndet
+!!fvec(i7,i3)=ffvec2(m4,i3)
+!!enddo
+!
+!if(i7.eq.strn)then
+!
+!!write(9,*),'srt',(strno(m119),m119=1,i7)
+!!ttqlty=0
+!!hqlty=0
+!!if(nfset.gt.0)then
+!
+!ttqlty=0
+!tqlty=0
+!bqlty=0
+!sqlty=0
+!do m119=1,i7
+!ttqlty=ttqlty+qq(m119)
+!tqlty=tqlty+qq1(m119)
+!bqlty=bqlty+bondq4(m119)
+!sqlty=sqlty+qq2(m119)
+!enddo
+!
+!!endif
+!!if(set_number.eq.1)hqlty=ttqlty
+!!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
+!!if(ttqlty.le.hqlty)then
+!!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
+!set_number=set_number+1
+!mns=mns+1
+!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!if(nfset.eq.1.and.set_number.gt.1)then
+!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!endif
+!
+!do m119=1,i7
+!
+!if(niao.eq.0)then
+!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.ne.0)then
+!if(niao.gt.1)then
+!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.eq.0)then
+!if(niao.eq.1)then
+!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!endif
+!
+!!write(9,231)(fvec(m119,i4),i4=1,ndet)
+!!do i4=1,ndet
+!!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
+!!enddo
+!
+!
+!
+!enddo
+!
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
+!!if(nfset.eq.0.or.nfset.gt.1) then
+!!if(nfset.gt.0.and.ovopt.eq.1) then
+!if(ovopt.eq.1) then
+!call MatLDR('str',col,i7,D)
+!
+!ovlp=1.0
+!do i=1,i7
+!ovlp=ovlp*D(i)
+!enddo
+!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
+!endif
+!
+!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
+!!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
+!
+!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!
+!!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!avg=avg+detc(i)
+!!enddo
+!!avg=avg/(tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!var=var+(detc(i)-avg)**2
+!!enddo
+!!var=var/(tot_ndet-1)
+!!std=sqrt(var)
+!!write(9,233)'STD_DET',std
+!!do i=1,1000
+!!detc(i)=0
+!!enddo
+!!avg=0
+!!var=0.0
+!!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
+!!write(9,911),tqlty,sqlty,bqlty
+!!write(9,*),'Total Quality = ',tqlty,bqlty
+!
+!bqlty=0
+!write(9,*),'Set_number=',set_number
+!write(9,*),'    '
+!endif
+!
+!!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!
+!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!if(mns.eq.max_set)then
+!if(u1.eq.mset-1) goto 316
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!if(u1.le.9)then
+!write(a,'(I1)')u1
+!endif
+!if(u1.gt.9.and.u1.lt.100)then
+!write(a,'(I2)')u1
+!endif
+!if(u1.gt.99.and.u1.lt.1000)then
+!write(a,'(I3)')u1
+!endif
+!if(u1.eq.1000)then
+!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
+!sets. Please increase the limit'
+!goto 316
+!endif
+!outfile='structure_set_'//trim(a)//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
+!endif
+!
+!!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
+!!if(nfset.eq.1) goto 316
+!goto 215
+!endif
+!i16i7=i7
+!m16m21=m21
+!
+!!do m9=1+qstrn(10),qstrn(11)
+!do m3=m4+1,ncqs
+!
+!!!!! quality 10 structures !!!!!!!
+!!write(*,*)'17 17 17 17 17 17'
+!
+!
+!do m20=i16i7+1,i7
+!strno(m20)=0
+!do i8=1,15
+!str2(m20,i8)=0
+!enddo
+!enddo
+!
+!i7=i16i7
+!totstr=i16i7
+!m21=m16m21
+!
+!totstr=totstr+1
+!strno(totstr)=m3
+!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!
+!!print*,'Ifail_test_check_ind',Ifail
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!print*,'Ifail_test_check_ind',Ifail,Ifailn
+!!write(9,*),'ifail',ifail,det_inv
+!!print*,'ifail10',ifail,(strno(i),i=1,totstr)
+!
+!if(Ifail.eq.1)then
+!!strno(totstr)=0
+!!totstr=totstr-1
+!goto 216
+!endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!!print*,'MatLDR_write_xmi',totstr
+!!print*,'MatLDR1'
+!call MatLDR('str',strno,totstr,D)
+!
+!ovlp=1.0
+!do i=1,totstr
+!ovlp=ovlp*D(i)
+!enddo
+!if(1.0-ovlp.gt.ovval)goto 216
+!endif
+!m21=m21+1
+!
+!if(m21.gt.strn) goto 316
+!
+!
+!i7=i7+1
+!
+!do i3=1,nae
+!str2(i7,i3)=str3(m3,i3)
+!enddo
+!col(i7)=m3
+!!print*,'i7',i7,m3
+!
+!qq(i7)=q_fac2(m3)
+!qq1(i7)=str_quality_1(m3)
+!qq2(i7)=str_quality_2(m3)
+!bondq4(i7)=bondq(m3)
+!
+!!do i3=1,ndet
+!!fvec(i7,i3)=ffvec2(m3,i3)
+!!enddo
+!
+!if(i7.eq.strn)then
+!
+!!write(9,*),'srt',(strno(m119),m119=1,i7)
+!!ttqlty=0
+!!hqlty=0
+!!if(nfset.gt.0)then
+!
+!ttqlty=0
+!tqlty=0
+!bqlty=0
+!sqlty=0
+!do m119=1,i7
+!ttqlty=ttqlty+qq(m119)
+!tqlty=tqlty+qq1(m119)
+!bqlty=bqlty+bondq4(m119)
+!sqlty=sqlty+qq2(m119)
+!enddo
+!
+!!endif
+!!if(set_number.eq.1)hqlty=ttqlty
+!!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
+!!if(ttqlty.le.hqlty)then
+!!if(ttqlty1.ge.tqlty.and.ttqlty2.ge.bqlty.and.ttqlty3.ge.sqlty.or.nfset.eq.0)then
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
+!set_number=set_number+1
+!mns=mns+1
+!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!if(nfset.eq.1.and.set_number.gt.1)then
+!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!endif
+!
+!do m119=1,i7
+!
+!if(niao.eq.0)then
+!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.ne.0)then
+!if(niao.gt.1)then
+!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.eq.0)then
+!if(niao.eq.1)then
+!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!endif
+!
+!!write(9,231)(fvec(m119,i4),i4=1,ndet)
+!!do i4=1,ndet
+!!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
+!!enddo
+!
+!enddo
+!
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
+!
+!!if(nfset.eq.0.or.nfset.gt.1) then
+!!if(nfset.gt.0.and.ovopt.eq.1) then
+!if(ovopt.eq.1) then
+!call MatLDR('str',col,i7,D)
+!
+!ovlp=1.0
+!do i=1,i7
+!ovlp=ovlp*D(i)
+!enddo
+!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
+!endif
+!
+!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
+!!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
+!
+!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!
+!!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!avg=avg+detc(i)
+!!enddo
+!!avg=avg/(tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!var=var+(detc(i)-avg)**2
+!!enddo
+!!var=var/(tot_ndet-1)
+!!std=sqrt(var)
+!!write(9,233)'STD_DET',std
+!!do i=1,1000
+!!detc(i)=0
+!!enddo
+!!avg=0
+!!var=0.0
+!!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
+!!write(9,911),tqlty,sqlty,bqlty
+!!write(9,*),'Total Quality = ',tqlty,bqlty
+!
+!bqlty=0
+!write(9,*),'Set_number=',set_number
+!write(9,*),'    '
+!endif
+!
+!!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!!f(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!ovval',1.0-ovlp
+!
+!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!if(mns.eq.max_set)then
+!if(u1.eq.mset-1) goto 316
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!if(u1.le.9)then
+!write(a,'(I1)')u1
+!endif
+!if(u1.gt.9.and.u1.lt.100)then
+!write(a,'(I2)')u1
+!endif
+!if(u1.gt.99.and.u1.lt.1000)then
+!write(a,'(I3)')u1
+!endif
+!if(u1.eq.1000)then
+!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
+!sets. Please increase the limit'
+!goto 316
+!endif
+!outfile='structure_set_'//trim(a)//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
+!endif
+!!if(nfset.eq.1) write(9,*),'ovval',1.0-ovlp
+!!if(nfset.eq.1) goto 316
+!goto 216
+!endif
+!i17i7=i7
+!m17m21=m21
+!
+!do m2=m3+1,ncqs
+!
+!!!!! quality 10 structures !!!!!!!
+!!write(*,*)'18 18 18 18 18 18'
+!
+!
+!do m20=i17i7+1,i7
+!strno(m20)=0
+!do i8=1,15
+!str2(m20,i8)=0
+!enddo
+!enddo
+!
+!i7=i17i7
+!totstr=i17i7
+!m21=m17m21
+!
+!totstr=totstr+1
+!strno(totstr)=m2
+!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!
+!!print*,'Ifail_test_check_ind',Ifail
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!print*,'Ifail_test_check_ind',Ifail,Ifailn
+!!write(9,*),'ifail',ifail,det_inv
+!!print*,'ifail10',ifail,(strno(i),i=1,totstr)
+!
+!if(Ifail.eq.1)then
+!!strno(totstr)=0
+!!totstr=totstr-1
+!goto 217
+!endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!!print*,'MatLDR_write_xmi',totstr
+!!print*,'MatLDR1'
+!call MatLDR('str',strno,totstr,D)
+!
+!ovlp=1.0
+!do i=1,totstr
+!ovlp=ovlp*D(i)
+!enddo
+!if(1.0-ovlp.gt.ovval)goto 217
+!endif
+!m21=m21+1
+!
+!if(m21.gt.strn) goto 316
+!
+!
+!i7=i7+1
+!
+!do i3=1,nae
+!str2(i7,i3)=str3(m2,i3)
+!enddo
+!col(i7)=m2
+!!print*,'i7',i7,m2
+!
+!qq(i7)=q_fac2(m2)
+!qq1(i7)=str_quality_1(m2)
+!qq2(i7)=str_quality_2(m2)
+!bondq4(i7)=bondq(m2)
+!
+!!do i3=1,ndet
+!!fvec(i7,i3)=ffvec2(m2,i3)
+!!enddo
+!
+!if(i7.eq.strn)then
+!
+!!write(9,*),'srt',(strno(m119),m119=1,i7)
+!!ttqlty=0
+!!hqlty=0
+!!if(nfset.gt.0)then
+!
+!ttqlty=0
+!tqlty=0
+!bqlty=0
+!sqlty=0
+!do m119=1,i7
+!ttqlty=ttqlty+qq(m119)
+!tqlty=tqlty+qq1(m119)
+!bqlty=bqlty+bondq4(m119)
+!sqlty=sqlty+qq2(m119)
+!enddo
+!
+!!endif
+!!if(set_number.eq.1)hqlty=ttqlty
+!!if(set_number.eq.1.and.nfset.eq.3)hqlty=ttqlty+noq
+!!if(ttqlty.le.hqlty)then
+!!if(ttqlty1.le.tqlty.and.ttqlty2.le.bqlty.and.ttqlty3.le.sqlty.or.nfset.eq.0)then
+!!if(ttqlty1.le.tqlty.and.ttqlty2.le.bqlty.and.ttqlty3.le.sqlty)then
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
+!set_number=set_number+1
+!mns=mns+1
+!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!if(nfset.eq.1.and.set_number.gt.1)then
+!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!endif
+!
+!do m119=1,i7
+!
+!if(niao.eq.0)then
+!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.ne.0)then
+!if(niao.gt.1)then
+!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!endif
+!!if(niao.ne.0.and.nnnatom.eq.0)then
+!if(niao.eq.1)then
+!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!endif
+!
+!!write(9,231)(fvec(m119,i4),i4=1,ndet)
+!!do i4=1,ndet
+!!detc(fvec(m119,i4))=detc(fvec(m119,i4))+1
+!!enddo
+!
+!enddo
+!
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
+!!if(nfset.eq.0.or.nfset.gt.1) then
+!!if(nfset.gt.0.and.ovopt.eq.1) then
+!if(ovopt.eq.1) then
+!call MatLDR('str',col,i7,D)
+!
+!ovlp=1.0
+!do i=1,i7
+!ovlp=ovlp*D(i)
+!enddo
+!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
+!endif
+!
+!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
+!!write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
+!
+!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!
+!!write(9,232)'det',(detc(i),i=1,tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!avg=avg+detc(i)
+!!enddo
+!!avg=avg/(tot_ndet-1)
+!!do i=1,tot_ndet-1
+!!var=var+(detc(i)-avg)**2
+!!enddo
+!!var=var/(tot_ndet-1)
+!!std=sqrt(var)
+!!write(9,233)'STD_DET',std
+!!do i=1,1000
+!!detc(i)=0
+!!enddo
+!!avg=0
+!!var=0.0
+!!write(9,910)'qualities:',' intra_bond =',tqlty,'nn_bond =',bqlty,'sym_break=',sqlty
+!!write(9,911),tqlty,sqlty,bqlty
+!!write(9,*),'Total Quality = ',tqlty,bqlty
+!
+!bqlty=0
+!write(9,*),'Set_number=',set_number
+!write(9,*),'    '
+!endif
+!
+!!if(nfset.eq.0.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!!if(ovopt.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3) write(9,*),&
+!!'ovval',1.0-ovlp
+!
+!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!if(mns.eq.max_set)then
+!if(u1.eq.mset-1) goto 316
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!if(u1.le.9)then
+!write(a,'(I1)')u1
+!endif
+!if(u1.gt.9.and.u1.lt.100)then
+!write(a,'(I2)')u1
+!endif
+!if(u1.gt.99.and.u1.lt.1000)then
+!write(a,'(I3)')u1
+!endif
+!if(u1.eq.1000)then
+!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
+!sets. Please increase the limit'
+!goto 316
+!endif
+!outfile='structure_set_'//trim(a)//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
+!endif
+!
+!!if(nfset.eq.1) write(9,*),'ovlpval',1.0-ovlp
+!!if(nfset.eq.1) goto 316
+!goto 217
+!endif
+!i18i7=i7
+!m18m21=m21
+!
+!do m1=m2+1,ncqs
+!
+!!!!! quality 10 structures !!!!!!!
+!!write(*,*)'19 19 19 19 19 19',ifail
+!
+!!print*,'i18i7,i7,m18m21,m21',i18i7,i7,m18m21,m21
+!if(ifail.eq.1)then
+!!print*,'i18i7,i7,m18m21,m21',i18i7,i7,m18m21,m21
 !do m20=i18i7+1,i7
 !strno(m20)=0
 !do i8=1,15
@@ -19231,43 +12094,16 @@ endif
 !i7=i18i7
 !totstr=i18i7
 !m21=m18m21
-
-goto 218
-endif
-
-!i19i7=i7
-!m19m21=m21
+!endif
 !
-!!do m9=1+qstrn(10),qstrn(11)
-!do mn1=m1+1,ncqs
-!
-!!!!! quality 10 structures !!!!!!!
-!write(*,*)'20 20 20 20 20 20'
-!
-!
-!do m20=i19i7+1,i7
-!strno(m20)=0
-!do i8=1,15
-!str2(m20,i8)=0
-!enddo
-!enddo
-!
-!i7=i19i7
-!totstr=i19i7
-!m21=m19m21
-!
-!
-!
-!!do m19=m9,ncqs
-!
-!
-!!if(q_fac2(m19).ne.q_fac2(m9))goto 92
 !totstr=totstr+1
-!strno(totstr)=mn1
+!strno(totstr)=m1
 !call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!print*,'Ifail_test_check_ind',Ifail
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!print*,'Ifail_test_check_ind',Ifail,Ifailn
 !if(Ifail.eq.1)then
-!goto 219
+!goto 218
 !endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 !if(totstr.gt.1.and.ovopt.eq.vpt) then
@@ -19277,7 +12113,7 @@ endif
 !do i=1,totstr
 !ovlp=ovlp*D(i)
 !enddo
-!if(1.0-ovlp.gt.ovval)goto 219
+!if(1.0-ovlp.gt.ovval)goto 218
 !endif
 !m21=m21+1
 !
@@ -19287,16 +12123,19 @@ endif
 !i7=i7+1
 !
 !do i3=1,nae
-!str2(i7,i3)=str3(mn1,i3)
+!str2(i7,i3)=str3(m1,i3)
 !enddo
-!col(i7)=mn1
+!col(i7)=m1
 !!print*,'i7',i7,m10
 !
-!qq(i7)=q_fac2(mn1)
-!qq1(i7)=str_quality_1(mn1)
-!qq2(i7)=str_quality_2(mn1)
-!bondq4(i7)=bondq(mn1)
+!qq(i7)=q_fac2(m1)
+!qq1(i7)=str_quality_1(m1)
+!qq2(i7)=str_quality_2(m1)
+!bondq4(i7)=bondq(m1)
 !
+!
+!i18i7=i7
+!m18m21=m21
 !if(i7.eq.strn)then
 !ttqlty=0
 !tqlty=0
@@ -19308,13 +12147,17 @@ endif
 !bqlty=bqlty+bondq4(m119)
 !sqlty=sqlty+qq2(m119)
 !enddo
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!if(ttqlty.le.ttqlty0)then
 !set_number=set_number+1
+!mns=mns+1
 !if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
 !if(nfset.eq.1.and.set_number.gt.1)then
 !if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
 !endif
+!
+!
 !
 !do m119=1,i7
 !
@@ -19332,7 +12175,20 @@ endif
 !
 !enddo
 !
-!if(nfset.eq.3)call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!call bond_det_vec(nl,i7,str2,bnd_std)
+!
+!!do i=1,nbd
+!!if(bdet(i).eq.int(bond_det))goto 779
+!!enddo
+!!nbd=nbd+1
+!!bdet(nbd)=int(bond_det)
+!!779 write(9,913)'bond_vec_det =',bond_det,Ifail,Ifailn
+!!if(nfset.eq.3)call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!
+!if(nfset.eq.3)then
+!Rumwrite=1
+!call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!endif
 !if(ovopt.eq.1) then
 !call MatLDR('str',col,i7,D)
 !
@@ -19342,26 +12198,288 @@ endif
 !enddo
 !write(9,912)'Overlap of this set of the structures =',1.0-ovlp
 !endif
-!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!
+!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!
+!if(Rid.eq.0)write(9,921)'quality value',ttqlty,'bnd_std',bnd_std
 !if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
 !bqlty=0
 !write(9,*),'Set_number=',set_number
 !write(9,*),'    '
 !endif
 !if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-!goto 219
+!if(mns.eq.max_set)then
+!if(u1.eq.mset-1) goto 316
+!close(9+u1)
+!mns=0
+!u1=u1+1
+!if(u1.le.9)then
+!write(a,'(I1)')u1
+!endif
+!if(u1.gt.9.and.u1.lt.100)then
+!write(a,'(I2)')u1
+!endif
+!if(u1.gt.99.and.u1.lt.1000)then
+!write(a,'(I3)')u1
+!endif
+!if(u1.eq.1000)then
+!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
+!sets. Please increase the limit'
+!goto 316
+!endif
+!outfile='structure_set_'//trim(a)//trim('.dat')
+!open(unit=9+u1,file=outfile,status='unknown')
 !endif
 !
-!i20i7=i7
-!m20m21=m21
+!!do m20=i18i7+1,i7
+!!strno(m20)=0
+!!do i8=1,15
+!!str2(m20,i8)=0
+!!enddo
+!!enddo
+!!
+!!i7=i18i7
+!!totstr=i18i7
+!!m21=m18m21
 !
-!!do m9=1+qstrn(10),qstrn(11)
-!do mn2=mn1+1,ncqs
+!goto 218
+!endif
 !
-!!!!! quality 10 structures !!!!!!!
-!write(*,*)'21 21 21 21 21 21 21 '
-!
-!
+!!i19i7=i7
+!!m19m21=m21
+!!
+!!!do m9=1+qstrn(10),qstrn(11)
+!!do mn1=m1+1,ncqs
+!!
+!!!!!! quality 10 structures !!!!!!!
+!!write(*,*)'20 20 20 20 20 20'
+!!
+!!
+!!do m20=i19i7+1,i7
+!!strno(m20)=0
+!!do i8=1,15
+!!str2(m20,i8)=0
+!!enddo
+!!enddo
+!!
+!!i7=i19i7
+!!totstr=i19i7
+!!m21=m19m21
+!!
+!!
+!!
+!!!do m19=m9,ncqs
+!!
+!!
+!!!if(q_fac2(m19).ne.q_fac2(m9))goto 92
+!!totstr=totstr+1
+!!strno(totstr)=mn1
+!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!if(Ifail.eq.1)then
+!!goto 219
+!!endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+!!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!!call MatLDR('str',strno,totstr,D)
+!!
+!!ovlp=1.0
+!!do i=1,totstr
+!!ovlp=ovlp*D(i)
+!!enddo
+!!if(1.0-ovlp.gt.ovval)goto 219
+!!endif
+!!m21=m21+1
+!!
+!!if(m21.gt.strn) goto 316
+!!
+!!
+!!i7=i7+1
+!!
+!!do i3=1,nae
+!!str2(i7,i3)=str3(mn1,i3)
+!!enddo
+!!col(i7)=mn1
+!!!print*,'i7',i7,m10
+!!
+!!qq(i7)=q_fac2(mn1)
+!!qq1(i7)=str_quality_1(mn1)
+!!qq2(i7)=str_quality_2(mn1)
+!!bondq4(i7)=bondq(mn1)
+!!
+!!if(i7.eq.strn)then
+!!ttqlty=0
+!!tqlty=0
+!!bqlty=0
+!!sqlty=0
+!!do m119=1,i7
+!!ttqlty=ttqlty+qq(m119)
+!!tqlty=tqlty+qq1(m119)
+!!bqlty=bqlty+bondq4(m119)
+!!sqlty=sqlty+qq2(m119)
+!!enddo
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!!set_number=set_number+1
+!!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!!if(nfset.eq.1.and.set_number.gt.1)then
+!!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!!endif
+!!
+!!do m119=1,i7
+!!
+!!if(niao.eq.0)then
+!!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!!endif
+!!if(niao.gt.1)then
+!!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!!endif
+!!if(niao.eq.1)then
+!!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!!endif
+!!
+!!
+!!
+!!enddo
+!!
+!!if(nfset.eq.3)call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!!if(ovopt.eq.1) then
+!!call MatLDR('str',col,i7,D)
+!!
+!!ovlp=1.0
+!!do i=1,i7
+!!ovlp=ovlp*D(i)
+!!enddo
+!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
+!!endif
+!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!!bqlty=0
+!!write(9,*),'Set_number=',set_number
+!!write(9,*),'    '
+!!endif
+!!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!!goto 219
+!!endif
+!!
+!!i20i7=i7
+!!m20m21=m21
+!!
+!!!do m9=1+qstrn(10),qstrn(11)
+!!do mn2=mn1+1,ncqs
+!!
+!!!!!! quality 10 structures !!!!!!!
+!!write(*,*)'21 21 21 21 21 21 21 '
+!!
+!!
+!!!do m20=i20i7+1,i7
+!!!strno(m20)=0
+!!!do i8=1,15
+!!!str2(m20,i8)=0
+!!!enddo
+!!!enddo
+!!!
+!!!i7=i20i7
+!!!totstr=i20i7
+!!!m21=m20m21
+!!
+!!
+!!
+!!!do m19=m9,ncqs
+!!
+!!
+!!!if(q_fac2(m19).ne.q_fac2(m9))goto 92
+!!totstr=totstr+1
+!!strno(totstr)=mn2
+!!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
+!!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
+!!if(Ifail.eq.1)then
+!!goto 220
+!!endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+!!if(totstr.gt.1.and.ovopt.eq.vpt) then
+!!call MatLDR('str',strno,totstr,D)
+!!
+!!ovlp=1.0
+!!do i=1,totstr
+!!ovlp=ovlp*D(i)
+!!enddo
+!!if(1.0-ovlp.gt.ovval)goto 220
+!!endif
+!!m21=m21+1
+!!
+!!if(m21.gt.strn) goto 316
+!!
+!!
+!!i7=i7+1
+!!
+!!do i3=1,nae
+!!str2(i7,i3)=str3(mn2,i3)
+!!enddo
+!!col(i7)=mn2
+!!!print*,'i7',i7,m10
+!!
+!!qq(i7)=q_fac2(mn2)
+!!qq1(i7)=str_quality_1(mn2)
+!!qq2(i7)=str_quality_2(mn2)
+!!bondq4(i7)=bondq(mn2)
+!!
+!!if(i7.eq.strn)then
+!!ttqlty=0
+!!tqlty=0
+!!bqlty=0
+!!sqlty=0
+!!do m119=1,i7
+!!ttqlty=ttqlty+qq(m119)
+!!tqlty=tqlty+qq1(m119)
+!!bqlty=bqlty+bondq4(m119)
+!!sqlty=sqlty+qq2(m119)
+!!enddo
+!!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
+!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
+!!set_number=set_number+1
+!!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
+!!if(nfset.eq.1.and.set_number.gt.1)then
+!!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
+!!endif
+!!
+!!do m119=1,i7
+!!
+!!if(niao.eq.0)then
+!!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
+!!endif
+!!if(niao.gt.1)then
+!!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
+!!endif
+!!if(niao.eq.1)then
+!!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
+!!endif
+!!
+!!
+!!
+!!enddo
+!!
+!!if(nfset.eq.3)call Rumer_set_id(str2,i7,nl,Rid,set_num)
+!!if(ovopt.eq.1) then
+!!call MatLDR('str',col,i7,D)
+!!
+!!ovlp=1.0
+!!do i=1,i7
+!!ovlp=ovlp*D(i)
+!!enddo
+!!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
+!!endif
+!!if(Rid.eq.0)write(9,910)'quality value',ttqlty
+!!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
+!!bqlty=0
+!!write(9,*),'Set_number=',set_number
+!!write(9,*),'    '
+!!endif
+!!if(set_number.eq.1000)goto 316
+!!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
+!!goto 220
+!!
 !!do m20=i20i7+1,i7
 !!strno(m20)=0
 !!do i8=1,15
@@ -19372,182 +12490,75 @@ endif
 !!i7=i20i7
 !!totstr=i20i7
 !!m21=m20m21
+!!
+!!endif
+!!
+!!
+!!!if(noq.eq.11)goto 210
+!!220 enddo
+!!219 enddo
+!218 enddo
+!217 enddo
+!216 enddo
+!215 enddo
+!214 enddo
+!213 enddo
+!212 enddo
+!211 enddo
+!210 enddo
+!209 enddo
+!208 enddo
+!207 enddo
+!206 enddo
+!205 enddo
+!204 enddo
+!203 enddo
+!202 enddo
+!201 enddo
+!200 enddo
 !
 !
-!
-!!do m19=m9,ncqs
-!
-!
-!!if(q_fac2(m19).ne.q_fac2(m9))goto 92
-!totstr=totstr+1
-!strno(totstr)=mn2
-!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!call check_ind(str3,totstr,nl,ncqs,strno,Ifailn,ffvec2)
-!if(Ifail.eq.1)then
-!goto 220
-!endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!call MatLDR('str',strno,totstr,D)
-!
-!ovlp=1.0
-!do i=1,totstr
-!ovlp=ovlp*D(i)
-!enddo
-!if(1.0-ovlp.gt.ovval)goto 220
-!endif
-!m21=m21+1
-!
-!if(m21.gt.strn) goto 316
+!!900 format(25I4)
+!!901 format(I3,x,I1,a,I1,x,25I4)
+!!909 format(I3,x,I1,a,I1,x,25I4)
 !
 !
-!i7=i7+1
+!900 format(I3,2x,I3,2x,I3,2x,I3,x,a,x,25I4)
+!901 format(I3,2x,I3,2x,I3,2x,I3,x,a,x,I2,a,I2,x,25I4)
+!909 format(I3,2x,I3,2x,I3,2x,I3,x,a,x,I3,I3,x,25I4)
+!910 format(a,2x,I5)
+!920 format(a,2x,I5,2x,a,2x,100I5)
+!921 format(a,2x,I5,2x,a,2x,F10.3)
+!911 format(15x,I3,7x,I3,7x,I3)
+!912 format(a,3x,F10.3)
+!913 format(a,3x,F10.3,2X,2I3)
 !
-!do i3=1,nae
-!str2(i7,i3)=str3(mn2,i3)
-!enddo
-!col(i7)=mn2
-!!print*,'i7',i7,m10
+!231 format(50I5)
+!232 format(a,300I3)
 !
-!qq(i7)=q_fac2(mn2)
-!qq1(i7)=str_quality_1(mn2)
-!qq2(i7)=str_quality_2(mn2)
-!bondq4(i7)=bondq(mn2)
+!close(21)
 !
-!if(i7.eq.strn)then
-!ttqlty=0
-!tqlty=0
-!bqlty=0
-!sqlty=0
-!do m119=1,i7
-!ttqlty=ttqlty+qq(m119)
-!tqlty=tqlty+qq1(m119)
-!bqlty=bqlty+bondq4(m119)
-!sqlty=sqlty+qq2(m119)
-!enddo
-!write(*,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!set_number=set_number+1
-!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!if(nfset.eq.1.and.set_number.gt.1)then
-!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!endif
+!open(unit=121,file='script10',status='unknown')
+!write(121,111)'rm -rf','Rumer_Sets.dat'
+!close(121)
+!CALL SYSTEM ("chmod +x script10 ")
+!CALL SYSTEM ("./script10 ")
+!CALL SYSTEM ("rm script10 ")
+!111 format(a,x,a)
 !
-!do m119=1,i7
-!
-!if(niao.eq.0)then
-!write(9,900),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',(str2(m119,m20),m20=1,nae)
-!endif
-!if(niao.gt.1)then
-!write(9,901),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,':',niao,(str2(m119,m20),m20=1,nae)
-!endif
-!if(niao.eq.1)then
-!write(9,909),qq1(m119),bondq4(m119),qq2(m119),qq(m119),'|',1,1,(str2(m119,m20),m20=1,nae)
-!endif
-!
-!
-!
-!enddo
-!
-!if(nfset.eq.3)call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!if(ovopt.eq.1) then
-!call MatLDR('str',col,i7,D)
-!
-!ovlp=1.0
+!print*,'exit write_xmi_new_2',iter_counter
+!!316 write(9,231)(bdet(i),i=1,nbd)
+!316 if(nfset.eq.0)then
 !do i=1,i7
-!ovlp=ovlp*D(i)
-!enddo
-!write(9,912)'Overlap of this set of the structures =',1.0-ovlp
-!endif
-!if(Rid.eq.0)write(9,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!bqlty=0
-!write(9,*),'Set_number=',set_number
-!write(9,*),'    '
-!endif
-!if(set_number.eq.1000)goto 316
-!if(nfset.eq.0.and.ttqlty.le.ttqlty0) goto 316
-!goto 220
-!
-!do m20=i20i7+1,i7
-!strno(m20)=0
-!do i8=1,15
-!str2(m20,i8)=0
+!nstr7=nstr7+1
+!do j=1,nae
+!str5(nstr7,j)=str2(i,j)
 !enddo
 !enddo
-!
-!i7=i20i7
-!totstr=i20i7
-!m21=m20m21
-!
 !endif
+!return
 !
-!
-!!if(noq.eq.11)goto 210
-!220 enddo
-!219 enddo
-218 enddo
-217 enddo
-216 enddo
-215 enddo
-214 enddo
-213 enddo
-212 enddo
-211 enddo
-210 enddo
-209 enddo
-208 enddo
-207 enddo
-206 enddo
-205 enddo
-204 enddo
-203 enddo
-202 enddo
-201 enddo
-200 enddo
-
-
-!900 format(25I4)
-!901 format(I3,x,I1,a,I1,x,25I4)
-!909 format(I3,x,I1,a,I1,x,25I4)
-
-
-900 format(I3,2x,I3,2x,I3,2x,I3,x,a,x,25I4)
-901 format(I3,2x,I3,2x,I3,2x,I3,x,a,x,I2,a,I2,x,25I4)
-909 format(I3,2x,I3,2x,I3,2x,I3,x,a,x,I3,I3,x,25I4)
-910 format(a,2x,I5)
-920 format(a,2x,I5,2x,a,2x,100I5)
-921 format(a,2x,I5,2x,a,2x,F10.3)
-911 format(15x,I3,7x,I3,7x,I3)
-912 format(a,3x,F10.3)
-913 format(a,3x,F10.3,2X,2I3)
-
-231 format(50I5)
-232 format(a,300I3)
-
-close(21)
-
-open(unit=121,file='script10',status='unknown')
-write(121,111)'rm -rf','Rumer_Sets.dat'
-close(121)
-CALL SYSTEM ("chmod +x script10 ")
-CALL SYSTEM ("./script10 ")
-CALL SYSTEM ("rm script10 ")
-111 format(a,x,a)
-
-print*,'exit write_xmi_new_2',iter_counter
-!316 write(9,231)(bdet(i),i=1,nbd)
-316 if(nfset.eq.0)then
-do i=1,i7
-nstr7=nstr7+1
-do j=1,nae
-str5(nstr7,j)=str2(i,j)
-enddo
-enddo
-endif
-return
-
-end subroutine write_xmi_new_2
+!end subroutine write_xmi_new_2
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 subroutine bond_det_vec(nl,str_num,str3,bnd_std)
@@ -21013,7 +14024,7 @@ call quality_factor(nl,astr,m4,quality_fac,str_quality_1,str_quality_2,bondq)
 !call symmetry_cal(nl,str1,str1_cnt,symsc,symq,nssym)
 
 
-write(7,*),'all',m4,' structures are permisible among below '
+write(7,*)'all',m4,' structures are permisible among below '
 !n=0
 !do ijk=nssym,1,-1
 do m8=1,m4
@@ -21021,7 +14032,7 @@ do m8=1,m4
 !n=n+1
 if(rumer(m8)*rumer_rad(m8).eq.1)rumstr='R'
 if(rumer(m8)*rumer_rad(m8).eq.0)rumstr='-'
-write(7,301),'str',m8,')','[',str_quality_1(m8),',',str_quality_2(m8),']','{',quality_fac(m8),'}',&
+write(7,301)'str',m8,')','[',str_quality_1(m8),',',str_quality_2(m8),']','{',quality_fac(m8),'}',&
 rumstr,(astr(m8,m9),m9=1,nae)
 !write(7,305)(fvec(m8,m9),m9=1,ndet)
 !write(*,305)(str1(m8,m9),m9=1,nae)
@@ -21041,15 +14052,15 @@ bqlty=0
 sqlty=0
 do m8=1,m4
 if(niao.eq.0)then
-write(9,900),str_quality_1(m8),bondq(m8),str_quality_2(m8),'|',(astr(m8,m9),m9=1,nae)
+write(9,900)str_quality_1(m8),bondq(m8),str_quality_2(m8),'|',(astr(m8,m9),m9=1,nae)
 endif
 !if(niao.gt.1.and.nnnatom.ne.0)then
 if(niao.gt.1)then
-write(9,901),str_quality_1(m8),bondq(m8),str_quality_2(m8),'|',1,':',niao,(astr(m8,m9),m9=1,nae)
+write(9,901)str_quality_1(m8),bondq(m8),str_quality_2(m8),'|',1,':',niao,(astr(m8,m9),m9=1,nae)
 endif
 !if(niao.eq.1.and.nnnatom.ne.0)then
 if(niao.eq.1)then
-write(9,901),str_quality_1(m8),bondq(m8),str_quality_2(m8),'|',1,1,(astr(m8,m9),m9=1,nae)
+write(9,901)str_quality_1(m8),bondq(m8),str_quality_2(m8),'|',1,1,(astr(m8,m9),m9=1,nae)
 endif
 !if(niao.ne.0.and.nnnatom.eq.0)then
 !write(9,909),quality_fac(m8),1,':',niao,(astr(m8,m9),m9=1,nae)
@@ -21059,7 +14070,7 @@ bqlty=bqlty+bondq(m8)
 sqlty=sqlty+str_quality_2(m8)
 enddo
 write(9,914)'qualities:','intra_bond','sym_break','nn_bond'
-write(9,915),tqlty,sqlty,bqlty
+write(9,915)tqlty,sqlty,bqlty
 
 900 format(I3,x,I3,x,I3,x,a,3x,25I4)
 901 format(I3,x,I3,x,I3,x,a,3x,I1,a,I2,x,25I4)
@@ -21194,7 +14205,7 @@ endif
 
 !elporb=nae-nl*2
 375 call wigner(elporb,wig2)
-write(7,*),wig2,' structures are permisible among below ',str1_cnt
+write(7,*)wig2,' structures are permisible among below ',str1_cnt
 if(nl.ne.0)write(7,*)'                 lone pair =',(lps(i3),i3=1,lp_cnt)
 
 call rumer_structures(nl,str1,str1_cnt,rumer,rumer_rad)
@@ -21211,7 +14222,7 @@ do m8=1,str1_cnt
 !write(7,*),rumer(m8),rumer_rad(m8),rumer(m8)*rumer_rad(m8)
 if(rumer(m8)*rumer_rad(m8).eq.1)rumstr='R'
 if(rumer(m8)*rumer_rad(m8).eq.0)rumstr='-'
-write(7,301),'str',m8,')','[',str_quality_1(m8),',',str_quality_2(m8),']','{',quality_fac(m8),'}',&
+write(7,301)'str',m8,')','[',str_quality_1(m8),',',str_quality_2(m8),']','{',quality_fac(m8),'}',&
 rumstr,(str1(m8,m9),m9=1,nae)
 !write(7,305)(fvec(m8,m9),m9=1,ndet)
 !write(*,305)(str1(m8,m9),m9=1,nae)
@@ -21249,29 +14260,29 @@ print*,'sourav1'
 !!!!!!!!!!!!!!!! Rumer Structures selection Ends !!!!!!!!!!!!!!!!!!!!!
 !***********************************************************************
 !***********************************************************************
-!!!!!!!!!!!!!!!! Ionic Structures selection for CHEM. QUAL. Starts !!!!!!!!!!!!!!!!!!
-!***********************************************************************
-
-!print*,'******** flg_ion,flg_cov',flg_ion,flg_cov
-if(flg1.eq.0.and.flg_ion.eq.1.and.flg_cov.eq.0.and.nfset.ne.0)then
-call quality_factor(nl,str1,str1_cnt,quality_fac,str_quality_1,str_quality_2,bondq)
-
-!do i=1,str1_cnt
-!write(*,231),(str1(i,j),j=1,nae)
-!enddo
-
-!call vector_rep(nl,str1,str1_cnt,fvec)
-call qult_str_arrange(nl,str1,str1_cnt,quality_fac,str2,q_fac)
-!print*,'Ionic Structures selection'
-call vector_rep(nl,str2,str1_cnt,fvec)
-if(ovopt.eq.1)call overlap(nl,str2,str1_cnt)
-call main_bond_cal(nl,str2,str1_cnt,mbondq)
-call write_xmi_new_2(nl,wig2,str2,str1_cnt,q_fac,quality_fac,fvec)
-!call write_xmi_new(nl,wig2,str2,str1_cnt,q_fac,tqlty)
-!call write_xmi2(nl,wig2,str2,str1_cnt,q_fac,tqlty)
-!print*,'tqlty',tqlty
-
-endif
+!!!!!!!!!!!!!!!!! Ionic Structures selection for CHEM. QUAL. Starts !!!!!!!!!!!!!!!!!!
+!!***********************************************************************
+!
+!!print*,'******** flg_ion,flg_cov',flg_ion,flg_cov
+!if(flg1.eq.0.and.flg_ion.eq.1.and.flg_cov.eq.0.and.nfset.ne.0)then
+!call quality_factor(nl,str1,str1_cnt,quality_fac,str_quality_1,str_quality_2,bondq)
+!
+!!do i=1,str1_cnt
+!!write(*,231),(str1(i,j),j=1,nae)
+!!enddo
+!
+!!call vector_rep(nl,str1,str1_cnt,fvec)
+!call qult_str_arrange(nl,str1,str1_cnt,quality_fac,str2,q_fac)
+!!print*,'Ionic Structures selection'
+!call vector_rep(nl,str2,str1_cnt,fvec)
+!if(ovopt.eq.1)call overlap(nl,str2,str1_cnt)
+!call main_bond_cal(nl,str2,str1_cnt,mbondq)
+!!call write_xmi_new_2(nl,wig2,str2,str1_cnt,q_fac,quality_fac,fvec)
+!!call write_xmi_new(nl,wig2,str2,str1_cnt,q_fac,tqlty)
+!!call write_xmi2(nl,wig2,str2,str1_cnt,q_fac,tqlty)
+!!print*,'tqlty',tqlty
+!
+!endif
 
 !***********************************************************************
 !!!!!!!!!!!!!!!! Ionic Structures selection for CHEM. QUAL. Ends !!!!!!!!!!!!!!!!!!
@@ -21305,12 +14316,12 @@ call qult_str_arrange(nl,str1,str1_cnt,quality_fac,str2,q_fac)
 !call symm_str_arrange(str1,str1_cnt,quality_fac,str2,symqq,nssym,qulsymm,tnqs,q_fac)
 !print*,'Covalent Structures selection symm'
 do i=1,str1_cnt
-write(*,231),(str2(i,j),j=1,nae)
+write(*,231)(str2(i,j),j=1,nae)
 !print*,'str2',quality_fac(i),bondq(i),q_fac(i)
 enddo
 
 call vector_rep(nl,str2,str1_cnt,fvec)
-if(ovopt.eq.1)call overlap(nl,str2,str1_cnt)
+!if(ovopt.eq.1)call overlap(nl,str2,str1_cnt)
 !call write_symm_xmi(nl,wig2,str2,str1_cnt,q_fac)
 call write_symm_xmi_new(nl,wig2,str2,str1_cnt,q_fac)
 !call write_xmi_new_2(nl,wig2,str2,str1_cnt,q_fac,quality_fac,fvec)
@@ -21337,10 +14348,10 @@ call vector_rep(nl,str2,str1_cnt,fvec)
 !print*,'vector_rep_out'
 !call write_xmi_new_2(nl,wig2,str1,str1_cnt,q_fac1,quality_fac,fvec)
 print*,'ovopt',ovopt,niao
-if(ovopt.eq.1)call overlap(nl,str2,str1_cnt)
+!if(ovopt.eq.1)call overlap(nl,str2,str1_cnt)
 call main_bond_cal(nl,str2,str1_cnt,mbondq)
 print*,'niao:str_sel',niao
-call write_xmi_new_2(nl,wig2,str2,str1_cnt,q_fac,quality_fac,fvec)
+!call write_xmi_new_2(nl,wig2,str2,str1_cnt,q_fac,quality_fac,fvec)
 
 endif
 
@@ -21364,7 +14375,7 @@ call qult_str_arrange(nl,str1,str1_cnt,quality_fac,str2,q_fac)
 !print*,'vector_rep_out'
 !call write_xmi_new_2(nl,wig2,str1,str1_cnt,q_fac1,quality_fac,fvec)
 print*,'ovopt',ovopt,niao
-if(ovopt.eq.1)call overlap(nl,str2,str1_cnt)
+!if(ovopt.eq.1)call overlap(nl,str2,str1_cnt)
 call main_bond_cal(nl,str2,str1_cnt,mbondq)
 call check_str_bond(nl,wig2,str2,str1_cnt)
 print*,'niao:str_sel',niao
@@ -21387,9 +14398,9 @@ sqlty1=sqlty1+sqlty
 if(nfset.eq.1.or.flg1.eq.1) then
 !write(9,910)'intra bond quality','sym break quality','nnbond quality'
 write(9,910)'qualities:',' intra_bond','sym_break','nn_bond'
-write(9,911),tqlty1,sqlty1,bqlty1
+write(9,911)tqlty1,sqlty1,bqlty1
 !write(9,*),'Total Quality = ',tqlty1
-write(9,*),'    '
+write(9,*)'    '
 endif
 
 910 format(a,x,a,x,a,x,a)
@@ -22192,3256 +15203,6 @@ enddo
       return
       End
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!subroutine write_symm_xmi(nl,strn,str3,ncqs,q_fac2)
-!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!use commondat
-!implicit none
-!common/quality/str_quality_1,str_quality_2,bondq,tqlty,bqlty,sqlty,tnqs,nssym,qulsym,symq,&
-!sigsym,tnqs_sig
-!common/str/str5,nstr7
-!
-!integer::nl,strn,ncqs,tostr,initstr,i,i1,i2,i3,i4,i5,i6,i7,i8,i9,m119,m18,m19,m20,m21,m23,m24,count&
-!,qul(100),nqul,j,jj,jjj,fg,flg,ii5,m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15,m16,m17,x,y,strs&
-!,ymd,alstr
-!integer::i5up16,i16i7,m16m21,i5up15,i15i7,m15m21,i5up14,i14i7,m14m21,i5up13,i13i7,m13m21,i5up12,i12i7,m12m21,&
-!i5up11,i11i7,m11m21,i5up10,i10i7,m10m21,i5up9,i9i7,m9m21,i5up8,i8i7,m8m21,i5up7,i7i7,m7m21,i5up6,i6i7,m6m21,&
-!i5up5,i5i7,m5m21,i5up4,i4i7,m4m21,i5up3,i3i7,m3m21,i5up2,i2i7,m2m21,i5up1,i1i7,m1m21,i5up17,i17i7,m17m21
-!integer::str3(15000,20),q_fac2(15000),finalvec(15000),strset(1000),col(1000),sigsym(15000),tnqs_sig,&
-!ffvec2(15000,1000),bondq(15000),bondq4(15000),nqset(15000),str5(2000,20),nstr7,&
-!tndet,totstr,Ifail,indpnt,strno(1000),str_quality_1(15000),str_quality_2(15000),ttqlty0,ttqlty&
-!,tqlty,bqlty,sqlty,hqlty,tnqs,nssym,qulsym(15000),symq(15000),set_number,ttqlty1,det_inv,ttqlty2,ttqlty3
-!integer::rumer(15000),rumer_rad(15000),quality_fac(15000),rumset,u1,max_set,mns
-!!integer,dimension(:),allocatable::qq1,qq2,qq
-!integer::qq1(5000),qq2(5000),qq(5000),str2(2000,20),Rid,set_num(100)
-!real*8::ovlp
-!character(10)::dd,a
-!Double Precision::D(1000)
-!character(len=100)::outfile
-!
-!print*,'enter write_symm_xmi'
-!mns=0
-!u1=1
-!max_set=75000
-!
-!if(nfset.eq.3.or.nfset.eq.5)then
-!rumset=0
-!call rumer_structures(nl,str3,ncqs,rumer,rumer_rad)
-!call write_rumer_xmi(nl,str3,ncqs,rumer,rumer_rad,quality_fac)
-!endif
-!
-!set_number=0
-!bqlty=0
-!tqlty=0
-!sqlty=0
-!hqlty=0
-!indpnt=2
-!!ovlpval=1.0
-!if(noq0.gt.strn)then
-!ttqlty0=noq0
-!else
-!ttqlty0=strn+noq0
-!endif
-!ttqlty1=strn+noq1
-!ttqlty2=strn+noq2
-!ttqlty3=strn+noq3
-!
-!do i=1,ncqs
-!write(*,231),i,(str3(i,j),j=1,nae),q_fac2(i),str_quality_1(i),str_quality_2(i),bondq(i)
-!enddo
-!!if(indpnt.eq.1)then
-!!call vector_rep(nl,str3,ncqs,ffvec2)
-!!endif
-!!print*,'sou1',strn,ndet,nl,ncqs
-!!do i1=1,ncqs
-!!print*,(ffvec2(i1,i),i=1,ndet)
-!!enddo
-!!call quality_factor(nl,str3,ncqs,q_fac2,q_1,q_2)
-!jj=1
-!do m19=1,ncqs
-!!print*,'q_fac2',q_fac2(m19)
-!if(m19.eq.1)qul(1)=q_fac2(1)
-!j=jj
-!do i=1,j
-!if(qul(i).eq.q_fac2(m19))goto 373
-!enddo
-!jj=jj+1
-!qul(i)=q_fac2(m19)
-!!print*,qul(i)
-!373 enddo
-!nqul=jj
-!!print*,'ncqs',ncqs
-!
-!!call date_and_time(dd)
-!!read (dd,'(I8)') ymd
-!!if(ymd.eq.20230516)stop
-!
-!do i=1,nqul
-!jjj=0
-!jj=0
-!do m19=1,ncqs
-!!print*,qul(i),q_fac2(m19)
-!if(qul(i).eq.q_fac2(m19))then
-!jjj=jjj+1
-!jj=m19
-!endif
-!enddo
-!nqset(i)=jjj
-!strset(i)=jj
-!print*,nqset(i),strset(i)
-!enddo
-!
-!flg=0
-!totstr=0
-!i7=0
-!m21=0
-!i5=ndet
-!do i8=1,1000
-!finalvec(i8)=0
-!enddo
-!do m19=1,10000
-!do m18=1,15
-!str2(m19,m18)=0
-!enddo
-!enddo
-!
-!
-!i5up1=i5
-!i1i7=i7
-!m1m21=m21
-!
-!
-!do m1=1,nqul
-!
-!  do i=i5up1+1,i5
-!  finalvec(i)=0
-!  enddo
-!
-!  do m19=i1i7+1,i7
-!  strno(m19)=0
-!    do i8=1,15
-!    str2(m19,i8)=0
-!    enddo
-!  enddo
-!
-!i7=i1i7
-!totstr=i1i7
-!m21=m1m21
-!
-!jj=0
-!
-!flg=0
-!
-!
-!if(nqset(m1).gt.strn)goto 701
-!
-!
-! if(m1.eq.1)then
-!  do i=1,strset(m1)
-!   totstr=totstr+1
-!   strno(totstr)=i
-!  enddo
-! else
-!  do i=strset(m1-1)+1,strset(m1)
-!   totstr=totstr+1
-!   strno(totstr)=i
-!  enddo
-! endif
-!if(totstr.gt.strn)goto 701
-!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!
-!if(Ifail.eq.1)goto 701
-! if(totstr.gt.1.and.ovopt.eq.vpt) then
-!   call MatLDR('str',strno,totstr,D)
-!   ovlp=1.0
-!  do i=1,totstr
-!   ovlp=ovlp*D(i)
-!  enddo
-!  if(1.0-ovlp.gt.ovval)goto 701
-! endif
-!
-!
-!
-! m21=m21+nqset(m1)
-! if(m21.gt.strn) goto 701
-!
-!
-! if(m1.eq.1)strs=0
-!  if(m1.ne.1)strs=strset(m1-1)
-!
-! do m19=strs+1,strset(m1)
-!   if(q_fac2(m19).ne.qul(m1))goto 601
-!   i7=i7+1
-! do i3=1,nae
-!   str2(i7,i3)=str3(m19,i3)
-! enddo
-!  col(i7)=m19
-!  qq(i7)=q_fac2(m19)
-!  qq1(i7)=str_quality_1(m19)
-!  qq2(i7)=str_quality_2(m19)
-!  bondq4(i7)=bondq(m19)
-!  flg=1
-!  count=1
-! 601 enddo
-! if(i7.eq.strn) then
-!   ttqlty=0
-!   tqlty=0
-!   bqlty=0
-!   sqlty=0
-! do m119=1,i7
-!  ttqlty=ttqlty+qq(m119)
-! enddo
-! if(ttqlty.le.ttqlty0)then
-!  mns=mns+1
-!  set_number=set_number+1
-!  if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!  if(nfset.eq.1.and.set_number.gt.1)then
-!   if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!  endif
-!
-!do m19=1,i7
-!if(niao.eq.0)then
-!write(9+u1,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!endif
-!if(niao.gt.1)then
-!write(9+u1,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!endif
-!if(niao.eq.1)then
-!write(9+u1,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!endif
-!enddo
-!!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.eq.3)then
-!Rumwrite=1
-!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!endif
-!
-!if(ovopt.eq.1) then
-!call MatLDR('str',col,i7,D)
-!
-!ovlp=1.0
-!do i=1,i7
-!ovlp=ovlp*D(i)
-!enddo
-!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-!endif
-!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!bqlty=0
-!write(9+u1,*),'Set_number=',set_number
-!write(9+u1,*),'    '
-!endif
-!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!'ovval',1.0-ovlp
-!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!
-!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!write(9,911),tqlty,sqlty,bqlty
-!!bqlty=0
-!!!set_number=set_number+1
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!endif
-!!if(nfset.eq.1) goto 379
-!goto 701
-!endif
-!
-!!endif
-!
-!i5up2=i5
-!i2i7=i7
-!m2m21=m21
-!
-!do m2=m1+1,nqul
-!
-!do i=i5up2+1,i5
-!finalvec(i)=0
-!enddo
-!
-!do m19=i2i7+1,i7
-!strno(m19)=0
-!do i8=1,15
-!str2(m19,i8)=0
-!enddo
-!enddo
-!
-!i7=i2i7
-!totstr=i2i7
-!m21=m2m21
-!
-!jj=0
-!
-!flg=0
-!!do m19=strset(m2-1)+1,strset(m2)
-!
-!if(nqset(m2).gt.strn)goto 702
-!
-!do i=strset(m2-1)+1,strset(m2)
-!totstr=totstr+1
-!strno(totstr)=i
-!enddo
-!if(totstr.gt.strn)goto 702
-!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!write(9,*),'ifail',ifail,det_inv
-!
-!if(Ifail.eq.1) goto 702
-!!do i=strset(m2-1)+1,strset(m2)
-!!strno(totstr)=0
-!!totstr=totstr-1
-!!enddo
-!!goto 702
-!!endif
-!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!call MatLDR('str',strno,totstr,D)
-!
-!!print*,'DDD',(D(i),i=1,totstr)
-!ovlp=1.0
-!do i=1,totstr
-!ovlp=ovlp*D(i)
-!enddo
-!!print*,'ovval',1.0-ovlp,ovlp
-!if(1.0-ovlp.gt.ovval)goto 702
-!endif
-!m21=m21+nqset(m2)
-!if(m21.gt.strn) goto 702
-!!print*,'sourav_xmi_sym'
-!
-!
-!do m19=strset(m2-1)+1,strset(m2)
-!if(q_fac2(m19).ne.qul(m2))goto 602
-!i7=i7+1
-!do i3=1,nae
-!str2(i7,i3)=str3(m19,i3)
-!enddo
-!col(i7)=m19
-!qq(i7)=q_fac2(m19)
-!qq1(i7)=str_quality_1(m19)
-!qq2(i7)=str_quality_2(m19)
-!bondq4(i7)=bondq(m19)
-!flg=1
-!count=2
-!602 enddo
-!if(i7.eq.strn) then
-!!if(nfset.gt.0)then
-!ttqlty=0
-!tqlty=0
-!bqlty=0
-!sqlty=0
-!do m119=1,i7
-!ttqlty=ttqlty+qq(m119)
-!!tqlty=tqlty+qq1(m119)
-!!bqlty=bqlty+bondq4(m119)
-!!sqlty=sqlty+qq2(m119)
-!enddo
-!!endif
-!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!if(ttqlty.le.ttqlty0)then
-!mns=mns+1
-!set_number=set_number+1
-!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!if(nfset.eq.1.and.set_number.gt.1)then
-!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(9+u1,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!endif
-!
-!do m19=1,i7
-!if(niao.eq.0)then
-!write(9+u1,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!endif
-!if(niao.gt.1)then
-!write(9+u1,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!endif
-!if(niao.eq.1)then
-!write(9+u1,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!endif
-!enddo
-!!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.eq.3)then
-!Rumwrite=1
-!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!endif
-!if(ovopt.eq.1) then
-!call MatLDR('str',col,i7,D)
-!
-!ovlp=1.0
-!do i=1,i7
-!ovlp=ovlp*D(i)
-!enddo
-!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-!endif
-!!write(9,910)'quality value',ttqlty
-!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!write(9,910)'qualities:','
-!!intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!bqlty=0
-!write(9+u1,*),'Set_number=',set_number
-!write(9+u1,*),'    '
-!endif
-!!endif
-!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!'ovval',1.0-ovlp
-!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!if(mns.eq.max_set)then
-!if(u1.eq.mset-1) goto 379
-!close(9+u1)
-!mns=0
-!u1=u1+1
-!if(u1.le.9)then
-!write(a,'(I1)')u1
-!endif
-!if(u1.gt.9.and.u1.lt.100)then
-!write(a,'(I2)')u1
-!endif
-!if(u1.gt.99.and.u1.lt.1000)then
-!write(a,'(I3)')u1
-!endif
-!if(u1.eq.1000)then
-!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!sets. Please increase the limit'
-!goto 379
-!endif
-!outfile='structure_set_'//trim(a)//trim('.dat')
-!open(unit=9+u1,file=outfile,status='unknown')
-!endif
-!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!write(9,911),tqlty,sqlty,bqlty
-!!bqlty=0
-!!!set_number=set_number+1
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!endif
-!!if(nfset.eq.1)goto 379
-!goto 702
-!endif
-!
-!
-!i5up3=i5
-!i3i7=i7
-!m3m21=m21
-!
-!
-!do m3=m2+1,nqul
-!
-!do i=i5up3+1,i5
-!finalvec(i)=0
-!enddo
-!
-!do m19=i3i7+1,i7
-!strno(m19)=0
-!do i8=1,15
-!str2(m19,i8)=0
-!enddo
-!enddo
-!
-!i7=i3i7
-!totstr=i3i7
-!m21=m3m21
-!
-!jj=0
-!
-!flg=0
-!!do m19=strset(m3-1)+1,strset(m3)
-!
-!if(nqset(m3).gt.strn)goto 703
-!
-!do i=strset(m3-1)+1,strset(m3)
-!totstr=totstr+1
-!strno(totstr)=i
-!enddo
-!if(totstr.gt.strn)goto 703
-!do i=1,totstr
-!enddo
-!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!write(9,*),'ifail',ifail,det_inv
-!
-!if(Ifail.eq.1) goto 703
-!!do i=strset(m3-1)+1,strset(m3)
-!!strno(totstr)=0
-!!totstr=totstr-1
-!!enddo
-!!goto 703
-!!endif
-!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!print*,'MatLDR_write_xmi',totstr
-!call MatLDR('str',strno,totstr,D)
-!
-!!print*,'DDD',(D(i),i=1,totstr)
-!ovlp=1.0
-!do i=1,totstr
-!ovlp=ovlp*D(i)
-!enddo
-!!print*,'ovval',1.0-ovlp,ovlp
-!if(1.0-ovlp.gt.ovval)goto 703
-!endif
-!
-!m21=m21+nqset(m3)
-!if(m21.gt.strn) goto 703
-!!print*,'sourav_xmi_sym'
-!
-!!303 enddo
-!
-!
-!do m19=strset(m3-1)+1,strset(m3)
-!if(q_fac2(m19).ne.qul(m3))goto 603
-!i7=i7+1
-!do i3=1,nae
-!str2(i7,i3)=str3(m19,i3)
-!enddo
-!col(i7)=m19
-!qq(i7)=q_fac2(m19)
-!qq1(i7)=str_quality_1(m19)
-!qq2(i7)=str_quality_2(m19)
-!bondq4(i7)=bondq(m19)
-!flg=1
-!count=3
-!603 enddo
-!if(i7.eq.strn) then
-!!if(nfset.gt.0)then
-!ttqlty=0
-!tqlty=0
-!bqlty=0
-!sqlty=0
-!do m119=1,i7
-!ttqlty=ttqlty+qq(m119)
-!!tqlty=tqlty+qq1(m119)
-!!bqlty=bqlty+bondq4(m119)
-!!sqlty=sqlty+qq2(m119)
-!enddo
-!!endif
-!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!if(ttqlty.le.ttqlty0)then
-!mns=mns+1
-!set_number=set_number+1
-!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!if(nfset.eq.1.and.set_number.gt.1)then
-!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(9+u1,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!endif
-!
-!do m19=1,i7
-!if(niao.eq.0)then
-!write(9+u1,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!endif
-!if(niao.gt.1)then
-!write(9+u1,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!endif
-!if(niao.eq.1)then
-!write(9+u1,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!endif
-!enddo
-!!if(nfset.eq.0.or.nfset.gt.1) then
-!if(ovopt.eq.vpt) then
-!call MatLDR('str',col,i7,D)
-!
-!ovlp=1.0
-!do i=1,i7
-!ovlp=ovlp*D(i)
-!enddo
-!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-!endif
-!!write(9,910)'quality value',ttqlty
-!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!write(9,910)'qualities:','
-!!intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!bqlty=0
-!write(9+u1,*),'Set_number=',set_number
-!write(9+u1,*),'    '
-!endif
-!!endif
-!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!'ovval',1.0-ovlp
-!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!if(mns.eq.max_set)then
-!if(u1.eq.mset-1) goto 379
-!close(9+u1)
-!mns=0
-!u1=u1+1
-!if(u1.le.9)then
-!write(a,'(I1)')u1
-!endif
-!if(u1.gt.9.and.u1.lt.100)then
-!write(a,'(I2)')u1
-!endif
-!if(u1.gt.99.and.u1.lt.1000)then
-!write(a,'(I3)')u1
-!endif
-!if(u1.eq.1000)then
-!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!sets. Please increase the limit'
-!goto 379
-!endif
-!outfile='structure_set_'//trim(a)//trim('.dat')
-!open(unit=9+u1,file=outfile,status='unknown')
-!endif
-!
-!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!write(9,911),tqlty,sqlty,bqlty
-!!bqlty=0
-!!!set_number=set_number+1
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!endif
-!!if(nfset.eq.1)goto 379
-!goto 703
-!endif
-!
-!i5up4=i5
-!i4i7=i7
-!m4m21=m21
-!
-!do m4=m3+1,nqul
-!!print*,'m4m4m4',m4
-!do i=i5up4+1,i5
-!finalvec(i)=0
-!enddo
-!do m19=i4i7+1,i7
-!strno(m19)=0
-!do i8=1,15
-!str2(m19,i8)=0
-!enddo
-!enddo
-!i7=i4i7
-!totstr=i4i7
-!m21=m4m21
-!
-!jj=0
-!flg=0
-!!do m19=strset(m4-1)+1,strset(m4)
-!
-!if(nqset(m4).gt.strn)goto 704
-!
-!do i=strset(m4-1)+1,strset(m4)
-!totstr=totstr+1
-!strno(totstr)=i
-!enddo
-!
-!if(totstr.gt.strn)goto 704
-!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!write(9,*),'ifail',ifail,det_inv
-!!print*,'ifail4',ifail
-!if(Ifail.eq.1) goto 704
-!!strno(totstr)=0
-!!totstr=totstr-1
-!!goto 304
-!!endif
-!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!print*,'MatLDR_write_xmi',totstr
-!call MatLDR('str',strno,totstr,D)
-!
-!!print*,'DDD',(D(i),i=1,totstr)
-!ovlp=1.0
-!do i=1,totstr
-!ovlp=ovlp*D(i)
-!enddo
-!!print*,'ovval',1.0-ovlp,ovlp
-!if(1.0-ovlp.gt.ovval)goto 704
-!endif
-!
-!
-!m21=m21+nqset(m4)
-!if(m21.gt.strn) goto 704
-!!print*,'sourav_xmi_sym'
-!
-!!304 enddo
-!
-!
-!do m19=strset(m4-1)+1,strset(m4)
-!if(q_fac2(m19).ne.qul(m4))goto 604
-!i7=i7+1
-!do i3=1,nae
-!str2(i7,i3)=str3(m19,i3)
-!enddo
-!col(i7)=m19
-!qq(i7)=q_fac2(m19)
-!qq1(i7)=str_quality_1(m19)
-!qq2(i7)=str_quality_2(m19)
-!bondq4(i7)=bondq(m19)
-!flg=1
-!count=4
-!604 enddo
-!if(i7.eq.strn) then
-!!if(nfset.gt.0)then
-!ttqlty=0
-!tqlty=0
-!bqlty=0
-!sqlty=0
-!do m119=1,i7
-!ttqlty=ttqlty+qq(m119)
-!!tqlty=tqlty+qq1(m119)
-!!bqlty=bqlty+bondq4(m119)
-!!sqlty=sqlty+qq2(m119)
-!enddo
-!!endif
-!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!if(ttqlty.le.ttqlty0)then
-!mns=mns+1
-!set_number=set_number+1
-!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!if(nfset.eq.1.and.set_number.gt.1)then
-!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(9+u1,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!endif
-!
-!do m19=1,i7
-!if(niao.eq.0)then
-!write(9+u1,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.ne.0)then
-!if(niao.gt.1)then
-!write(9+u1,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.eq.0)then
-!if(niao.eq.1)then
-!write(9+u1,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!endif
-!enddo
-!!if(nfset.eq.0.or.nfset.gt.1) then
-!if(ovopt.eq.vpt) then
-!call MatLDR('str',col,i7,D)
-!
-!ovlp=1.0
-!do i=1,i7
-!ovlp=ovlp*D(i)
-!enddo
-!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-!endif
-!!write(9,910)'quality value',ttqlty
-!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!write(9,910)'qualities:','
-!!intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!bqlty=0
-!write(9+u1,*),'Set_number=',set_number
-!write(9+u1,*),'    '
-!endif
-!!endif
-!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!'ovval',1.0-ovlp
-!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!if(mns.eq.max_set)then
-!if(u1.eq.mset-1) goto 379
-!close(9+u1)
-!mns=0
-!u1=u1+1
-!if(u1.le.9)then
-!write(a,'(I1)')u1
-!endif
-!if(u1.gt.9.and.u1.lt.100)then
-!write(a,'(I2)')u1
-!endif
-!if(u1.gt.99.and.u1.lt.1000)then
-!write(a,'(I3)')u1
-!endif
-!if(u1.eq.1000)then
-!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!sets. Please increase the limit'
-!goto 379
-!endif
-!outfile='structure_set_'//trim(a)//trim('.dat')
-!open(unit=9+u1,file=outfile,status='unknown')
-!endif
-!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!write(9,911),tqlty,sqlty,bqlty
-!!bqlty=0
-!!!set_number=set_number+1
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!endif
-!!if(nfset.eq.1)goto 379
-!goto 704
-!endif
-!
-!i5up5=i5
-!i5i7=i7
-!m5m21=m21
-!
-!!!!!! loop 5 >>>
-!do m5=m4+1,nqul
-!!print*,'m5m5m5',m5
-!do i=i5up5+1,i5
-!finalvec(i)=0
-!enddo
-!do m19=i5i7+1,i7
-!strno(m19)=0
-!do i8=1,15
-!str2(m19,i8)=0
-!enddo
-!enddo
-!i7=i5i7
-!totstr=i5i7
-!!print*,'totstr5',totstr
-!m21=m5m21
-!jj=0
-!
-!flg=0
-!!do m19=strset(m5-1)+1,strset(m5)
-!
-!if(nqset(m5).gt.strn)goto 705
-!
-!do i=strset(m5-1)+1,strset(m5)
-!totstr=totstr+1
-!strno(totstr)=i
-!enddo
-!
-!if(totstr.gt.strn)goto 705
-!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!write(9,*),'ifail',ifail,det_inv
-!if(Ifail.eq.1) goto 705
-!
-!!strno(totstr)=0
-!!totstr=totstr-1
-!!goto 305
-!!endif
-!!endif
-!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!print*,'MatLDR_write_xmi',totstr
-!call MatLDR('str',strno,totstr,D)
-!
-!!print*,'DDD',(D(i),i=1,totstr)
-!ovlp=1.0
-!do i=1,totstr
-!ovlp=ovlp*D(i)
-!enddo
-!!print*,'ovval',1.0-ovlp,ovlp
-!if(1.0-ovlp.gt.ovval)goto 705
-!endif
-!
-!
-!m21=m21+nqset(m5)
-!if(m21.gt.strn) goto 705
-!!print*,'sourav_xmi_sym'
-!
-!!305 enddo
-!
-!!print*,'jj',jj,m5,nqul
-!!print*,'******jj',jj
-!
-!do m19=strset(m5-1)+1,strset(m5)
-!if(q_fac2(m19).ne.qul(m5))goto 605
-!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!i7=i7+1
-!do i3=1,nae
-!str2(i7,i3)=str3(m19,i3)
-!enddo
-!col(i7)=m19
-!qq(i7)=q_fac2(m19)
-!qq1(i7)=str_quality_1(m19)
-!qq2(i7)=str_quality_2(m19)
-!bondq4(i7)=bondq(m19)
-!flg=1
-!count=5
-!605 enddo
-!!print*,'i7 5',i7,m5
-!if(i7.eq.strn) then
-!!if(nfset.gt.0)then
-!ttqlty=0
-!tqlty=0
-!bqlty=0
-!sqlty=0
-!do m119=1,i7
-!ttqlty=ttqlty+qq(m119)
-!!tqlty=tqlty+qq1(m119)
-!!bqlty=bqlty+bondq4(m119)
-!!sqlty=sqlty+qq2(m119)
-!enddo
-!!endif
-!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!if(ttqlty.le.ttqlty0)then
-!mns=mns+1
-!set_number=set_number+1
-!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!if(nfset.eq.1.and.set_number.gt.1)then
-!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(9+u1,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!endif
-!
-!do m19=1,i7
-!if(niao.eq.0)then
-!write(9+u1,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.ne.0)then
-!if(niao.gt.1)then
-!write(9+u1,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.eq.0)then
-!if(niao.eq.1)then
-!write(9+u1,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!endif
-!enddo
-!!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.eq.3)then
-!Rumwrite=1
-!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!endif
-!if(ovopt.eq.1) then
-!call MatLDR('str',col,i7,D)
-!
-!ovlp=1.0
-!do i=1,i7
-!ovlp=ovlp*D(i)
-!enddo
-!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-!endif
-!!write(9,910)'quality value',ttqlty
-!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!write(9,910)'qualities:','
-!!intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!bqlty=0
-!write(9+u1,*),'Set_number=',set_number
-!write(9+u1,*),'    '
-!endif
-!!endif
-!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!'ovval',1.0-ovlp
-!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!if(mns.eq.max_set)then
-!if(u1.eq.mset-1) goto 379
-!close(9+u1)
-!mns=0
-!u1=u1+1
-!if(u1.le.9)then
-!write(a,'(I1)')u1
-!endif
-!if(u1.gt.9.and.u1.lt.100)then
-!write(a,'(I2)')u1
-!endif
-!if(u1.gt.99.and.u1.lt.1000)then
-!write(a,'(I3)')u1
-!endif
-!if(u1.eq.1000)then
-!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!sets. Please increase the limit'
-!goto 379
-!endif
-!outfile='structure_set_'//trim(a)//trim('.dat')
-!open(unit=9+u1,file=outfile,status='unknown')
-!endif
-!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!write(9,911),tqlty,sqlty,bqlty
-!!bqlty=0
-!!!set_number=set_number+1
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!endif
-!!if(nfset.eq.1)goto 379
-!goto 705
-!endif
-!
-!i5up6=i5
-!i6i7=i7
-!m6m21=m21
-!
-!do m6=m5+1,nqul
-!
-!!print*,'m6m6m6',m6
-!do i=i5up6+1,i5
-!finalvec(i)=0
-!enddo
-!do m19=i6i7+1,i7
-!strno(m19)=0
-!do i8=1,15
-!str2(m19,i8)=0
-!enddo
-!enddo
-!i7=i6i7
-!totstr=i6i7
-!!print*,'totstr6',totstr
-!m21=m6m21
-!
-!jj=0
-!
-!flg=0
-!!do m19=strset(m6-1)+1,strset(m6)
-!
-!if(nqset(m6).gt.strn)goto 706
-!
-!do i=strset(m6-1)+1,strset(m6)
-!totstr=totstr+1
-!strno(totstr)=i
-!enddo
-!
-!if(totstr.gt.strn)goto 706
-!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!write(9,*),'ifail',ifail,det_inv
-!!print*,'ifail6',ifail
-!if(Ifail.eq.1)goto 706
-!!!do i8=1,nae
-!!!str4(totstr,i8)=0
-!!!enddo
-!!strno(totstr)=0
-!!totstr=totstr-1
-!!goto 306
-!!endif
-!!endif
-!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!print*,'MatLDR_write_xmi',totstr
-!call MatLDR('str',strno,totstr,D)
-!
-!!print*,'DDD',(D(i),i=1,totstr)
-!ovlp=1.0
-!do i=1,totstr
-!ovlp=ovlp*D(i)
-!enddo
-!!print*,'ovval',1.0-ovlp,ovlp
-!if(1.0-ovlp.gt.ovval)goto 706
-!endif
-!
-!
-!m21=m21+nqset(m6)
-!if(m21.gt.strn) goto 706
-!!print*,'sourav_xmi_sym'
-!
-!!306 enddo
-!
-!!print*,'jj',jj,m6,nqul
-!do m19=strset(m6-1)+1,strset(m6)
-!if(q_fac2(m19).ne.qul(m6))goto 606
-!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!i7=i7+1
-!do i3=1,nae
-!str2(i7,i3)=str3(m19,i3)
-!enddo
-!col(i7)=m19
-!qq(i7)=q_fac2(m19)
-!qq1(i7)=str_quality_1(m19)
-!qq2(i7)=str_quality_2(m19)
-!bondq4(i7)=bondq(m19)
-!flg=1
-!count=6
-!606 enddo
-!!print*,'i7  6',i7,m6
-!if(i7.eq.strn) then
-!!if(nfset.gt.0)then
-!ttqlty=0
-!tqlty=0
-!bqlty=0
-!sqlty=0
-!do m119=1,i7
-!ttqlty=ttqlty+qq(m119)
-!!tqlty=tqlty+qq1(m119)
-!!bqlty=bqlty+bondq4(m119)
-!!sqlty=sqlty+qq2(m119)
-!enddo
-!!endif
-!!write(9,*),'ttqlty,ttqlty0',ttqlty,ttqlty0,tqlty,ttqlty1,bqlty,ttqlty2,sqlty,ttqlty3
-!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!if(ttqlty.le.ttqlty0)then
-!mns=mns+1
-!set_number=set_number+1
-!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!if(nfset.eq.1.and.set_number.gt.1)then
-!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(9+u1,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!endif
-!
-!do m19=1,i7
-!if(niao.eq.0)then
-!write(9+u1,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.ne.0)then
-!if(niao.gt.1)then
-!write(9+u1,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.eq.0)then
-!if(niao.eq.1)then
-!write(9+u1,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!endif
-!enddo
-!!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.eq.3)then
-!Rumwrite=1
-!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!endif
-!if(ovopt.eq.1) then
-!call MatLDR('str',col,i7,D)
-!
-!ovlp=1.0
-!do i=1,i7
-!ovlp=ovlp*D(i)
-!enddo
-!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-!endif
-!!write(9,910)'qualities:','
-!!intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!!write(9,910)'quality value',ttqlty
-!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!bqlty=0
-!write(9+u1,*),'Set_number=',set_number
-!write(9+u1,*),'    '
-!endif
-!!endif
-!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!'ovval',1.0-ovlp
-!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!if(mns.eq.max_set)then
-!if(u1.eq.mset-1) goto 379
-!close(9+u1)
-!mns=0
-!u1=u1+1
-!if(u1.le.9)then
-!write(a,'(I1)')u1
-!endif
-!if(u1.gt.9.and.u1.lt.100)then
-!write(a,'(I2)')u1
-!endif
-!if(u1.gt.99.and.u1.lt.1000)then
-!write(a,'(I3)')u1
-!endif
-!if(u1.eq.1000)then
-!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!sets. Please increase the limit'
-!goto 379
-!endif
-!outfile='structure_set_'//trim(a)//trim('.dat')
-!open(unit=9+u1,file=outfile,status='unknown')
-!endif
-!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!write(9,911),tqlty,sqlty,bqlty
-!!bqlty=0
-!!!set_number=set_number+1
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!endif
-!!if(nfset.eq.1)goto 379
-!goto 706
-!endif
-!
-!i5up7=i5
-!i7i7=i7
-!m7m21=m21
-!
-!do m7=m6+1,nqul
-!!print*,'m7m7m7',m7
-!do i=i5up7+1,i5
-!finalvec(i)=0
-!enddo
-!do m19=i7i7+1,i7
-!strno(m19)=0
-!do i8=1,15
-!str2(m19,i8)=0
-!enddo
-!enddo
-!i7=i7i7
-!totstr=i7i7
-!!print*,'totstr7',totstr
-!m21=m7m21
-!
-!jj=0
-!
-!flg=0
-!!do m19=strset(m7-1)+1,strset(m7)
-!
-!if(nqset(m7).gt.strn)goto 707
-!do i=strset(m7-1)+1,strset(m7)
-!totstr=totstr+1
-!strno(totstr)=i
-!enddo
-!if(totstr.gt.strn)goto 707
-!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!write(9,*),'ifail',ifail,det_inv
-!if(Ifail.eq.1)goto 707
-!!!do i8=1,nae
-!!!str4(totstr,i8)=0
-!!!enddo
-!!strno(totstr)=0
-!!totstr=totstr-1
-!!goto 307
-!!endif
-!!endif
-!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!print*,'MatLDR_write_xmi',totstr
-!call MatLDR('str',strno,totstr,D)
-!
-!!print*,'DDD',(D(i),i=1,totstr)
-!ovlp=1.0
-!do i=1,totstr
-!ovlp=ovlp*D(i)
-!enddo
-!!print*,'ovval',1.0-ovlp,ovlp
-!if(1.0-ovlp.gt.ovval)goto 707
-!endif
-!
-!
-!m21=m21+nqset(m7)
-!if(m21.gt.strn) goto 707
-!!print*,'sourav_xmi_sym'
-!
-!!307 enddo
-!
-!!print*,'jj',jj,m7,nqul
-!!407 if(jj.eq.nqset(m7))then
-!!print*,'******jj',jj
-!
-!do m19=strset(m7-1)+1,strset(m7)
-!if(q_fac2(m19).ne.qul(m7))goto 607
-!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!i7=i7+1
-!do i3=1,nae
-!str2(i7,i3)=str3(m19,i3)
-!enddo
-!col(i7)=m19
-!qq(i7)=q_fac2(m19)
-!qq1(i7)=str_quality_1(m19)
-!qq2(i7)=str_quality_2(m19)
-!bondq4(i7)=bondq(m19)
-!flg=1
-!count=7
-!607 enddo
-!if(i7.eq.strn) then
-!!if(nfset.gt.0)then
-!ttqlty=0
-!tqlty=0
-!bqlty=0
-!sqlty=0
-!do m119=1,i7
-!ttqlty=ttqlty+qq(m119)
-!!tqlty=tqlty+qq1(m119)
-!!bqlty=bqlty+bondq4(m119)
-!!sqlty=sqlty+qq2(m119)
-!enddo
-!!endif
-!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!if(ttqlty.le.ttqlty0)then
-!mns=mns+1
-!set_number=set_number+1
-!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!if(nfset.eq.1.and.set_number.gt.1)then
-!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(9+u1,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!endif
-!
-!do m19=1,i7
-!if(niao.eq.0)then
-!write(9+u1,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.ne.0)then
-!if(niao.gt.1)then
-!write(9+u1,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.eq.0)then
-!if(niao.eq.1)then
-!write(9+u1,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!endif
-!enddo
-!!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.eq.3)then
-!Rumwrite=1
-!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!endif
-!if(ovopt.eq.1) then
-!call MatLDR('str',col,i7,D)
-!
-!ovlp=1.0
-!do i=1,i7
-!ovlp=ovlp*D(i)
-!enddo
-!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-!endif
-!!write(9,910)'quality value',ttqlty
-!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!write(9,910)'qualities:','
-!!intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!bqlty=0
-!write(9+u1,*),'Set_number=',set_number
-!write(9+u1,*),'    '
-!endif
-!!endif
-!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!
-!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!'ovval',1.0-ovlp
-!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!if(mns.eq.max_set)then
-!if(u1.eq.mset-1) goto 379
-!close(9+u1)
-!mns=0
-!u1=u1+1
-!if(u1.le.9)then
-!write(a,'(I1)')u1
-!endif
-!if(u1.gt.9.and.u1.lt.100)then
-!write(a,'(I2)')u1
-!endif
-!if(u1.gt.99.and.u1.lt.1000)then
-!write(a,'(I3)')u1
-!endif
-!if(u1.eq.1000)then
-!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!sets. Please increase the limit'
-!goto 379
-!endif
-!outfile='structure_set_'//trim(a)//trim('.dat')
-!open(unit=9+u1,file=outfile,status='unknown')
-!endif
-!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!write(9,911),tqlty,sqlty,bqlty
-!!bqlty=0
-!!!set_number=set_number+1
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!endif
-!!if(nfset.eq.1)goto 379
-!goto 707
-!endif
-!
-!i5up8=i5
-!i8i7=i7
-!m8m21=m21
-!
-!do m8=m7+1,nqul
-!!print*,'m8m8m8',m8
-!do i=i5up8+1,i5
-!finalvec(i)=0
-!enddo
-!do m19=i8i7+1,i7
-!strno(m19)=0
-!do i8=1,15
-!str2(m19,i8)=0
-!enddo
-!enddo
-!i7=i8i7
-!totstr=i8i7
-!!print*,'totstr8',totstr
-!m21=m8m21
-!
-!jj=0
-!
-!flg=0
-!!do m19=strset(m8-1)+1,strset(m8)
-!
-!if(nqset(m8).gt.strn)goto 708
-!
-!do i=strset(m8-1)+1,strset(m8)
-!totstr=totstr+1
-!strno(totstr)=i
-!enddo
-!
-!if(totstr.gt.strn)goto 708
-!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!write(9,*),'ifail',ifail,det_inv
-!if(Ifail.eq.1)goto 708
-!
-!!!do i8=1,nae
-!!!str4(totstr,i8)=0
-!!!enddo
-!!strno(totstr)=0
-!!totstr=totstr-1
-!!goto 308
-!!endif
-!!endif
-!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!print*,'MatLDR_write_xmi',totstr
-!call MatLDR('str',strno,totstr,D)
-!
-!!print*,'DDD',(D(i),i=1,totstr)
-!ovlp=1.0
-!do i=1,totstr
-!ovlp=ovlp*D(i)
-!enddo
-!!print*,'ovval',1.0-ovlp,ovlp
-!if(1.0-ovlp.gt.ovval)goto 708
-!endif
-!
-!
-!m21=m21+nqset(m8)
-!if(m21.gt.strn) goto 708
-!!print*,'sourav_xmi_sym'
-!
-!!308 enddo
-!
-!!print*,'jj',jj,m7,nqul
-!!408 if(jj.eq.nqset(m8))then
-!!print*,'******jj',jj
-!
-!do m19=strset(m8-1)+1,strset(m8)
-!if(q_fac2(m19).ne.qul(m8))goto 608
-!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!i7=i7+1
-!do i3=1,nae
-!str2(i7,i3)=str3(m19,i3)
-!enddo
-!col(i7)=m19
-!qq(i7)=q_fac2(m19)
-!qq1(i7)=str_quality_1(m19)
-!qq2(i7)=str_quality_2(m19)
-!bondq4(i7)=bondq(m19)
-!flg=1
-!count=8
-!608 enddo
-!!print*,'i7 8',i7,m8
-!if(i7.eq.strn) then
-!!if(nfset.gt.0)then
-!ttqlty=0
-!tqlty=0
-!bqlty=0
-!sqlty=0
-!do m119=1,i7
-!ttqlty=ttqlty+qq(m119)
-!!tqlty=tqlty+qq1(m119)
-!!bqlty=bqlty+bondq4(m119)
-!!sqlty=sqlty+qq2(m119)
-!enddo
-!!endif
-!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!if(ttqlty.le.ttqlty0)then
-!mns=mns+1
-!set_number=set_number+1
-!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!if(nfset.eq.1.and.set_number.gt.1)then
-!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(9+u1,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!endif
-!
-!do m19=1,i7
-!if(niao.eq.0)then
-!write(9+u1,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.ne.0)then
-!if(niao.gt.1)then
-!write(9+u1,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.eq.0)then
-!if(niao.eq.1)then
-!write(9+u1,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!endif
-!enddo
-!!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.eq.3)then
-!Rumwrite=1
-!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!endif
-!if(ovopt.eq.1) then
-!call MatLDR('str',col,i7,D)
-!
-!ovlp=1.0
-!do i=1,i7
-!ovlp=ovlp*D(i)
-!enddo
-!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-!endif
-!!write(9,910)'quality value',ttqlty
-!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!bqlty=0
-!write(9+u1,*),'Set_number=',set_number
-!write(9+u1,*),'    '
-!endif
-!!endif
-!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!'ovval',1.0-ovlp
-!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!if(mns.eq.max_set)then
-!if(u1.eq.mset-1) goto 379
-!close(9+u1)
-!mns=0
-!u1=u1+1
-!if(u1.le.9)then
-!write(a,'(I1)')u1
-!endif
-!if(u1.gt.9.and.u1.lt.100)then
-!write(a,'(I2)')u1
-!endif
-!if(u1.gt.99.and.u1.lt.1000)then
-!write(a,'(I3)')u1
-!endif
-!if(u1.eq.1000)then
-!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!sets. Please increase the limit'
-!goto 379
-!endif
-!outfile='structure_set_'//trim(a)//trim('.dat')
-!open(unit=9+u1,file=outfile,status='unknown')
-!endif
-!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!write(9,911),tqlty,sqlty,bqlty
-!!bqlty=0
-!!!set_number=set_number+1
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!endif
-!!if(nfset.eq.1)goto 379
-!goto 708
-!endif
-!
-!i5up9=i5
-!i9i7=i7
-!m9m21=m21
-!
-!do m9=m8+1,nqul
-!!print*,'m9m9m9',m9
-!do i=i5up9+1,i5
-!finalvec(i)=0
-!enddo
-!do m19=i9i7+1,i7
-!strno(m19)=0
-!do i8=1,15
-!str2(m19,i8)=0
-!enddo
-!enddo
-!i7=i9i7
-!totstr=i9i7
-!!print*,'totstr9',totstr
-!m21=m9m21
-!
-!jj=0
-!
-!flg=0
-!!do m19=strset(m9-1)+1,strset(m9)
-!
-!if(nqset(m9).gt.strn)goto 709
-!
-!do i=strset(m9-1)+1,strset(m9)
-!totstr=totstr+1
-!strno(totstr)=i
-!enddo
-!
-!if(totstr.gt.strn)goto 709
-!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!write(9,*),'ifail',ifail,det_inv
-!!print*,'ifail9',ifail
-!if(Ifail.eq.1)goto 709
-!!!do i8=1,nae
-!!!str4(totstr,i8)=0
-!!!enddo
-!!strno(totstr)=0
-!!totstr=totstr-1
-!!goto 309
-!!endif
-!!endif
-!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!print*,'MatLDR_write_xmi',totstr
-!call MatLDR('str',strno,totstr,D)
-!
-!!print*,'DDD',(D(i),i=1,totstr)
-!ovlp=1.0
-!do i=1,totstr
-!ovlp=ovlp*D(i)
-!enddo
-!!print*,'ovval',1.0-ovlp,ovlp
-!if(1.0-ovlp.gt.ovval)goto 709
-!endif
-!
-!
-!m21=m21+nqset(m9)
-!if(m21.gt.strn) goto 709
-!!print*,'sourav_xmi_sym'
-!
-!!309 enddo
-!
-!!print*,'jj',jj,m9,nqul
-!!409 if(jj.eq.nqset(m9))then
-!!print*,'******jj',jj
-!
-!do m19=strset(m9-1)+1,strset(m9)
-!if(q_fac2(m19).ne.qul(m9))goto 609
-!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!i7=i7+1
-!do i3=1,nae
-!str2(i7,i3)=str3(m19,i3)
-!enddo
-!col(i7)=m19
-!qq(i7)=q_fac2(m19)
-!qq1(i7)=str_quality_1(m19)
-!qq2(i7)=str_quality_2(m19)
-!bondq4(i7)=bondq(m19)
-!flg=1
-!count=9
-!609 enddo
-!!print*,'i7 9',i7,m9
-!if(i7.eq.strn) then
-!!if(nfset.gt.0)then
-!ttqlty=0
-!tqlty=0
-!bqlty=0
-!sqlty=0
-!do m119=1,i7
-!ttqlty=ttqlty+qq(m119)
-!!tqlty=tqlty+qq1(m119)
-!!bqlty=bqlty+bondq4(m119)
-!!sqlty=sqlty+qq2(m119)
-!enddo
-!!endif
-!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!if(ttqlty.le.ttqlty0)then
-!mns=mns+1
-!set_number=set_number+1
-!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!if(nfset.eq.1.and.set_number.gt.1)then
-!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(9+u1,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!endif
-!
-!do m19=1,i7
-!if(niao.eq.0)then
-!write(9+u1,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.ne.0)then
-!if(niao.gt.1)then
-!write(9+u1,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.eq.0)then
-!if(niao.eq.1)then
-!write(9+u1,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!endif
-!enddo
-!!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.eq.3)then
-!Rumwrite=1
-!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!endif
-!if(ovopt.eq.1) then
-!call MatLDR('str',col,i7,D)
-!
-!ovlp=1.0
-!do i=1,i7
-!ovlp=ovlp*D(i)
-!enddo
-!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-!endif
-!!write(9,910)'quality value',ttqlty
-!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!bqlty=0
-!write(9+u1,*),'Set_number=',set_number
-!write(9+u1,*),'    '
-!endif
-!!endif
-!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!'ovval',1.0-ovlp
-!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!if(mns.eq.max_set)then
-!if(u1.eq.mset-1) goto 379
-!close(9+u1)
-!mns=0
-!u1=u1+1
-!if(u1.le.9)then
-!write(a,'(I1)')u1
-!endif
-!if(u1.gt.9.and.u1.lt.100)then
-!write(a,'(I2)')u1
-!endif
-!if(u1.gt.99.and.u1.lt.1000)then
-!write(a,'(I3)')u1
-!endif
-!if(u1.eq.1000)then
-!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!sets. Please increase the limit'
-!goto 379
-!endif
-!outfile='structure_set_'//trim(a)//trim('.dat')
-!open(unit=9+u1,file=outfile,status='unknown')
-!endif
-!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!write(9,911),tqlty,sqlty,bqlty
-!!bqlty=0
-!!!set_number=set_number+1
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!endif
-!!if(nfset.eq.1)goto 379
-!goto 709
-!endif
-!
-!i5up10=i5
-!i10i7=i7
-!m10m21=m21
-!
-!do m10=m9+1,nqul
-!!print*,'m10m10m10',m10
-!do i=i5up10+1,i5
-!finalvec(i)=0
-!enddo
-!do m19=i10i7+1,i7
-!strno(m19)=0
-!do i8=1,15
-!str2(m19,i8)=0
-!enddo
-!enddo
-!i7=i10i7
-!totstr=i10i7
-!!print*,'totstr10',totstr
-!m21=m10m21
-!
-!jj=0
-!
-!flg=0
-!!do m19=strset(m10-1)+1,strset(m10)
-!
-!if(nqset(m10).gt.strn)goto 710
-!
-!do i=strset(m10-1)+1,strset(m10)
-!totstr=totstr+1
-!strno(totstr)=i
-!enddo
-!
-!if(totstr.gt.strn)goto 710
-!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!write(9,*),'ifail',ifail,det_inv
-!if(Ifail.eq.1)goto 710
-!!!do i8=1,nae
-!!!str4(totstr,i8)=0
-!!!enddo
-!!strno(totstr)=0
-!!totstr=totstr-1
-!!goto 310
-!!endif
-!!endif
-!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!print*,'MatLDR_write_xmi',totstr
-!call MatLDR('str',strno,totstr,D)
-!
-!!print*,'DDD',(D(i),i=1,totstr)
-!ovlp=1.0
-!do i=1,totstr
-!ovlp=ovlp*D(i)
-!enddo
-!!print*,'ovval',1.0-ovlp,ovlp
-!if(1.0-ovlp.gt.ovval)goto 710
-!endif
-!
-!
-!m21=m21+nqset(m10)
-!if(m21.gt.strn) goto 710
-!!print*,'sourav_xmi_sym'
-!
-!!310 enddo
-!
-!!print*,'jj',jj,m10,nqul
-!!410 if(jj.eq.nqset(m10))then
-!!print*,'******jj',jj
-!
-!do m19=strset(m10-1)+1,strset(m10)
-!if(q_fac2(m19).ne.qul(m10))goto 610
-!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!i7=i7+1
-!do i3=1,nae
-!str2(i7,i3)=str3(m19,i3)
-!enddo
-!col(i7)=m19
-!qq(i7)=q_fac2(m19)
-!qq1(i7)=str_quality_1(m19)
-!qq2(i7)=str_quality_2(m19)
-!bondq4(i7)=bondq(m19)
-!flg=1
-!count=10
-!610 enddo
-!!print*,'i7 10',i7,m10
-!if(i7.eq.strn) then
-!!if(nfset.gt.0)then
-!ttqlty=0
-!tqlty=0
-!bqlty=0
-!sqlty=0
-!do m119=1,i7
-!ttqlty=ttqlty+qq(m119)
-!!tqlty=tqlty+qq1(m119)
-!!bqlty=bqlty+bondq4(m119)
-!!sqlty=sqlty+qq2(m119)
-!enddo
-!!endif
-!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!if(ttqlty.le.ttqlty0)then
-!mns=mns+1
-!set_number=set_number+1
-!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!if(nfset.eq.1.and.set_number.gt.1)then
-!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(9+u1,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!endif
-!
-!do m19=1,i7
-!if(niao.eq.0)then
-!write(9+u1,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.ne.0)then
-!if(niao.gt.1)then
-!write(9+u1,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.eq.0)then
-!if(niao.eq.1)then
-!write(9+u1,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!endif
-!enddo
-!!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.eq.3)then
-!Rumwrite=1
-!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!endif
-!if(ovopt.eq.1) then
-!call MatLDR('str',col,i7,D)
-!
-!ovlp=1.0
-!do i=1,i7
-!ovlp=ovlp*D(i)
-!enddo
-!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-!endif
-!!write(9,910)'quality value',ttqlty
-!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!bqlty=0
-!write(9+u1,*),'Set_number=',set_number
-!write(9+u1,*),'    '
-!endif
-!!endif
-!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!'ovval',1.0-ovlp
-!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!if(mns.eq.max_set)then
-!if(u1.eq.mset-1) goto 379
-!close(9+u1)
-!mns=0
-!u1=u1+1
-!if(u1.le.9)then
-!write(a,'(I1)')u1
-!endif
-!if(u1.gt.9.and.u1.lt.100)then
-!write(a,'(I2)')u1
-!endif
-!if(u1.gt.99.and.u1.lt.1000)then
-!write(a,'(I3)')u1
-!endif
-!if(u1.eq.1000)then
-!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!sets. Please increase the limit'
-!goto 379
-!endif
-!outfile='structure_set_'//trim(a)//trim('.dat')
-!open(unit=9+u1,file=outfile,status='unknown')
-!endif
-!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!write(9,911),tqlty,sqlty,bqlty
-!!bqlty=0
-!!!set_number=set_number+1
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!endif
-!!if(nfset.eq.1)goto 379
-!goto 710
-!endif
-!
-!i5up11=i5
-!i11i7=i7
-!m11m21=m21
-!
-!do m11=m10+1,nqul
-!!print*,'m11m11m11',m11
-!do i=i5up11+1,i5
-!finalvec(i)=0
-!enddo
-!do m19=i11i7+1,i7
-!strno(m19)=0
-!do i8=1,15
-!str2(m19,i8)=0
-!enddo
-!enddo
-!i7=i11i7
-!totstr=i11i7
-!!print*,'totstr11',totstr
-!m21=m11m21
-!
-!jj=0
-!
-!flg=0
-!!do m19=strset(m11-1)+1,strset(m11)
-!
-!if(nqset(m11).gt.strn)goto 711
-!
-!do i=strset(m11-1)+1,strset(m11)
-!totstr=totstr+1
-!strno(totstr)=i
-!enddo
-!
-!if(totstr.gt.strn)goto 711
-!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!write(9,*),'ifail',ifail,det_inv
-!if(Ifail.eq.1)goto 711
-!!!do i8=1,nae
-!!!str4(totstr,i8)=0
-!!!enddo
-!!strno(totstr)=0
-!!totstr=totstr-1
-!!goto 311
-!!endif
-!!endif
-!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!print*,'MatLDR_write_xmi',totstr
-!call MatLDR('str',strno,totstr,D)
-!
-!!print*,'DDD',(D(i),i=1,totstr)
-!ovlp=1.0
-!do i=1,totstr
-!ovlp=ovlp*D(i)
-!enddo
-!!print*,'ovval',1.0-ovlp,ovlp
-!if(1.0-ovlp.gt.ovval)goto 711
-!endif
-!
-!
-!m21=m21+nqset(m11)
-!if(m21.gt.strn) goto 711
-!!print*,'sourav_xmi_sym'
-!
-!!311 enddo
-!
-!!print*,'jj',jj,m11,nqul
-!!411 if(jj.eq.nqset(m11))then
-!!print*,'******jj',jj
-!
-!do m19=strset(m11-1)+1,strset(m11)
-!if(q_fac2(m19).ne.qul(m11))goto 611
-!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!i7=i7+1
-!do i3=1,nae
-!str2(i7,i3)=str3(m19,i3)
-!enddo
-!col(i7)=m19
-!qq(i7)=q_fac2(m19)
-!qq1(i7)=str_quality_1(m19)
-!qq2(i7)=str_quality_2(m19)
-!bondq4(i7)=bondq(m19)
-!flg=1
-!count=11
-!611 enddo
-!!print*,'i7 11',i7,m11
-!if(i7.eq.strn) then
-!!if(nfset.gt.0)then
-!ttqlty=0
-!tqlty=0
-!bqlty=0
-!sqlty=0
-!do m119=1,i7
-!ttqlty=ttqlty+qq(m119)
-!!tqlty=tqlty+qq1(m119)
-!!bqlty=bqlty+bondq4(m119)
-!!sqlty=sqlty+qq2(m119)
-!enddo
-!!endif
-!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!if(ttqlty.le.ttqlty0)then
-!mns=mns+1
-!set_number=set_number+1
-!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!if(nfset.eq.1.and.set_number.gt.1)then
-!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(9+u1,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!endif
-!
-!do m19=1,i7
-!if(niao.eq.0)then
-!write(9+u1,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.ne.0)then
-!if(niao.gt.1)then
-!write(9+u1,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.eq.0)then
-!if(niao.eq.1)then
-!write(9+u1,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!endif
-!enddo
-!!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.eq.3)then
-!Rumwrite=1
-!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!endif
-!if(ovopt.eq.1) then
-!call MatLDR('str',col,i7,D)
-!
-!ovlp=1.0
-!do i=1,i7
-!ovlp=ovlp*D(i)
-!enddo
-!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-!endif
-!!write(9,910)'quality value',ttqlty
-!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!bqlty=0
-!write(9+u1,*),'Set_number=',set_number
-!write(9+u1,*),'    '
-!endif
-!!endif
-!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!'ovval',1.0-ovlp
-!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!if(mns.eq.max_set)then
-!if(u1.eq.mset-1) goto 379
-!close(9+u1)
-!mns=0
-!u1=u1+1
-!if(u1.le.9)then
-!write(a,'(I1)')u1
-!endif
-!if(u1.gt.9.and.u1.lt.100)then
-!write(a,'(I2)')u1
-!endif
-!if(u1.gt.99.and.u1.lt.1000)then
-!write(a,'(I3)')u1
-!endif
-!if(u1.eq.1000)then
-!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!sets. Please increase the limit'
-!goto 379
-!endif
-!outfile='structure_set_'//trim(a)//trim('.dat')
-!open(unit=9+u1,file=outfile,status='unknown')
-!endif
-!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!write(9,911),tqlty,sqlty,bqlty
-!!bqlty=0
-!!!set_number=set_number+1
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!endif
-!!if(nfset.eq.1)goto 379
-!goto 711
-!endif
-!
-!i5up12=i5
-!i12i7=i7
-!m12m21=m21
-!
-!do m12=m11+1,nqul
-!!print*,'m12m12m12',m12
-!do i=i5up12+1,i5
-!finalvec(i)=0
-!enddo
-!do m19=i12i7+1,i7
-!strno(m19)=0
-!do i8=1,15
-!str2(m19,i8)=0
-!enddo
-!enddo
-!i7=i12i7
-!totstr=i12i7
-!!print*,'totstr12',totstr
-!m21=m12m21
-!
-!jj=0
-!
-!flg=0
-!!do m19=strset(m12-1)+1,strset(m12)
-!
-!if(nqset(m12).gt.strn)goto 712
-!
-!do i=strset(m12-1)+1,strset(m12)
-!totstr=totstr+1
-!strno(totstr)=i
-!enddo
-!
-!if(totstr.gt.strn)goto 712
-!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!write(9,*),'ifail',ifail,det_inv
-!if(Ifail.eq.1)goto 712
-!!!do i8=1,nae
-!!!str4(totstr,i8)=0
-!!!enddo
-!!strno(totstr)=0
-!!totstr=totstr-1
-!!goto 312
-!!endif
-!!endif
-!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!print*,'MatLDR_write_xmi',totstr
-!call MatLDR('str',strno,totstr,D)
-!
-!!print*,'DDD',(D(i),i=1,totstr)
-!ovlp=1.0
-!do i=1,totstr
-!ovlp=ovlp*D(i)
-!enddo
-!!print*,'ovval',1.0-ovlp,ovlp
-!if(1.0-ovlp.gt.ovval)goto 712
-!endif
-!
-!
-!m21=m21+nqset(m12)
-!if(m21.gt.strn) goto 712
-!!print*,'sourav_xmi_sym'
-!
-!
-!!312 enddo
-!
-!!print*,'jj',jj,m12,nqul
-!!412 if(jj.eq.nqset(m12))then
-!!print*,'******jj',jj
-!
-!do m19=strset(m12-1)+1,strset(m12)
-!if(q_fac2(m19).ne.qul(m12))goto 612
-!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!i7=i7+1
-!do i3=1,nae
-!str2(i7,i3)=str3(m19,i3)
-!enddo
-!col(i7)=m19
-!qq(i7)=q_fac2(m19)
-!qq1(i7)=str_quality_1(m19)
-!qq2(i7)=str_quality_2(m19)
-!bondq4(i7)=bondq(m19)
-!flg=1
-!count=12
-!612 enddo
-!!print*,'i7 12',i7,m12
-!if(i7.eq.strn) then
-!!if(nfset.gt.0)then
-!ttqlty=0
-!tqlty=0
-!bqlty=0
-!sqlty=0
-!do m119=1,i7
-!ttqlty=ttqlty+qq(m119)
-!!tqlty=tqlty+qq1(m119)
-!!bqlty=bqlty+bondq4(m119)
-!!sqlty=sqlty+qq2(m119)
-!enddo
-!!endif
-!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!if(ttqlty.le.ttqlty0)then
-!mns=mns+1
-!set_number=set_number+1
-!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!if(nfset.eq.1.and.set_number.gt.1)then
-!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(9+u1,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!endif
-!
-!do m19=1,i7
-!if(niao.eq.0)then
-!write(9+u1,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.ne.0)then
-!if(niao.gt.1)then
-!write(9+u1,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.eq.0)then
-!if(niao.eq.1)then
-!write(9+u1,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!endif
-!enddo
-!!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.eq.3)then
-!Rumwrite=1
-!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!endif
-!if(ovopt.eq.1) then
-!call MatLDR('str',col,i7,D)
-!
-!ovlp=1.0
-!do i=1,i7
-!ovlp=ovlp*D(i)
-!enddo
-!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-!endif
-!!write(9,910)'quality value',ttqlty
-!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!bqlty=0
-!write(9+u1,*),'Set_number=',set_number
-!write(9+u1,*),'    '
-!endif
-!!endif
-!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!'ovval',1.0-ovlp
-!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!if(mns.eq.max_set)then
-!if(u1.eq.mset-1) goto 379
-!close(9+u1)
-!mns=0
-!u1=u1+1
-!if(u1.le.9)then
-!write(a,'(I1)')u1
-!endif
-!if(u1.gt.9.and.u1.lt.100)then
-!write(a,'(I2)')u1
-!endif
-!if(u1.gt.99.and.u1.lt.1000)then
-!write(a,'(I3)')u1
-!endif
-!if(u1.eq.1000)then
-!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!sets. Please increase the limit'
-!goto 379
-!endif
-!outfile='structure_set_'//trim(a)//trim('.dat')
-!open(unit=9+u1,file=outfile,status='unknown')
-!endif
-!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!write(9,911),tqlty,sqlty,bqlty
-!!bqlty=0
-!!!set_number=set_number+1
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!endif
-!!if(nfset.eq.1)goto 379
-!goto 712
-!endif
-!
-!i5up13=i5
-!i13i7=i7
-!m13m21=m21
-!
-!do m13=m12+1,nqul
-!
-!!print*,'m13m13m13',m13
-!do i=i5up13+1,i5
-!finalvec(i)=0
-!enddo
-!do m19=i13i7+1,i7
-!strno(m19)=0
-!do i8=1,15
-!str2(m19,i8)=0
-!enddo
-!enddo
-!i7=i13i7
-!totstr=i13i7
-!!print*,'totstr13',totstr
-!m21=m13m21
-!
-!jj=0
-!
-!flg=0
-!!do m19=strset(m13-1)+1,strset(m13)
-!
-!if(nqset(m13).gt.strn)goto 713
-!
-!do i=strset(m13-1)+1,strset(m13)
-!totstr=totstr+1
-!strno(totstr)=i
-!enddo
-!
-!if(totstr.gt.strn)goto 713
-!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!write(9,*),'ifail',ifail,det_inv
-!!print*,'ifail13',ifail
-!if(Ifail.eq.1)goto 713
-!!!do i8=1,nae
-!!!str4(totstr,i8)=0
-!!!enddo
-!!strno(totstr)=0
-!!totstr=totstr-1
-!!goto 313
-!!endif
-!!endif
-!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!print*,'MatLDR_write_xmi',totstr
-!call MatLDR('str',strno,totstr,D)
-!
-!!print*,'DDD',(D(i),i=1,totstr)
-!ovlp=1.0
-!do i=1,totstr
-!ovlp=ovlp*D(i)
-!enddo
-!!print*,'ovval',1.0-ovlp,ovlp
-!if(1.0-ovlp.gt.ovval)goto 713
-!endif
-!
-!m21=m21+nqset(m13)
-!if(m21.gt.strn) goto 713
-!!print*,'sourav_xmi_sym'
-!
-!!313 enddo
-!
-!!print*,'jj',jj,m13,nqul
-!!413 if(jj.eq.nqset(m13))then
-!!print*,'******jj',jj
-!
-!do m19=strset(m13-1)+1,strset(m13)
-!if(q_fac2(m19).ne.qul(m13))goto 613
-!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!i7=i7+1
-!do i3=1,nae
-!str2(i7,i3)=str3(m19,i3)
-!enddo
-!col(i7)=m19
-!qq(i7)=q_fac2(m19)
-!qq1(i7)=str_quality_1(m19)
-!qq2(i7)=str_quality_2(m19)
-!bondq4(i7)=bondq(m19)
-!flg=1
-!count=13
-!613 enddo
-!!print*,'i7 13',i7,m13
-!if(i7.eq.strn) then
-!!if(nfset.gt.0)then
-!ttqlty=0
-!tqlty=0
-!bqlty=0
-!sqlty=0
-!do m119=1,i7
-!ttqlty=ttqlty+qq(m119)
-!!tqlty=tqlty+qq1(m119)
-!!bqlty=bqlty+bondq4(m119)
-!!sqlty=sqlty+qq2(m119)
-!enddo
-!!endif
-!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!if(ttqlty.le.ttqlty0)then
-!mns=mns+1
-!set_number=set_number+1
-!
-!do m19=1,i7
-!if(niao.eq.0)then
-!write(9+u1,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.ne.0)then
-!if(niao.gt.1)then
-!write(9+u1,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.eq.0)then
-!if(niao.eq.1)then
-!write(9+u1,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!endif
-!enddo
-!!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.eq.3)then
-!Rumwrite=1
-!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!endif
-!if(ovopt.eq.1) then
-!call MatLDR('str',col,i7,D)
-!
-!ovlp=1.0
-!do i=1,i7
-!ovlp=ovlp*D(i)
-!enddo
-!
-!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-!endif
-!!write(9,910)'quality value',ttqlty
-!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!bqlty=0
-!write(9+u1,*),'Set_number=',set_number
-!write(9+u1,*),'    '
-!endif
-!!endif
-!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!'ovval',1.0-ovlp
-!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!if(mns.eq.max_set)then
-!if(u1.eq.mset-1) goto 379
-!close(9+u1)
-!mns=0
-!u1=u1+1
-!if(u1.le.9)then
-!write(a,'(I1)')u1
-!endif
-!if(u1.gt.9.and.u1.lt.100)then
-!write(a,'(I2)')u1
-!endif
-!if(u1.gt.99.and.u1.lt.1000)then
-!write(a,'(I3)')u1
-!endif
-!if(u1.eq.1000)then
-!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!sets. Please increase the limit'
-!goto 379
-!endif
-!outfile='structure_set_'//trim(a)//trim('.dat')
-!open(unit=9+u1,file=outfile,status='unknown')
-!endif
-!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!write(9,911),tqlty,sqlty,bqlty
-!!bqlty=0
-!!!set_number=set_number+1
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!endif
-!!if(nfset.eq.1)goto 379
-!goto 713
-!endif
-!
-!i5up14=i5
-!i14i7=i7
-!m14m21=m21
-!
-!do m14=m13+1,nqul
-!!print*,'m14m14m14',m14
-!do i=i5up14+1,i5
-!finalvec(i)=0
-!enddo
-!do m19=i14i7+1,i7
-!strno(m19)=0
-!do i8=1,15
-!str2(m19,i8)=0
-!enddo
-!enddo
-!i7=i14i7
-!totstr=i14i7
-!!print*,'totstr14',totstr
-!m21=m14m21
-!
-!jj=0
-!
-!flg=0
-!!do m19=strset(m14-1)+1,strset(m14)
-!
-!if(nqset(m14).gt.strn)goto 714
-!
-!do i=strset(m14-1)+1,strset(m14)
-!totstr=totstr+1
-!strno(totstr)=i
-!enddo
-!
-!if(totstr.gt.strn)goto 714
-!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!write(9,*),'ifail',ifail,det_inv
-!if(Ifail.eq.1)goto 714
-!!!do i8=1,nae
-!!!str4(totstr,i8)=0
-!!!enddo
-!!strno(totstr)=0
-!!totstr=totstr-1
-!!goto 314
-!!endif
-!!endif
-!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!print*,'MatLDR_write_xmi',totstr
-!call MatLDR('str',strno,totstr,D)
-!
-!!print*,'DDD',(D(i),i=1,totstr)
-!ovlp=1.0
-!do i=1,totstr
-!ovlp=ovlp*D(i)
-!enddo
-!!print*,'ovval',1.0-ovlp,ovlp
-!if(1.0-ovlp.gt.ovval)goto 714
-!endif
-!
-!
-!m21=m21+nqset(m14)
-!if(m21.gt.strn) goto 714
-!!print*,'sourav_xmi_sym'
-!
-!!314 enddo
-!
-!!print*,'jj',jj,m14,nqul
-!!414 if(jj.eq.nqset(m14))then
-!!print*,'******jj',jj
-!
-!do m19=strset(m14-1)+1,strset(m14)
-!if(q_fac2(m19).ne.qul(m14))goto 614
-!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!i7=i7+1
-!do i3=1,nae
-!str2(i7,i3)=str3(m19,i3)
-!enddo
-!col(i7)=m19
-!qq(i7)=q_fac2(m19)
-!qq1(i7)=str_quality_1(m19)
-!qq2(i7)=str_quality_2(m19)
-!bondq4(i7)=bondq(m19)
-!flg=1
-!count=14
-!614 enddo
-!!print*,'i7 14',i7,m14
-!if(i7.eq.strn) then
-!!if(nfset.gt.0)then
-!ttqlty=0
-!tqlty=0
-!bqlty=0
-!sqlty=0
-!do m119=1,i7
-!ttqlty=ttqlty+qq(m119)
-!!tqlty=tqlty+qq1(m119)
-!!bqlty=bqlty+bondq4(m119)
-!!sqlty=sqlty+qq2(m119)
-!enddo
-!!endif
-!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!if(ttqlty.le.ttqlty0)then
-!mns=mns+1
-!set_number=set_number+1
-!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!if(nfset.eq.1.and.set_number.gt.1)then
-!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(9+u1,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!endif
-!
-!do m19=1,i7
-!if(niao.eq.0)then
-!write(9+u1,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.ne.0)then
-!if(niao.gt.1)then
-!write(9+u1,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.eq.0)then
-!if(niao.eq.1)then
-!write(9+u1,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!endif
-!enddo
-!!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.eq.3)then
-!Rumwrite=1
-!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!endif
-!if(ovopt.eq.1) then
-!call MatLDR('str',col,i7,D)
-!
-!ovlp=1.0
-!do i=1,i7
-!ovlp=ovlp*D(i)
-!enddo
-!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-!endif
-!!write(9,910)'quality value',ttqlty
-!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!bqlty=0
-!write(9+u1,*),'Set_number=',set_number
-!write(9+u1,*),'    '
-!endif
-!!endif
-!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!'ovval',1.0-ovlp
-!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!if(mns.eq.max_set)then
-!if(u1.eq.mset-1) goto 379
-!close(9+u1)
-!mns=0
-!u1=u1+1
-!if(u1.le.9)then
-!write(a,'(I1)')u1
-!endif
-!if(u1.gt.9.and.u1.lt.100)then
-!write(a,'(I2)')u1
-!endif
-!if(u1.gt.99.and.u1.lt.1000)then
-!write(a,'(I3)')u1
-!endif
-!if(u1.eq.1000)then
-!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!sets. Please increase the limit'
-!goto 379
-!endif
-!outfile='structure_set_'//trim(a)//trim('.dat')
-!open(unit=9+u1,file=outfile,status='unknown')
-!endif
-!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!write(9,911),tqlty,sqlty,bqlty
-!!bqlty=0
-!!!set_number=set_number+1
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!endif
-!!if(nfset.eq.1)goto 379
-!goto 714
-!endif
-!
-!i5up15=i5
-!i15i7=i7
-!m15m21=m21
-!
-!do m15=m14+1,nqul
-!!print*,'m15m15m15',m15
-!do i=i5up15+1,i5
-!finalvec(i)=0
-!enddo
-!do m19=i15i7+1,i7
-!strno(m19)=0
-!do i8=1,15
-!str2(m19,i8)=0
-!enddo
-!enddo
-!i7=i15i7
-!totstr=i15i7
-!!print*,'totstr15',totstr
-!m21=m15m21
-!
-!jj=0
-!
-!flg=0
-!!do m19=strset(m15-1)+1,strset(m15)
-!
-!if(nqset(m15).gt.strn)goto 715
-!
-!do i=strset(m15-1)+1,strset(m15)
-!totstr=totstr+1
-!strno(totstr)=i
-!enddo
-!
-!if(totstr.gt.strn)goto 715
-!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!write(9,*),'ifail',ifail,det_inv
-!if(Ifail.eq.1)goto 715
-!!!do i8=1,nae
-!!!str4(totstr,i8)=0
-!!!enddo
-!!strno(totstr)=0
-!!totstr=totstr-1
-!!goto 315
-!!endif
-!!endif
-!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!print*,'MatLDR_write_xmi',totstr
-!call MatLDR('str',strno,totstr,D)
-!
-!!print*,'DDD',(D(i),i=1,totstr)
-!ovlp=1.0
-!do i=1,totstr
-!ovlp=ovlp*D(i)
-!enddo
-!!print*,'ovval',1.0-ovlp,ovlp
-!if(1.0-ovlp.gt.ovval)goto 715
-!endif
-!
-!
-!m21=m21+nqset(m15)
-!if(m21.gt.strn) goto 715
-!!print*,'sourav_xmi_sym'
-!
-!!315 enddo
-!
-!!print*,'jj',jj,m15,nqul
-!!415 if(jj.eq.nqset(m15))then
-!!print*,'******jj',jj
-!
-!do m19=strset(m15-1)+1,strset(m15)
-!if(q_fac2(m19).ne.qul(m15))goto 615
-!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!i7=i7+1
-!do i3=1,nae
-!str2(i7,i3)=str3(m19,i3)
-!enddo
-!col(i7)=m19
-!qq(i7)=q_fac2(m19)
-!qq1(i7)=str_quality_1(m19)
-!qq2(i7)=str_quality_2(m19)
-!bondq4(i7)=bondq(m19)
-!flg=1
-!count=15
-!615 enddo
-!!print*,'i7 15',i7,m15
-!if(i7.eq.strn) then
-!!if(nfset.gt.0)then
-!ttqlty=0
-!tqlty=0
-!bqlty=0
-!sqlty=0
-!do m119=1,i7
-!ttqlty=ttqlty+qq(m119)
-!!tqlty=tqlty+qq1(m119)
-!!bqlty=bqlty+bondq4(m119)
-!!sqlty=sqlty+qq2(m119)
-!enddo
-!!endif
-!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!if(ttqlty.le.ttqlty0)then
-!mns=mns+1
-!set_number=set_number+1
-!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!if(nfset.eq.1.and.set_number.gt.1)then
-!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(9+u1,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!endif
-!
-!do m19=1,i7
-!if(niao.eq.0)then
-!write(9+u1,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.ne.0)then
-!if(niao.gt.1)then
-!write(9+u1,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.eq.0)then
-!if(niao.eq.1)then
-!write(9+u1,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!endif
-!enddo
-!!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.eq.3)then
-!Rumwrite=1
-!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!endif
-!if(ovopt.eq.1) then
-!call MatLDR('str',col,i7,D)
-!
-!ovlp=1.0
-!do i=1,i7
-!ovlp=ovlp*D(i)
-!enddo
-!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-!endif
-!!write(9,910)'quality value',ttqlty
-!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!bqlty=0
-!write(9+u1,*),'Set_number=',set_number
-!write(9+u1,*),'    '
-!endif
-!!endif
-!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!'ovval',1.0-ovlp
-!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!if(mns.eq.max_set)then
-!if(u1.eq.mset-1) goto 379
-!close(9+u1)
-!mns=0
-!u1=u1+1
-!if(u1.le.9)then
-!write(a,'(I1)')u1
-!endif
-!if(u1.gt.9.and.u1.lt.100)then
-!write(a,'(I2)')u1
-!endif
-!if(u1.gt.99.and.u1.lt.1000)then
-!write(a,'(I3)')u1
-!endif
-!if(u1.eq.1000)then
-!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!sets. Please increase the limit'
-!goto 379
-!endif
-!outfile='structure_set_'//trim(a)//trim('.dat')
-!open(unit=9+u1,file=outfile,status='unknown')
-!endif
-!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!write(9,911),tqlty,sqlty,bqlty
-!!bqlty=0
-!!!set_number=set_number+1
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!endif
-!!if(nfset.eq.1)goto 379
-!goto 715
-!endif
-!
-!i5up16=i5
-!i16i7=i7
-!m16m21=m21
-!
-!do m16=m15+1,nqul
-!!print*,'m16m16m16',m16
-!do i=i5up16+1,i5
-!finalvec(i)=0
-!enddo
-!do m19=i16i7+1,i7
-!strno(m19)=0
-!do i8=1,15
-!str2(m19,i8)=0
-!enddo
-!enddo
-!i7=i16i7
-!totstr=i16i7
-!!print*,'totstr16',totstr
-!m21=m16m21
-!
-!jj=0
-!
-!flg=0
-!!do m19=strset(m16-1)+1,strset(m16)
-!
-!if(nqset(m16).gt.strn)goto 716
-!
-!do i=strset(m16-1)+1,strset(m16)
-!totstr=totstr+1
-!strno(totstr)=i
-!enddo
-!if(totstr.gt.strn)goto 716
-!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!write(9,*),'ifail',ifail,det_inv
-!if(Ifail.eq.1)goto 716
-!!!do i8=1,nae
-!!!str4(totstr,i8)=0
-!!!enddo
-!!strno(totstr)=0
-!!totstr=totstr-1
-!!goto 316
-!!endif
-!!endif
-!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!print*,'MatLDR_write_xmi',totstr
-!call MatLDR('str',strno,totstr,D)
-!
-!!print*,'DDD',(D(i),i=1,totstr)
-!ovlp=1.0
-!do i=1,totstr
-!ovlp=ovlp*D(i)
-!enddo
-!!print*,'ovval',1.0-ovlp,ovlp
-!if(1.0-ovlp.gt.ovval)goto 716
-!endif
-!
-!
-!m21=m21+nqset(m16)
-!if(m21.gt.strn) goto 716
-!!print*,'sourav_xmi_sym'
-!
-!!316 enddo
-!
-!!print*,'jj',jj,m16,nqul
-!!416 if(jj.eq.nqset(m16))then
-!!print*,'******jj',jj
-!
-!do m19=strset(m16-1)+1,strset(m16)
-!if(q_fac2(m19).ne.qul(m16))goto 616
-!!write(9,231),m19,(finalvec(i1),i1=1,i5)
-!i7=i7+1
-!do i3=1,nae
-!str2(i7,i3)=str3(m19,i3)
-!enddo
-!col(i7)=m19
-!qq(i7)=q_fac2(m19)
-!qq1(i7)=str_quality_1(m19)
-!qq2(i7)=str_quality_2(m19)
-!bondq4(i7)=bondq(m19)
-!flg=1
-!count=16
-!616 enddo
-!!print*,'i7 16',i7,m16
-!if(i7.eq.strn) then
-!!if(nfset.gt.0)then
-!ttqlty=0
-!tqlty=0
-!bqlty=0
-!sqlty=0
-!do m119=1,i7
-!ttqlty=ttqlty+qq(m119)
-!!tqlty=tqlty+qq1(m119)
-!!bqlty=bqlty+bondq4(m119)
-!!sqlty=sqlty+qq2(m119)
-!enddo
-!!endif
-!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!if(ttqlty.le.ttqlty0)then
-!mns=mns+1
-!set_number=set_number+1
-!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!if(nfset.eq.1.and.set_number.gt.1)then
-!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(9+u1,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!endif
-!
-!do m19=1,i7
-!if(niao.eq.0)then
-!write(9+u1,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.ne.0)then
-!if(niao.gt.1)then
-!write(9+u1,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.eq.0)then
-!if(niao.eq.1)then
-!write(9+u1,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!endif
-!enddo
-!!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.eq.3)then
-!Rumwrite=1
-!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!endif
-!if(ovopt.eq.1) then
-!call MatLDR('str',col,i7,D)
-!
-!ovlp=1.0
-!do i=1,i7
-!ovlp=ovlp*D(i)
-!enddo
-!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-!endif
-!!write(9,910)'quality value',ttqlty
-!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!bqlty=0
-!write(9+u1,*),'Set_number=',set_number
-!write(9+u1,*),'    '
-!endif
-!!endif
-!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!'ovval',1.0-ovlp
-!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!if(mns.eq.max_set)then
-!if(u1.eq.mset-1) goto 379
-!close(9+u1)
-!mns=0
-!u1=u1+1
-!if(u1.le.9)then
-!write(a,'(I1)')u1
-!endif
-!if(u1.gt.9.and.u1.lt.100)then
-!write(a,'(I2)')u1
-!endif
-!if(u1.gt.99.and.u1.lt.1000)then
-!write(a,'(I3)')u1
-!endif
-!if(u1.eq.1000)then
-!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!sets. Please increase the limit'
-!goto 379
-!endif
-!outfile='structure_set_'//trim(a)//trim('.dat')
-!open(unit=9+u1,file=outfile,status='unknown')
-!endif
-!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!write(9,911),tqlty,sqlty,bqlty
-!!bqlty=0
-!!!set_number=set_number+1
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!endif
-!!if(nfset.eq.1)goto 379
-!goto 716
-!endif
-!
-!
-!i5up17=i5
-!i17i7=i7
-!m17m21=m21
-!
-!do m17=m16+1,nqul
-!!print*,'m17m17m17',m17
-!do i=i5up17+1,i5
-!finalvec(i)=0
-!enddo
-!do m19=i17i7+1,i7
-!strno(m19)=0
-!do i8=1,15
-!str2(m19,i8)=0
-!enddo
-!enddo
-!i7=i17i7
-!totstr=i17i7
-!!print*,'totstr17',totstr
-!m21=m17m21
-!
-!jj=0
-!
-!flg=0
-!!do m19=strset(m17-1)+1,strset(m17)
-!
-!if(nqset(m17).gt.strn)goto 717
-!
-!do i=strset(m17-1)+1,strset(m17)
-!totstr=totstr+1
-!strno(totstr)=i
-!enddo
-!
-!if(totstr.gt.strn)goto 717
-!call mat_ind(nl,totstr,ncqs,strno,Ifail,det_inv)
-!!write(*,*),'ifail_xmi',ifail,totstr,det_inv
-!!write(9,*),'ifail',ifail,det_inv
-!if(Ifail.eq.1)goto 717
-!!strno(totstr)=0
-!!totstr=totstr-1
-!!goto 317
-!!endif
-!!endif
-!if(totstr.gt.1.and.ovopt.eq.vpt) then
-!!print*,'MatLDR_write_xmi',totstr
-!call MatLDR('str',strno,totstr,D)
-!
-!!print*,'DDD',(D(i),i=1,totstr)
-!ovlp=1.0
-!do i=1,totstr
-!ovlp=ovlp*D(i)
-!enddo
-!!print*,'ovval',1.0-ovlp,ovlp
-!if(1.0-ovlp.gt.ovval)goto 717
-!endif
-!
-!
-!m21=m21+nqset(m17)
-!if(m21.gt.strn) goto 717
-!!print*,'sourav_xmi_sym'
-!
-!!317 enddo
-!
-!!417 if(jj.eq.nqset(m17))then
-!
-!do m19=strset(m17-1)+1,strset(m17)
-!if(q_fac2(m19).ne.qul(m17))goto 617
-!i7=i7+1
-!do i3=1,nae
-!str2(i7,i3)=str3(m19,i3)
-!enddo
-!col(i7)=m19
-!qq(i7)=q_fac2(m19)
-!qq1(i7)=str_quality_1(m19)
-!qq2(i7)=str_quality_2(m19)
-!bondq4(i7)=bondq(m19)
-!flg=1
-!617 enddo
-!!print*,'i7 16',i7,m17
-!if(i7.eq.strn) then
-!!if(nfset.gt.0)then
-!ttqlty=0
-!tqlty=0
-!bqlty=0
-!sqlty=0
-!do m119=1,i7
-!ttqlty=ttqlty+qq(m119)
-!!tqlty=tqlty+qq1(m119)
-!!bqlty=bqlty+bondq4(m119)
-!!sqlty=sqlty+qq2(m119)
-!enddo
-!!endif
-!!if(ttqlty.le.ttqlty0.or.nfset.eq.2)then
-!if(ttqlty.le.ttqlty0)then
-!mns=mns+1
-!set_number=set_number+1
-!if(nfset.eq.1.and.set_number.eq.1)ttqlty0=ttqlty
-!if(nfset.eq.1.and.set_number.gt.1)then
-!if(ttqlty.lt.ttqlty0)ttqlty0=ttqlty
-!write(9+u1,*),'ttqlty,ttqlty0',ttqlty,ttqlty0
-!endif
-!
-!do m19=1,i7
-!if(niao.eq.0)then
-!write(9+u1,900),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.ne.0)then
-!if(niao.gt.1)then
-!write(9+u1,901),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!endif
-!!if(niao.ne.0.and.nnnatom.eq.0)then
-!if(niao.eq.1)then
-!write(9+u1,909),qq1(m19),bondq4(m19),qq2(m19),qq(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!endif
-!enddo
-!!if(nfset.eq.0.or.nfset.gt.1) then
-!if(nfset.eq.3)then
-!Rumwrite=1
-!call Rumer_set_id(str2,i7,nl,Rid,set_num)
-!endif
-!if(ovopt.eq.1) then
-!call MatLDR('str',col,i7,D)
-!
-!ovlp=1.0
-!do i=1,i7
-!ovlp=ovlp*D(i)
-!enddo
-!write(9+u1,912)'Overlap of this set of the structures =',1.0-ovlp
-!endif
-!!write(9,910)'quality value',ttqlty
-!if(Rid.eq.0)write(9+u1,910)'quality value',ttqlty
-!if(Rid.eq.1)write(9+u1,920)'quality value',ttqlty,'Rumer_Set',(set_num(i),i=1,nrs)
-!!write(9,910)'qualities:',' intra_bond=',tqlty,'nn_bond=',bqlty,'sym_break=',sqlty
-!bqlty=0
-!write(9+u1,*),'Set_number=',set_number
-!write(9+u1,*),'    '
-!endif
-!!endif
-!!if(nfset.eq.1.and.tqlty.le.ttqlty1.and.bqlty.le.ttqlty2.and.sqlty.le.ttqlty3)write(9,*),&
-!!'ovval',1.0-ovlp
-!if(nfset.eq.0.and.ttqlty.le.ttqlty0)goto 379
-!if(mns.eq.max_set)then
-!if(u1.eq.mset-1) goto 379
-!close(9+u1)
-!mns=0
-!u1=u1+1
-!if(u1.le.9)then
-!write(a,'(I1)')u1
-!endif
-!if(u1.gt.9.and.u1.lt.100)then
-!write(a,'(I2)')u1
-!endif
-!if(u1.gt.99.and.u1.lt.1000)then
-!write(a,'(I3)')u1
-!endif
-!if(u1.eq.1000)then
-!write(*,*)'Maximum output file has been set to 1000, it seems that you have more&
-!sets. Please increase the limit'
-!goto 379
-!endif
-!outfile='structure_set_'//trim(a)//trim('.dat')
-!open(unit=9+u1,file=outfile,status='unknown')
-!endif
-!!write(9,910)'intra bond quality','sym break quality','nnbond quality'
-!!write(9,911),tqlty,sqlty,bqlty
-!!bqlty=0
-!!!set_number=set_number+1
-!!write(9,*),'Set_number=',set_number
-!!write(9,*),'    '
-!!endif
-!!endif
-!!if(nfset.eq.1)goto 379
-!endif
-!
-!717 enddo
-!!print*,'count',count
-!if(indpnt.eq.2)then
-!if (count.eq.1)goto 702
-!if (count.eq.2)goto 703
-!if (count.eq.3)goto 704
-!if (count.eq.4)goto 705
-!if (count.eq.5)goto 706
-!if (count.eq.6)goto 707
-!if (count.eq.7)goto 708
-!if (count.eq.8)goto 709
-!if (count.eq.9)goto 710
-!if (count.eq.10)goto 711
-!if (count.eq.11)goto 712
-!if (count.eq.12)goto 713
-!if (count.eq.13)goto 714
-!if (count.eq.14)goto 715
-!if (count.eq.15)goto 716
-!endif
-!!if (count.eq.16)goto 717
-!
-!if(indpnt.eq.1)then
-!if (count.eq.1)goto 701
-!if (count.eq.2)goto 702
-!if (count.eq.3)goto 703
-!if (count.eq.4)goto 704
-!if (count.eq.5)goto 705
-!if (count.eq.6)goto 706
-!if (count.eq.7)goto 707
-!if (count.eq.8)goto 708
-!if (count.eq.9)goto 709
-!if (count.eq.10)goto 710
-!if (count.eq.11)goto 711
-!if (count.eq.12)goto 712
-!if (count.eq.13)goto 713
-!if (count.eq.14)goto 714
-!if (count.eq.15)goto 715
-!if (count.eq.16)goto 716
-!endif
-!
-!716 enddo
-!
-!715 enddo
-!
-!714 enddo
-!
-!713 enddo
-!
-!712 enddo
-!
-!711 enddo
-!
-!710 enddo
-!
-!709 enddo
-!
-!708 enddo
-!
-!707 enddo
-!
-!706 enddo
-!
-!705 enddo
-!
-!704 enddo
-!
-!703 enddo
-!
-!702 enddo
-!
-!701 enddo
-!!enddo
-!
-!
-!!379 do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq(m19),(str2(m19,m20),m20=1,nae)
-!!endif
-!!if(niao.ne.0.and.nnnatom.ne.0)then
-!!write(9,901),qq(m19),bondq4(m19),1,':',niao,(str2(m19,m20),m20=1,nae)
-!!!write(9,901),m19,1,':',niao,(str2(m19,m20),m20=1,nae)
-!!!write(*,900),m19,niao,(str2(m19,m20),m20=1,nae)
-!!!write(9,*)qq(m19)
-!!endif
-!!if(niao.ne.0.and.nnnatom.eq.0)then
-!!write(9,909),qq(m19),1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!
-!
-!!do m19=1,i7
-!!if(niao.eq.0)then
-!!write(9,900),qq1(m19),qq2(m19),bondq4(m19),'|',(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.ne.0)then
-!!if(niao.gt.1)then
-!!write(9,901),qq1(m19),qq2(m19),bondq4(m19),'|',1,':',niao,(str2(m19,m20),m20=1,nae)
-!!endif
-!!!if(niao.ne.0.and.nnnatom.eq.0)then
-!!if(niao.eq.1)then
-!!write(9,909),qq1(m19),qq2(m19),bondq4(m19),'|',1,1,(str2(m19,m20),m20=1,nae)
-!!endif
-!!tqlty=tqlty+qq1(m19)
-!!bqlty=bqlty+bondq4(m19)
-!!sqlty=sqlty+qq2(m19)
-!!enddo
-!
-!!900 format(25I4)
-!!901 format(I3,x,I3,x,I1,a,I1,x,25I4)
-!!909 format(I3,x,I1,a,I1,x,25I4)
-!
-!900 format(I3,x,I3,x,I3,x,I3,x,a,x,25I4)
-!901 format(I3,x,I3,x,I3,x,I3,x,a,x,I1,a,I3,x,25I4)
-!909 format(I3,x,I3,x,I3,x,I3,x,a,x,I3,I3,x,25I4)
-!!910 format(a,x,a,x,a,x,a)
-!!911 format(15x,I3,7x,I3,7x,I3)
-!910 format(a,I3)
-!920 format(a,2x,I5,2x,a,2x,100I5)
-!911 format(15x,I3,7x,I3,7x,I3)
-!912 format(a,3x,F10.3)
-!
-!close(21)
-!
-!open(unit=121,file='script10',status='unknown')
-!write(121,111)'rm -rf','Rumer_Sets.dat'
-!close(121)
-!CALL SYSTEM ("chmod +x script10 ")
-!CALL SYSTEM ("./script10 ")
-!CALL SYSTEM ("rm script10 ")
-!111 format(a,x,a)
-!
-!231 format(50I3)
-!!deallocate(str2)
-!!deallocate(qq)
-!!deallocate(qq1)
-!!deallocate(qq2)
-!
-!379 return
-!end subroutine write_symm_xmi
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 subroutine write_symm_xmi_new(nl,strn,str3,ncqs,q_fac2)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -26124,8 +15885,6 @@ endif
 900 format(I3,x,I3,x,I3,x,I3,x,a,x,25I4)
 901 format(I3,x,I3,x,I3,x,I3,x,a,x,I1,a,I3,x,25I4)
 909 format(I3,x,I3,x,I3,x,I3,x,a,x,I3,I3,x,25I4)
-!910 format(a,x,a,x,a,x,a)
-!911 format(15x,I3,7x,I3,7x,I3)
 910 format(a,I3)
 920 format(a,2x,I5,2x,a,2x,100I5)
 911 format(15x,I3,7x,I3,7x,I3)
