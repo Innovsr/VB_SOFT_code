@@ -69,11 +69,15 @@ class InputGUI:
                 for field in pane:
                     field.delete(0, tk.END)
 
+################################################################################
+#### fragment section starts here : first ##
+################################################################################
     def create_fragment_section(self):
         # Create a new frame for fragment inputs if it doesn't exist
         if self.fragment_frame is None:
-            self.fragment_frame = ttk.Frame(self.root, padding="10")
-            self.fragment_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+            self.fragment_frame = tk.Toplevel(self.root, padx=10, pady=10)
+            self.fragment_frame.title("Fragment inputs")
+            self.fragment_frame.geometry("400x300")
 
 #        # Clear existing fragment panes
 #        for widget in self.fragment_frame.winfo_children():
@@ -89,28 +93,6 @@ class InputGUI:
         ttk.Button(
             self.fragment_frame, text="Analyze Description", command=lambda: self.analyze_fragments(desc_entry.get())
         ).grid(row=2, column=0, columnspan=2, pady=10)
-
-    def create_orbital_section(self):
-        # Create a new frame for orbital inputs if it doesn't exist
-        if self.orbital_frame is None:
-            self.orbital_frame = ttk.Frame(self.root, padding="10")
-            self.orbital_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-
-#        # Clear existing fragment panes
-#        for widget in self.orbital_frame.winfo_children():
-#            widget.destroy()
-        self.orbital_entries = []
-
-        # Input for description of fragments
-        ttk.Label(self.orbital_frame, text="Description of orbitals").grid(
-            row=0, column=0, columnspan=2, pady=5
-        )
-        desc_entry = ttk.Entry(self.orbital_frame, width=40)
-        desc_entry.grid(row=1, column=0, columnspan=2, pady=5)
-        ttk.Button(
-            self.orbital_frame, text="Analyze Description", command=lambda: self.analyze_orbital(desc_entry.get())
-        ).grid(row=2, column=0, columnspan=2, pady=10)
-
 
     def analyze_fragments(self, description):
         self.description = description
@@ -143,6 +125,50 @@ class InputGUI:
 
             self.fragment_entries.append((type_entry, number_entry))
 
+    def calculate_fragments(self, description):
+        """
+        Parse the description and calculate the total number of fragments.
+        """
+        total_fragments = 0
+        groups = description.split()
+        for group in groups:
+            if '*' in group:
+                # Handle compact notation like "3*4"
+                match = re.match(r"(\d+)\*(\d+)", group)
+                if match:
+                    total_fragments += int(match.group(2))
+            else:
+                # Handle individual groups
+                total_fragments += 1
+        return total_fragments
+
+###################################################################################
+########## orbital section starts here :
+###################################################################################
+
+    def create_orbital_section(self):
+        # Create a new frame for orbital inputs if it doesn't exist
+        if self.orbital_frame is None:
+            self.orbital_frame = tk.Toplevel(self.root, padx=10, pady=10)
+            self.orbital_frame.title("orbital inputs")
+            self.orbital_frame.geometry("300x300")
+
+#        # Clear existing fragment panes
+#        for widget in self.orbital_frame.winfo_children():
+#            widget.destroy()
+        self.orbital_entries = []
+
+        # Input for description of fragments
+        ttk.Label(self.orbital_frame, text="Description of orbitals").grid(
+            row=0, column=0, columnspan=2, pady=5
+        )
+        desc_entry = ttk.Entry(self.orbital_frame, width=40)
+        desc_entry.grid(row=1, column=0, columnspan=2, pady=5)
+        ttk.Button(
+            self.orbital_frame, text="Analyze Description", command=lambda: self.analyze_orbital(desc_entry.get())
+        ).grid(row=2, column=0, columnspan=2, pady=10)
+
+
     def analyze_orbital(self, description_orb):
         self.description_orb = description_orb
         try:
@@ -170,22 +196,6 @@ class InputGUI:
 
             self.orbital_entries.append(number_entry)
 
-    def calculate_fragments(self, description):
-        """
-        Parse the description and calculate the total number of fragments.
-        """
-        total_fragments = 0
-        groups = description.split()
-        for group in groups:
-            if '*' in group:
-                # Handle compact notation like "3*4"
-                match = re.match(r"(\d+)\*(\d+)", group)
-                if match:
-                    total_fragments += int(match.group(2))
-            else:
-                # Handle individual groups
-                total_fragments += 1
-        return total_fragments
 
     def calculate_orbital(self, description_orb):
         """
