@@ -2,17 +2,21 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 import re
+import os
 #import program_main
 import subprocess
+import sys
 
 
-class InputGUI:
+class Input_creater:
     def __init__(self, root):
         self.root = root
         self.root.title("Input File Creator")
 
 # initialise disctionary to store control data
         self.ctrl_inputs={}
+        self.input_text=''
+        self.fname=''
  
         # Main Frame
         self.frame = ttk.Frame(root, padding="10")
@@ -20,7 +24,7 @@ class InputGUI:
 
         # Input Fields
         self.entries = {}
-        self.keywords = ["str", "nao", "nae", "nmul", "chinst"]
+        self.keywords = ["str", "nao", "nae", "nmul", "frgtyp", "chinst"]
         self.create_input_fields()
 
         # Buttons
@@ -40,7 +44,7 @@ class InputGUI:
         self.description_key = ""
 
     def create_input_fields(self):
-        ttk.Label(self.frame, text="Enter Input Keywords").grid(row=1, column=0, columnspan=2, pady=5)
+        ttk.Label(self.frame, text="Enter Ctrl Keywords").grid(row=1, column=0, columnspan=2, pady=5)
         ttk.Label(self.frame, text="file_name").grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
         self.file_name = ttk.Entry(self.frame, width=20)
         self.file_name.grid(row=0, column=1, padx=5, pady=5)
@@ -67,6 +71,12 @@ class InputGUI:
 
         reset_button = ttk.Button(self.frame, text="Reset", command=self.reset_fields)
         reset_button.grid(row=12, column=2, padx=5, pady=10, sticky=tk.W)
+
+
+    def go_to_output(self):
+        self.frame.destroy()  # Destroy the output frame
+        InputCreator(self.root)  # Switch back to the input frame
+
 
     def reset_fields(self):
         for entry in self.entries.values():
@@ -162,11 +172,11 @@ class InputGUI:
         if self.orbital_frame is None:
             self.orbital_frame = tk.Toplevel(self.root, padx=10, pady=10)
             self.orbital_frame.title("orbital inputs")
-            self.orbital_frame.geometry("400x300")
+            self.orbital_frame.geometry("600x600")
 
-#        # Clear existing fragment panes
-#        for widget in self.orbital_frame.winfo_children():
-#            widget.destroy()
+        # Clear existing fragment panes
+        for widget in self.orbital_frame.winfo_children():
+            widget.destroy()
         self.orbital_entries = []
 
         # Input for description of fragments
@@ -199,11 +209,28 @@ class InputGUI:
         ttk.Label(self.orbital_frame, text=f"Number of orbitals: {num_orbital}").grid(
             row=0, column=0, columnspan=2, pady=5
         )
-        for i in range(num_orbital):
-            row = i + 1
-            ttk.Label(self.orbital_frame, text=f"orbital {i + 1} ").grid(row=row, column=1, padx=5, pady=5, sticky=tk.W)
+        if num_orbital % 2 == 0:
+            j1=int(num_orbital/2)
+            j2=int(num_orbital/2)
+        else:
+            j1=int(num_orbital/2)
+            j2=int(num_orbital/2)+1
+
+        j=0
+        for i in range(j2):
+            j = j+1
+            row = i+1
+            ttk.Label(self.orbital_frame, text=f"orbital {j } ").grid(row=row, column=1, padx=5, pady=5, sticky=tk.W)
             number_entry = ttk.Entry(self.orbital_frame, width=10)
             number_entry.grid(row=row, column=2, padx=5, pady=5)
+
+            self.orbital_entries.append(number_entry)
+        for i in range(j1):
+            j = j+1
+            row = i+1
+            ttk.Label(self.orbital_frame, text=f"orbital {j } ").grid(row=row, column=3, padx=5, pady=5, sticky=tk.W)
+            number_entry = ttk.Entry(self.orbital_frame, width=10)
+            number_entry.grid(row=row, column=4, padx=5, pady=5)
 
             self.orbital_entries.append(number_entry)
 
@@ -233,7 +260,7 @@ class InputGUI:
             self.keywd_frame = tk.Toplevel(self.root, padx=10, pady=10)
             self.keywd_frame.title("Spatial Keywords")
             self.keywd_frame.geometry("400x300")
-
+            # Add a vertical scrollbar
 #        # Clear existing fragment panes
 #        for widget in self.fragment_frame.winfo_children():
 #            widget.destroy()
@@ -319,7 +346,7 @@ class InputGUI:
             if orbital_number:
                 orbital_inputs.append(orbital_number)
             else:
-                raise ValueError(f"Invalid pane in fragment_entries: {pane}")
+                raise ValueError(f"Invalid pane in orbital_entries: {pane}")
 
         # collect spatial keyword inputs if available
         keywd_inputs = [self.description_key]
@@ -345,7 +372,7 @@ class InputGUI:
         self.input_text += f"{self.description_orb}\n"
         for orb in orbital_inputs[1:]:
             self.input_text += f"{orb}\n"
-        self.input_text += "$end"
+        self.input_text += "$end\n"
         for keywd in keywd_inputs[1:]:
             self.input_text += f"{keywd[0]} {keywd[1]}\n"
 
@@ -353,7 +380,8 @@ class InputGUI:
     
 
     def get_data(self):
-        return self.input_text
+        input_text1=self.input_text
+        return input_text1
     def get_file_name(self):
         print('file_name',self.fname)
         return self.fname
@@ -366,8 +394,7 @@ class analyse_inputs:
         # Write the input text to a file
         self.file_name=''.join([file_name1, ".xmi"])
         with open(self.file_name, 'w') as f:
-#            f.write(file_name1 +'\n')
-            f.write(input_data)
+            f.write(self.input_data)
     def run_Fortran(self):
         #Calling the Fortran executable using subprocess
         process = subprocess.Popen(['./my_program',self.file_name], 
@@ -390,95 +417,57 @@ class Output:
         self.frame = ttk.Frame(root, padding="10")
         self.frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-        # Add a label to display the status
-        self.label = ttk.Label(self.frame, text="Status: Waiting for output...")
-        self.label.grid(row=0, column=0, pady=(0, 10))
+        # Create a frame for the text widget and scrollbar
+        text_frame = ttk.Frame(self.frame)
+        text_frame.grid(row=1, column=0, pady=(0, 10), sticky=(tk.W, tk.E, tk.N, tk.S))
+
+        # Add a vertical scrollbar
+        self.scrollbar = ttk.Scrollbar(text_frame, orient=tk.VERTICAL)
+        self.scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
 
         # Add a Text widget to display the file content
-        self.output_text = tk.Text(self.frame, wrap=tk.WORD, height=20, width=50)
-        self.output_text.grid(row=1, column=0, pady=(0, 10))
-
-        # Add a button to re-read the output file (if necessary)
-        self.run_button = ttk.Button(
-            self.frame, text="Reload Output", command=self.reload_output
+        self.output_text = tk.Text(
+            text_frame, wrap=tk.WORD, height=25, width=80, yscrollcommand=self.scrollbar.set
         )
-        self.run_button.grid(row=2, column=0, pady=(0, 10))
-        self.run_button.config(state=tk.DISABLED)  # Initially disabled
+        self.output_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-        # File to monitor
-        self.output_file = "structure_set_1.dat"
+        # Configure the scrollbar to work with the Text widget
+        self.scrollbar.config(command=self.output_text.yview)
 
-        # Check for the file and display its content
-        self.monitor_file()
-
-    def monitor_file(self):
-        """Waits for the output file to be generated."""
-        while not os.path.exists(self.output_file):
-            time.sleep(0.5)  # Wait for the file to be created
-
-        # Once the file is available, read its content
-        self.display_file_content(self.output_file)
-        self.label.config(text="Status: Output generated!")
-        self.run_button.config(state=tk.NORMAL)  # Enable the reload button
-
-    def display_file_content(self, file_path):
+    def display_file_content(self, output_file):
         """Displays the content of the specified file in the Text widget."""
-        with open(file_path, 'r') as f:
+        with open(output_file, 'r') as f:
             content = f.read()
 
         # Display the content in the Text widget
         self.output_text.delete(1.0, tk.END)  # Clear previous content
         self.output_text.insert(tk.END, content)
 
-    def reload_output(self):
-        """Reload the output file content."""
-        if os.path.exists(self.output_file):
-            self.display_file_content(self.output_file)
-            self.label.config(text="Status: Output reloaded!")
-        else:
-            self.label.config(text="Status: Output file not found!")
+def open_second_root():
+    root1 = tk.Tk()
+    output = Output(root1)
+    output_file = "structure_set_1.dat"
+    output.display_file_content(output_file)
 
-
-# Example usage
-
-#class output:
-#    def __init__(self,root)
-#        self.root = root
-#        self.root.title("Output value")
-#        self.frame = ttk.Frame(root, padding="10")
-#        self.frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-#        output_file = "structure_set_1.dat"
-#        while not os.path.exists(output_file):
-#            time.sleep(0.5)  # Wait for the file to be generated
-#
-#        # Once the file is available, read its content
-#        self.display_file_content(output_file)
-#        self.label.config(text="Status: Output generated!")
-#        self.run_button.config(state=tk.NORMAL)
-#
-#    def display_file_content(self, file_path):
-#        with open(file_path, 'r') as f:
-#            content = f.read()
-#        # Display the content in the Text widget
-#        self.output_text.delete(1.0, tk.END)  # Clear previous content
-#        self.output_text.insert(tk.END, content)
-
-
-
-# Run the GUI
-if __name__ == "__main__":
-    root = tk.Tk()
-#    root1 = tk.Tk()
-    app = InputGUI(root)
-    root.mainloop()
-    input_data=app.get_data()
-    file_name=app.get_file_name()
-    print('input data', input_data)
+    input_data=inputc.get_data()
+    file_name=inputc.get_file_name()
+    #    print('input data', input_data)
     result=analyse_inputs(input_data)
     result.creat_input(file_name)
     result.run_Fortran()
-#    root1.mainloop()
+    root1.mainloop()
+
+def finish():
+    sys.exit()
+
+
 if __name__ == "__main__":
     root = tk.Tk()
-    app = Output(root)
+    inputc = Input_creater(root)
+    run_button = ttk.Button(root, text="RUN", command=open_second_root)
+    run_button.grid(row=1, column=0, pady=10)
+    close_button = ttk.Button(root, text="FINISH", command=finish)
+    close_button.grid(row=2, column=0, pady=10)
+
     root.mainloop()
+#if __name__ == "__main__":
