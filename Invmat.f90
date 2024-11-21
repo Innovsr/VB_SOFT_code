@@ -8,7 +8,7 @@ use commondat
 use commondat1
       Implicit DOUBLE PRECISION(A-H,O-Z)
       Dimension A(1000,1000),B(1000,1000)
-
+      integer::ndim,ifail
 
 
 

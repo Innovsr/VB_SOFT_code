@@ -7,10 +7,11 @@ import re
 class InputGUI:
     def __init__(self, root):
         self.root = root
-#        self.root1 = root1
         self.root.title("Input File Creator")
-#        self.root1.title("Inputs of orbital section")
 
+# initialise disctionary to store control data
+        self.ctrl_inputs={}
+ 
         # Main Frame
         self.frame = ttk.Frame(root, padding="10")
         self.frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -228,14 +229,14 @@ class InputGUI:
 
     def generate_input(self):
         # Collect standard inputs
-        inputs = {}
         for key, entry in self.entries.items():
             try:
                 value = entry.get()
                 if value:
-                    inputs[key]=value
+                    self.ctrl_inputs[key]=value
             except AttributeError:
                 raise TypeError(f"Expected tk.Entry, but got {type(entry)} for key {key}")
+            print('inputs',self.ctrl_inputs)
 
         # Collect fragment inputs if available
         fragment_inputs = [self.description]
@@ -255,7 +256,7 @@ class InputGUI:
 
         # Generate input string
         input_text = "$ctrl\n"
-        input_text += " ".join(f"{key}={value}" for key, value in inputs.items() if key != "fragments" and key != "orbital")
+        input_text += " ".join(f"{key}={value}" for key, value in self.ctrl_inputs.items() if key != "fragments" and key != "orbital")
         input_text += "\n$end"
         input_text += "\n$frag\n"
         input_text += f"{self.description}\n"
@@ -270,11 +271,15 @@ class InputGUI:
 
         self.show_result(input_text)
 
+    def get_data(self):
+        return self.ctrl_inputs
 
 # Run the GUI
 if __name__ == "__main__":
     root = tk.Tk()
 #    root1 = tk.Tk()
-    app = InputGUI(root) 
+    app = InputGUI(root)
     root.mainloop()
+    ctrl_data=app.get_data()
+    print('ctrl data', ctrl_data)
 #    root1.mainloop()

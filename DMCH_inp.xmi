@@ -1,0 +1,11 @@
+DMCH_inp
+DMCH_inp
+$ctrl
+str=cov nao=4 nae=5 nmul=1 chinst=1
+$end
+$frag
+
+$end
+$orb
+
+$end

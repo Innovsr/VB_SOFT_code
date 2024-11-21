@@ -1,0 +1,17 @@
+DMCH_file
+$ctrl
+str=cov nao=5 nae=5 nmul=1 chinst=1
+$end
+$frag
+1 1 1
+px 1
+py 3
+pz 4
+$end
+$orb
+1 1 1
+1
+3
+4
+$endnset0
+symqual
